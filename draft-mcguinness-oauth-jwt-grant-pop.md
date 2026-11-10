@@ -83,7 +83,7 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 ## Relationship to Other Documents
 
-This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It retains the first's `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{jwt-dpop}}) and extends that document from DPoP to mutual TLS. Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant presented with either grant type ({{grant-type-substitution}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
+This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It retains the first's `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{jwt-dpop}}) and extends that document from DPoP to mutual TLS. Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant presented with either grant type ({{grant-type-substitution}}), and it returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
 
 This specification generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant. {{profile-examples}} describes that grant as a profile of this specification and lists the conflicts between the two documents.
 
@@ -751,7 +751,7 @@ This appendix is informative. It shows how two specifications answer the items i
 {{ID-JAG}} would answer the items as follows:
 
 1. The `typ` value is `oauth-id-jag+jwt`, and the `requested_token_type` value is `urn:ietf:params:oauth:token-type:id-jag`.
-2. Both confirmation methods, `jkt` and `x5t#S256`, may be used. Neither is mandatory to implement, nor is the `jwt-dpop` grant type.
+2. Both confirmation methods, `jkt` and `x5t#S256`, may be used, and neither is mandatory to implement. A DPoP-bound grant is presented with the `jwt-dpop` grant type ({{Section 4.4 of ID-JAG}}).
 3. Binding is optional.
 4. A Resource Authorization Server may accept a bound grant in place of client authentication. The IdP Authorization Server authenticates the client in the Token Exchange request, binds the grant to the key or certificate for which that request carries proof of possession, and identifies the client in the grant's `client_id` claim.
 5. A Resource Authorization Server also validates a certificate presented for an `x5t#S256`-bound grant as described in {{Section 2 of RFC8705}} ({{Section 9.11.2.2 of ID-JAG}}). It rejects an unbound grant with the `invalid_grant` error code when the resource requires sender-constrained access tokens and the request carries neither a DPoP proof nor a TLS client certificate ({{Section 9.11.1.2.4 of ID-JAG}}, {{Section 9.11.2.2 of ID-JAG}}).
