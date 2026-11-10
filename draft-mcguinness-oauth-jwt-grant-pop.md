@@ -474,16 +474,16 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 
 When the grant is bound, the consuming authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
-* if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof, which for a key-bound grant is the grant's key ({{processing}}); or
-* otherwise, the certificate that the grant's `x5t#S256` member identifies.
+* for a key-bound grant, the grant's key, which is the key of the DPoP proof ({{processing}}); or
+* for a certificate-bound grant, the grant's certificate or, if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof.
 
-A TLS client certificate presented with a key-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound, and a consuming authorization server that does not support DPoP applies the second row in place of the third.
+A TLS client certificate presented with a key-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound.
 
 | Grant's confirmation member | Proof in the request | Binding of issued tokens |
 |---|---|---|
 | `jkt` or `jwk` | DPoP proof, with or without a TLS client certificate | Grant's key |
 | `x5t#S256` | TLS client certificate only | Grant's certificate |
-| `x5t#S256` | TLS client certificate and DPoP proof | Key of the DPoP proof |
+| `x5t#S256` | TLS client certificate and DPoP proof | Grant's certificate or key of the DPoP proof |
 {: #binding-outcomes title="Binding of Tokens Issued for a Bound Grant"}
 
 The following is an example of the access token response to the request in {{ex-redeem}}:
@@ -507,7 +507,7 @@ If the consuming authorization server issues a refresh token for a bound grant, 
 
 When a client presents a refresh token bound under this section, the consuming authorization server MUST verify its binding as items 2 and 3 of {{processing}} verify the binding of a grant, with the same error codes. It MUST apply {{token-response}} and this section to the access token and to any refresh token that it issues in response, with the presented refresh token's key or certificate in place of the grant's. The binding of the presented refresh token does not change, even when the issued tokens are bound to the key of a DPoP proof ({{binding-outcomes}}).
 
-The client presents a refresh token issued for a bound grant with each proof of possession that it presented in the request in which it obtained that refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. The response does not always show which binding was applied; for example, a consuming authorization server that does not support DPoP binds to the certificate and returns a `token_type` of `Bearer`.
+The client presents a refresh token issued for a bound grant with each proof of possession that it presented in the request in which it obtained that refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. The response does not always show which binding was applied; for example, a consuming authorization server can bind to the certificate although the request contained a DPoP proof, and return a `token_type` of `Bearer` ({{binding-outcomes}}).
 
 The following is an example of a refresh request for a refresh token bound to the certificate in {{cert-example}}. The client sends it over a mutual-TLS connection that uses that certificate, with which it also authenticates ({{Section 2 of RFC8705}}), and adds a DPoP proof:
 
@@ -523,7 +523,7 @@ grant_type=refresh_token
 ~~~
 {: title="Refresh Request with a Certificate-Bound Refresh Token"}
 
-The consuming authorization server verifies the certificate against the refresh token's binding and binds the issued tokens to the key of the DPoP proof:
+The consuming authorization server verifies the certificate against the refresh token's binding and, in this example, binds the issued tokens to the key of the DPoP proof:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -678,7 +678,7 @@ The DPoP proof replay protections of {{Section 11.1 of RFC9449}} and the authori
 A DPoP proof does not cover the grant it accompanies or the TLS connection that carries it. An attacker that captures a grant together with a DPoP proof for its key can replay both, over its own TLS connection, within the window in which the consuming authorization server accepts the proof ({{Section 11.1 of RFC9449}}). What the attacker obtains depends on the binding of the issued tokens:
 
 * An access token or refresh token bound to the grant's key is of no use to the attacker.
-* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding. The reverse case is safe: for an `x5t#S256`-bound grant, the mutual-TLS handshake shows that a DPoP proof comes from the holder of the grant's certificate, so {{token-response}} lets that proof determine the binding.
+* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding. The reverse case is safe: for an `x5t#S256`-bound grant, the mutual-TLS handshake shows that a DPoP proof comes from the holder of the grant's certificate, so {{token-response}} lets the issued tokens be bound to the key of that proof.
 * A refresh token bound only to a client as which the attacker authenticates would be usable, at the first refresh or a later one; {{refresh}} binds every refresh token issued for a bound grant, and every replacement, as described in {{token-response}}.
 * An unbound access token is usable.
 
@@ -764,7 +764,7 @@ Version -06 of that document conflicts with this specification in three places. 
 
 ## Identity and Authorization Chaining
 
-{{ID-CHAINING}} defines no profile of this specification, so the defaults in {{profiles}} apply. Binding the grant adds a mitigation to those listed in {{Section 5.5 of ID-CHAINING}}.
+{{ID-CHAINING}} defines no profile of this specification, so the defaults in {{profiles}} apply. Binding the grant adds a mitigation to those listed in {{Section 5.5 of ID-CHAINING}}. {{Appendix B.3 of ID-CHAINING}} binds the access token to a key that the grant conveys in a `requested_cnf` claim. For a bound grant, {{token-response}} permits only the bindings in {{binding-outcomes}}, so a grant that carries both a `cnf` claim and a `requested_cnf` claim for a different key conflicts with this specification.
 
 # Open Issues {#open-issues}
 
