@@ -892,12 +892,16 @@ Table of Contents
    authorization server verifies that the grant identifies the
    authenticated client, in a claim that the profile of the grant
    defines (Section 7), it MAY instead bind the refresh token only to
-   that client.  A binding to a key or certificate is in addition to the
-   binding to the client that Section 10.4 of [RFC6749] requires.  It is
-   stricter than Section 5 of [RFC9449], under which a refresh token
-   issued to a confidential client is not bound to the DPoP key, and
-   than the recommendation in Section 4 of [RFC8705]; Section 8.6 gives
-   the reason.
+   that client.  At a later refresh, this exception applies only if the
+   consuming authorization server retained evidence that the original
+   grant identified the authenticated client; the refresh token's
+   association with that client (Section 6 of [RFC6749]) does not by
+   itself satisfy it.  A binding to a key or certificate is in addition
+   to the binding to the client that Section 10.4 of [RFC6749] requires.
+   It is stricter than Section 5 of [RFC9449], under which a refresh
+   token issued to a confidential client is not bound to the DPoP key,
+   and than the recommendation in Section 4 of [RFC8705]; Section 8.6
+   gives the reason.
 
    When a client presents a refresh token that the consuming
    authorization server bound to a key or certificate under this
