@@ -608,7 +608,7 @@ The following is an example of metadata on which an issuing authorization server
 
 ## Client Registration Metadata {#client-metadata}
 
-A consuming authorization server can require a client to present DPoP-bound grants by registering the client with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes the `jwt-dpop` grant type and not the `jwt-bearer` grant type. The consuming authorization server then rejects a request from that client that uses the `jwt-bearer` grant type with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-dpop}} rejects an unbound grant. When a bound grant takes the place of client authentication ({{client-auth}}), the client is the one that the profile identifies from the grant.
+A consuming authorization server can require a client to present DPoP-bound grants by registering the client with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes the `jwt-dpop` grant type and not the `jwt-bearer` grant type. The consuming authorization server then rejects a request from that client that uses the `jwt-bearer` grant type with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-dpop}} rejects an unbound grant. This applies only to a request in which the consuming authorization server identifies the client: by client authentication or, when a bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration.
 
 The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the grant to be bound.
 
