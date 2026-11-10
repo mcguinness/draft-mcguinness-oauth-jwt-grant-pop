@@ -219,7 +219,7 @@ For example, the following `jwk` member matches a `jkt` member with the value `0
 
 # Issuing a Bound Grant {#issuance}
 
-This section applies to a JWT authorization grant that an issuing authorization server issues in response to a Token Exchange request ({{Section 2.1 of RFC8693}}); {{cnf-param}} applies to any token that Token Exchange issues, and {{other-issuance}} covers other issuance interfaces. An issued token is a JWT authorization grant if it is a JWT whose `aud` claim identifies an authorization server. The issuing authorization server decides whether to issue one from the `requested_token_type`, `audience`, and `resource` parameters and its policy.
+This section applies to a JWT authorization grant that an issuing authorization server issues in response to a Token Exchange request ({{Section 2.1 of RFC8693}}); {{cnf-param}} applies to any token that Token Exchange issues, and {{other-issuance}} covers other issuance interfaces. An issued token is a JWT authorization grant if it is a JWT that the issuing authorization server issues for the client to present to an authorization server as an authorization grant ({{Section 2.1 of RFC7523}}). The issuing authorization server determines this, and whether to issue one, from the `requested_token_type` value, such as a value that the profile of the grant defines ({{profiles}}), from its configuration for the `audience` and `resource` values, and from its policy.
 
 ## Token Exchange Request {#te-request}
 
