@@ -1445,18 +1445,20 @@ appear in all capitals, as shown here.<a href="#section-1.2-1" class="pilcrow">�
       <h2 id="name-issuing-a-bound-grant-with-">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-issuing-a-bound-grant-with-" class="section-name selfRef">Issuing a Bound Grant with Token Exchange</a>
       </h2>
-<p id="section-3-1">This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-2.1" class="relref">Section 2.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>), except for <a href="#cnf-param" class="auto internal xref">Section 3.5</a> and <a href="#client-processing" class="auto internal xref">Section 3.6</a>, which apply to any token that Token Exchange issues. The issuing authorization server determines from the <code>requested_token_type</code>, <code>audience</code>, and <code>resource</code> parameters and from its policy whether the issued token is a JWT authorization grant. An issuing authorization server that supports this specification supports at least one of the <code>jkt</code> and <code>x5t#S256</code> confirmation methods, and implements <a href="#cnf-param" class="auto internal xref">Section 3.5</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">When it rejects a request for a JWT authorization grant, the issuing authorization server <span class="bcp14">MUST NOT</span> treat the <code>subject_token</code> or <code>actor_token</code> as used, for example by rotating a refresh token. The client can then retry the request, for example after a <code>use_dpop_nonce</code> error response.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-1">This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-2.1" class="relref">Section 2.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>), except for <a href="#cnf-param" class="auto internal xref">Section 3.5</a> and <a href="#client-processing" class="auto internal xref">Section 3.6</a>, which apply to any token that Token Exchange issues. An issuing authorization server that supports this specification supports at least one of the <code>jkt</code> and <code>x5t#S256</code> confirmation methods, and implements <a href="#cnf-param" class="auto internal xref">Section 3.5</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">When it rejects a request for a JWT authorization grant, the issuing authorization server <span class="bcp14">MUST NOT</span> treat the <code>subject_token</code> or <code>actor_token</code> as used, for example by rotating a refresh token (<a href="#single-use" class="auto internal xref">Section 8.7</a>).<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div id="binding-request">
 <section id="section-3.1">
         <h3 id="name-binding-request">
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-binding-request" class="section-name selfRef">Binding Request</a>
         </h3>
-<p id="section-3.1-1">A client requests a bound grant by including a DPoP proof (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4" class="relref">Section 4</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) in the DPoP header field of a Token Exchange request. This is the signal that <span><a href="https://rfc-editor.org/rfc/rfc9449#section-5" class="relref">Section 5</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> defines for requesting a DPoP-bound access token, applied here to a grant. The client signs the DPoP proof with the key that it will use to redeem the grant (<a href="#token-request" class="auto internal xref">Section 4.1</a>).<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1-2">The following is an example of a binding request from a client that authenticates with a client secret, for a grant for the consuming authorization server <code>https://as.example/</code>:<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-1">A client requests a bound grant by including a DPoP proof (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4" class="relref">Section 4</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) in the DPoP header field of a Token Exchange request, as it would to request a DPoP-bound access token (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5" class="relref">Section 5</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>). The client signs the DPoP proof with the key that it will use to redeem the grant (<a href="#token-request" class="auto internal xref">Section 4.1</a>).<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">The issuing authorization server <span class="bcp14">MUST</span> validate the DPoP proof as described in <span><a href="https://rfc-editor.org/rfc/rfc9449#section-4.3" class="relref">Section 4.3</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, and responds to an invalid proof or a missing nonce as described in <a href="#errors" class="auto internal xref">Section 5</a>.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">If an issuing authorization server that supports the <code>jkt</code> confirmation method receives a binding request with a valid DPoP proof, it <span class="bcp14">MUST</span> either bind the issued grant to the public key of the DPoP proof (<a href="#bind" class="auto internal xref">Section 3.4</a>) or reject the request (<a href="#errors" class="auto internal xref">Section 5</a>). It <span class="bcp14">MUST NOT</span> issue an unbound grant, or a grant bound to another key or certificate, in response to a binding request, including when the client also presents a TLS client certificate.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">The following is an example of a binding request from a client that authenticates with a client secret, for a grant for the consuming authorization server <code>https://as.example/</code>:<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 <span id="name-token-exchange-request-with"></span><div id="ex-binding-request">
 <figure id="figure-2">
-          <div class="lang-http-message sourcecode" id="section-3.1-3.1">
+          <div class="lang-http-message sourcecode" id="section-3.1-5.1">
 <pre>
 POST /token HTTP/1.1
 Host: issuer.example
@@ -1475,9 +1477,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 <a href="#name-token-exchange-request-with" class="selfRef">Token Exchange Request with a DPoP Proof</a>
           </figcaption></figure>
 </div>
-<p id="section-3.1-4">The decoded JOSE header and claims of the DPoP proof in that request are:<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">The decoded JOSE header and claims of the DPoP proof in that request are:<a href="#section-3.1-6" class="pilcrow">¶</a></p>
 <span id="name-dpop-proof-jose-header"></span><figure id="figure-3">
-          <div class="lang-json sourcecode" id="section-3.1-5.1">
+          <div class="lang-json sourcecode" id="section-3.1-7.1">
 <pre>
 {
   "typ": "dpop+jwt",
@@ -1495,7 +1497,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 <a href="#name-dpop-proof-jose-header" class="selfRef">DPoP Proof JOSE Header</a>
           </figcaption></figure>
 <span id="name-dpop-proof-claims-for-the-i"></span><figure id="figure-4">
-          <div class="lang-json sourcecode" id="section-3.1-6.1">
+          <div class="lang-json sourcecode" id="section-3.1-8.1">
 <pre>
 {
   "jti": "e1j3V_bKic8-LAEB",
@@ -1508,8 +1510,6 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 <figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
 <a href="#name-dpop-proof-claims-for-the-i" class="selfRef">DPoP Proof Claims for the Issuing Authorization Server</a>
           </figcaption></figure>
-<p id="section-3.1-7">The issuing authorization server <span class="bcp14">MUST</span> validate the DPoP proof as described in <span><a href="https://rfc-editor.org/rfc/rfc9449#section-4.3" class="relref">Section 4.3</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>, and responds to an invalid proof or a missing nonce as described in <a href="#errors" class="auto internal xref">Section 5</a>.<a href="#section-3.1-7" class="pilcrow">¶</a></p>
-<p id="section-3.1-8">If an issuing authorization server that supports the <code>jkt</code> confirmation method receives a binding request with a valid DPoP proof, it <span class="bcp14">MUST</span> either bind the issued grant to the public key of the DPoP proof (<a href="#bind" class="auto internal xref">Section 3.4</a>) or reject the request (<a href="#errors" class="auto internal xref">Section 5</a>). It <span class="bcp14">MUST NOT</span> issue an unbound grant, or a grant bound to another key or certificate, in response to a binding request, including when the client also presents a TLS client certificate.<a href="#section-3.1-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="cert-binding">
@@ -1518,9 +1518,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 <a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-certificate-binding" class="section-name selfRef">Certificate Binding</a>
         </h3>
 <p id="section-3.2-1">A TLS client certificate is not a binding request: a client presents one for mutual-TLS client authentication (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-2" class="relref">Section 2</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) without necessarily intending to bind the grant.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">If a request contains no DPoP proof and the client presented a TLS client certificate in the mutual-TLS handshake of the connection that carries the request, an issuing authorization server that supports the <code>x5t#S256</code> confirmation method <span class="bcp14">MAY</span> bind the grant to that certificate (<a href="#bind" class="auto internal xref">Section 3.4</a>). It <span class="bcp14">SHOULD NOT</span> do so unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification neither learns of the binding nor presents the certificate to the consuming authorization server. The <code>tls_client_certificate_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.4" class="relref">Section 3.4</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) indicates an intention to use certificate-bound access tokens, not certificate-bound grants, and is not such an indication.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
-<p id="section-3.2-3">An issuing authorization server binds a grant only as described in <a href="#binding-request" class="auto internal xref">Section 3.1</a> and this section. This specification defines no request parameter by which a client requires a bound grant; a client that requires one enforces the requirement when it processes the response (<a href="#client-processing" class="auto internal xref">Section 3.6</a>).<a href="#section-3.2-3" class="pilcrow">¶</a></p>
-<p id="section-3.2-4">The following is an example of a Token Exchange response in which the issuing authorization server binds the grant to the TLS client certificate that the client used for mutual-TLS client authentication. The request contained no DPoP proof, and the issuing authorization server's configuration for the client indicates that the client redeems grants over mutual TLS with that certificate:<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the <code>x5t#S256</code> confirmation method <span class="bcp14">MAY</span> bind the grant to that certificate (<a href="#bind" class="auto internal xref">Section 3.4</a>). It <span class="bcp14">SHOULD NOT</span> do so unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The <code>tls_client_certificate_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.4" class="relref">Section 3.4</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) concerns access tokens and is not such an indication.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-3">An issuing authorization server binds a grant only as described in <a href="#binding-request" class="auto internal xref">Section 3.1</a> and this section. No request parameter lets a client require a bound grant; a client that requires one checks the response (<a href="#client-processing" class="auto internal xref">Section 3.6</a>).<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose configuration at the issuing authorization server indicates that it redeems grants over mutual TLS with the certificate it used to authenticate:<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 <span id="name-token-exchange-response-for"></span><div id="cert-example">
 <figure id="figure-5">
           <div class="lang-http-message sourcecode" id="section-3.2-5.1">
@@ -1560,7 +1560,7 @@ Cache-Control: no-store
             <p id="section-3.3-2.2.1">The requesting client authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-2.3" class="relref">Section 2.3</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>).<a href="#section-3.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.3-3">The issuing authorization server determines the audience from the token's <code>aud</code> claim or from its own records of the token. That a token was issued to a party other than the requesting client does not exempt the request from this check. A grant issued in response to a binding request that proves possession of a DPoP-bound <code>subject_token</code> is therefore bound to the same key (<a href="#binding-request" class="auto internal xref">Section 3.1</a>).<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">The issuing authorization server determines the audience from the token's <code>aud</code> claim or from its own records of the token. A grant issued in response to a binding request that proves possession of a DPoP-bound <code>subject_token</code> is therefore bound to the same key (<a href="#binding-request" class="auto internal xref">Section 3.1</a>).<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="bind">
@@ -1577,10 +1577,13 @@ Cache-Control: no-store
             <p id="section-3.4-2.2.1">for a certificate binding, <code>x5t#S256</code> (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>), containing the SHA-256 thumbprint of the DER encoding of the client's certificate, which for a Token Exchange request is the TLS client certificate.<a href="#section-3.4-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.4-3">For example, a grant issued in response to the binding request in <a href="#ex-binding-request" class="auto internal xref">Figure 2</a> has the following claims:<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+<p id="section-3.4-3">This is narrower than <span><a href="https://rfc-editor.org/rfc/rfc7800#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC7800" class="cite xref">RFC7800</a>]</span>, which requires only that a <code>cnf</code> claim "represent only a single proof-of-possession key". The issuing authorization server <span class="bcp14">MUST NOT</span> bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+<p id="section-3.4-4">The issuing authorization server <span class="bcp14">MUST NOT</span> bind a grant using a confirmation method unless it has determined that the consuming authorization server identified by the grant's <code>aud</code> claim verifies that confirmation method as described in <a href="#processing" class="auto internal xref">Section 4.2</a> (see <a href="#non-enforcing-consumers" class="auto internal xref">Section 8.1</a>). It makes this determination from configuration, from an established trust relationship, or, for the <code>jkt</code> confirmation method, from the consuming authorization server's metadata (<a href="#as-metadata" class="auto internal xref">Section 6.1</a>). If the issuing authorization server cannot bind the grant for the consuming authorization server in response to a binding request, it <span class="bcp14">MUST</span> reject the request with the <code>invalid_target</code> error code (<a href="#errors" class="auto internal xref">Section 5</a>).<a href="#section-3.4-4" class="pilcrow">¶</a></p>
+<p id="section-3.4-5">When the issued token is a bound grant, the issuing authorization server <span class="bcp14">MUST</span> set the <code>token_type</code> response parameter to <code>N_A</code> (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-2.2.1" class="relref">Section 2.2.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>); the <code>DPoP</code> value that <span><a href="https://rfc-editor.org/rfc/rfc9449#section-5" class="relref">Section 5</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> requires applies only to a DPoP-bound access token.<a href="#section-3.4-5" class="pilcrow">¶</a></p>
+<p id="section-3.4-6">For example, a grant issued in response to the binding request in <a href="#ex-binding-request" class="auto internal xref">Figure 2</a> has the following claims:<a href="#section-3.4-6" class="pilcrow">¶</a></p>
 <span id="name-claims-of-a-dpop-bound-gran"></span><div id="ex-grant">
 <figure id="figure-6">
-          <div class="lang-json sourcecode" id="section-3.4-4.1">
+          <div class="lang-json sourcecode" id="section-3.4-7.1">
 <pre>
 {
   "iss": "https://issuer.example/",
@@ -1599,9 +1602,9 @@ Cache-Control: no-store
 <a href="#name-claims-of-a-dpop-bound-gran" class="selfRef">Claims of a DPoP-Bound Grant</a>
           </figcaption></figure>
 </div>
-<p id="section-3.4-5">A certificate-bound grant instead contains a <code>cnf</code> claim such as the following:<a href="#section-3.4-5" class="pilcrow">¶</a></p>
+<p id="section-3.4-8">A certificate-bound grant instead contains a <code>cnf</code> claim such as the following:<a href="#section-3.4-8" class="pilcrow">¶</a></p>
 <span id="name-confirmation-claim-of-a-cer"></span><figure id="figure-7">
-          <div class="lang-json sourcecode" id="section-3.4-6.1">
+          <div class="lang-json sourcecode" id="section-3.4-9.1">
 <pre>
 {
   "cnf": {
@@ -1613,11 +1616,9 @@ Cache-Control: no-store
 <figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
 <a href="#name-confirmation-claim-of-a-cer" class="selfRef">Confirmation Claim of a Certificate-Bound Grant</a>
           </figcaption></figure>
-<p id="section-3.4-7">This is narrower than <span><a href="https://rfc-editor.org/rfc/rfc7800#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC7800" class="cite xref">RFC7800</a>]</span>, which requires only that a <code>cnf</code> claim "represent only a single proof-of-possession key". The issuing authorization server <span class="bcp14">MUST NOT</span> bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.<a href="#section-3.4-7" class="pilcrow">¶</a></p>
-<p id="section-3.4-8">The issuing authorization server <span class="bcp14">MUST NOT</span> bind a grant using a confirmation method unless it has determined that the consuming authorization server identified by the grant's <code>aud</code> claim verifies that confirmation method as described in <a href="#processing" class="auto internal xref">Section 4.2</a> (see <a href="#non-enforcing-consumers" class="auto internal xref">Section 8.1</a>). It makes this determination from configuration, from an established trust relationship, or, for the <code>jkt</code> confirmation method, from the consuming authorization server's metadata (<a href="#as-metadata" class="auto internal xref">Section 6.1</a>). If the issuing authorization server cannot bind the grant for the consuming authorization server in response to a binding request, it <span class="bcp14">MUST</span> reject the request with the <code>invalid_target</code> error code (<a href="#errors" class="auto internal xref">Section 5</a>).<a href="#section-3.4-8" class="pilcrow">¶</a></p>
-<p id="section-3.4-9">The following is an example of that error response:<a href="#section-3.4-9" class="pilcrow">¶</a></p>
+<p id="section-3.4-10">The following is an example of the <code>invalid_target</code> error response:<a href="#section-3.4-10" class="pilcrow">¶</a></p>
 <span id="name-error-response-for-a-bindin"></span><figure id="figure-8">
-          <div class="lang-http-message sourcecode" id="section-3.4-10.1">
+          <div class="lang-http-message sourcecode" id="section-3.4-11.1">
 <pre>
 HTTP/1.1 400 Bad Request
 Content-Type: application/json
@@ -1632,8 +1633,6 @@ Cache-Control: no-store
 <figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
 <a href="#name-error-response-for-a-bindin" class="selfRef">Error Response for a Binding Request That Cannot Be Honored</a>
           </figcaption></figure>
-<p id="section-3.4-11">When the issued token is a bound grant, the issuing authorization server <span class="bcp14">MUST</span> set the <code>token_type</code> response parameter to <code>N_A</code> (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-2.2.1" class="relref">Section 2.2.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>). The requirement in <span><a href="https://rfc-editor.org/rfc/rfc9449#section-5" class="relref">Section 5</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> to return a <code>token_type</code> of <code>DPoP</code> applies to a DPoP-bound access token, not to a grant.<a href="#section-3.4-11" class="pilcrow">¶</a></p>
-<p id="section-3.4-12">The other contents of the grant, including the <code>aud</code> claim, are defined by <span>[<a href="#RFC7523" class="cite xref">RFC7523</a>]</span> as updated by <span>[<a href="#RFC10070" class="cite xref">RFC10070</a>]</span> and by the profile of the grant (<a href="#profiles" class="auto internal xref">Section 7</a>).<a href="#section-3.4-12" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="cnf-param">
@@ -1650,13 +1649,12 @@ Cache-Control: no-store
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-3.5-3">The parameter describes only the token in the <code>access_token</code> response parameter, whatever its <code>issued_token_type</code>, and not a <code>refresh_token</code> in the same response. It applies to any token that Token Exchange issues, including an opaque or encrypted token whose <code>cnf</code> claim the client cannot read, and an access token for which the <code>token_type</code> response parameter also indicates the binding.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
+<p id="section-3.5-3">The parameter describes only the token in the <code>access_token</code> response parameter, whatever its <code>issued_token_type</code>, including an opaque or encrypted token and an access token whose <code>token_type</code> also indicates the binding. It does not describe a <code>refresh_token</code> in the same response.<a href="#section-3.5-3" class="pilcrow">¶</a></p>
 <p id="section-3.5-4">When the issued token is a JWT that contains a <code>cnf</code> claim, the parameter <span class="bcp14">MUST</span> identify the same key or certificate as that claim (<a href="#cnf-comparison" class="auto internal xref">Section 3.5.1</a>). The authorization server <span class="bcp14">SHOULD</span> use the same confirmation member in the parameter as in the claim, and <span class="bcp14">SHOULD</span> use a thumbprint member, such as <code>jkt</code> or <code>x5t#S256</code>, rather than a <code>jwk</code> member (<a href="#privacy" class="auto internal xref">Section 9</a>).<a href="#section-3.5-4" class="pilcrow">¶</a></p>
-<p id="section-3.5-5">A client that does not support this specification ignores the parameter, as it ignores any unrecognized response parameter (<span><a href="https://rfc-editor.org/rfc/rfc6749#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>).<a href="#section-3.5-5" class="pilcrow">¶</a></p>
-<p id="section-3.5-6">The following is an example of the Token Exchange response to the binding request in <a href="#ex-binding-request" class="auto internal xref">Figure 2</a>:<a href="#section-3.5-6" class="pilcrow">¶</a></p>
+<p id="section-3.5-5">The following is an example of the Token Exchange response to the binding request in <a href="#ex-binding-request" class="auto internal xref">Figure 2</a>:<a href="#section-3.5-5" class="pilcrow">¶</a></p>
 <span id="name-token-exchange-response-wit"></span><div id="ex-te-response">
 <figure id="figure-9">
-          <div class="lang-http-message sourcecode" id="section-3.5-7.1">
+          <div class="lang-http-message sourcecode" id="section-3.5-6.1">
 <pre>
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -1682,7 +1680,7 @@ Cache-Control: no-store
           <h4 id="name-comparing-confirmation-valu">
 <a href="#section-3.5.1" class="section-number selfRef">3.5.1. </a><a href="#name-comparing-confirmation-valu" class="section-name selfRef">Comparing Confirmation Values</a>
           </h4>
-<p id="section-3.5.1-1">This specification compares two confirmation values, such as the <code>cnf</code> response parameter and a <code>cnf</code> claim, or a confirmation member and the client's own key or certificate, by confirmation method and value rather than by byte representation:<a href="#section-3.5.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.5.1-1">Two confirmation values, or a confirmation value and the client's own key or certificate, are compared by confirmation method and value, not by byte representation:<a href="#section-3.5.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.5.1-2.1">
               <p id="section-3.5.1-2.1.1">JSON member order and insignificant whitespace are ignored.<a href="#section-3.5.1-2.1.1" class="pilcrow">¶</a></p>
@@ -1697,7 +1695,7 @@ Cache-Control: no-store
               <p id="section-3.5.1-2.4.1">Members of different confirmation methods, other than a <code>jwk</code> and <code>jkt</code> pair, do not match.<a href="#section-3.5.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
-<p id="section-3.5.1-3">For example, the following confirmation value, which carries the client's public key in a <code>jwk</code> member, matches a <code>jkt</code> member with the value <code>0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I</code>, because that value is the JWK SHA-256 Thumbprint of the key:<a href="#section-3.5.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.5.1-3">For example, the following <code>jwk</code> member matches a <code>jkt</code> member with the value <code>0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I</code>, the JWK SHA-256 Thumbprint of its key:<a href="#section-3.5.1-3" class="pilcrow">¶</a></p>
 <span id="name-confirmation-value-with-a-j"></span><figure id="figure-10">
             <div class="lang-json sourcecode" id="section-3.5.1-4.1">
 <pre>
@@ -1743,10 +1741,10 @@ Cache-Control: no-store
             </ul>
 </li>
         </ol>
-<p id="section-3.6-3">For the response in <a href="#ex-te-response" class="auto internal xref">Figure 9</a>, the client verifies that the <code>jkt</code> value in the <code>cnf</code> response parameter equals the JWK SHA-256 Thumbprint of its DPoP public key.<a href="#section-3.6-3" class="pilcrow">¶</a></p>
-<p id="section-3.6-4">The client determines the binding from the <code>cnf</code> parameter and claim, not from the <code>token_type</code> response parameter. It cannot distinguish an authorization server that does not support this specification from one that failed to apply the binding; the steps above treat both the same way.<a href="#section-3.6-4" class="pilcrow">¶</a></p>
-<p id="section-3.6-5">A client that receives the <code>invalid_target</code> error code in response to a binding request, and does not require a bound grant, <span class="bcp14">MAY</span> repeat the request without a DPoP proof.<a href="#section-3.6-5" class="pilcrow">¶</a></p>
-<p id="section-3.6-6">A client that did not send a binding request but receives a <code>cnf</code> parameter holds a bound token. If the client holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication, it presents the token with the corresponding proof. Otherwise, it cannot use the token and <span class="bcp14">SHOULD</span> treat the response as an error.<a href="#section-3.6-6" class="pilcrow">¶</a></p>
+<p id="section-3.6-3">The client does not infer the binding from the <code>token_type</code> response parameter.<a href="#section-3.6-3" class="pilcrow">¶</a></p>
+<p id="section-3.6-4">A client that receives the <code>invalid_target</code> error code in response to a binding request, and does not require a bound grant, <span class="bcp14">MAY</span> repeat the request without a DPoP proof.<a href="#section-3.6-4" class="pilcrow">¶</a></p>
+<p id="section-3.6-5">A client that did not send a binding request but receives a <code>cnf</code> parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it <span class="bcp14">SHOULD</span> treat the response as an error.<a href="#section-3.6-5" class="pilcrow">¶</a></p>
+<p id="section-3.6-6">For the response in <a href="#ex-te-response" class="auto internal xref">Figure 9</a>, the client verifies that the <code>jkt</code> value in the <code>cnf</code> response parameter equals the JWK SHA-256 Thumbprint of its DPoP public key.<a href="#section-3.6-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="other-issuance">
@@ -1754,7 +1752,7 @@ Cache-Control: no-store
         <h3 id="name-other-issuance-interfaces">
 <a href="#section-3.7" class="section-number selfRef">3.7. </a><a href="#name-other-issuance-interfaces" class="section-name selfRef">Other Issuance Interfaces</a>
         </h3>
-<p id="section-3.7-1">A JWT authorization grant can also be issued through an interface other than Token Exchange, such as a workload platform's token service. <a href="#bind" class="auto internal xref">Section 3.4</a> applies to a bound grant issued through such an interface, except for the requirements on the Token Exchange response, with the request for the grant being the request that the interface defines. How the client requests the binding and learns of it is defined by that interface. <a href="#redemption" class="auto internal xref">Section 4</a> applies however the grant was issued.<a href="#section-3.7-1" class="pilcrow">¶</a></p>
+<p id="section-3.7-1">When a JWT authorization grant is issued through an interface other than Token Exchange, such as a workload platform's token service, <a href="#bind" class="auto internal xref">Section 3.4</a> applies except for its requirements on the Token Exchange response, with that interface's request in place of the Token Exchange request. The interface defines how the client requests the binding and learns of it. <a href="#redemption" class="auto internal xref">Section 4</a> applies however the grant was issued.<a href="#section-3.7-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
