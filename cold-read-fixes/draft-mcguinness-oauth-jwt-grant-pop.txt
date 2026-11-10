@@ -217,7 +217,7 @@ Table of Contents
       request (Section 4.1 of [RFC7521]).
 
    Bound grant:  A JWT authorization grant that contains a cnf claim
-      (Section 3.1 of [RFC7800]).  A key-bound grant has a jkt or jwk
+      (Section 3.1 of [RFC7800]).  A DPoP-bound grant has a jkt or jwk
       confirmation member; a certificate-bound grant has an x5t#S256
       confirmation member.
 
@@ -601,10 +601,10 @@ Table of Contents
 
 3.6.  Client Processing of the Response
 
-   When the issued token is a JWT authorization grant, a client that
-   sent a binding request, or that presented a TLS client certificate
-   and requires a bound grant, processes the Token Exchange response as
-   follows:
+   When the token_type response parameter is N_A, as it is for a JWT
+   authorization grant (Section 3.4), a client that sent a binding
+   request, or that presented a TLS client certificate and requires a
+   bound grant, processes the Token Exchange response as follows:
 
    1.  If the cnf parameter is present and is not a JSON object that
        contains exactly one confirmation member, the client MUST discard
@@ -631,11 +631,11 @@ Table of Contents
           certificate.  A confirmation member that the client does not
           recognize does not match.
 
-   The client does not infer the binding of a grant from the token_type
-   response parameter, which is N_A (Section 3.4).  For an access token,
-   the client determines the binding from the token_type response
-   parameter (Section 5 of [RFC9449]) and can also compare the cnf
-   parameter with its own key or certificate (Section 3.5.1).
+   For an access token, a token_type of DPoP indicates a DPoP binding
+   (Section 5 of [RFC9449]).  [RFC8705] defines no token_type value, so
+   the token_type does not show a certificate binding; the cnf
+   parameter, if present, identifies the key or certificate of either
+   binding (Section 3.5.1).
 
    A client that did not send a binding request but receives a cnf
    parameter presents the token with the corresponding proof if it holds
@@ -761,9 +761,10 @@ Table of Contents
    A consuming authorization server that supports DPoP validates a DPoP
    proof in the request, including its nonce, before it validates the
    grant, and rejects an invalid proof as Section 5 of [RFC9449]
-   requires, whatever the binding of the grant.  A request for a key-
+   requires, whatever the binding of the grant.  A request for a DPoP-
    bound grant that carries no DPoP proof is rejected with the
-   invalid_grant error code (item 2), not use_dpop_nonce.
+   invalid_grant error code (item 2), not use_dpop_nonce, unless
+   Section 4.5 requires the invalid_client error code.
 
    For an x5t#S256 member, the consuming authorization server need not
    authenticate the client with the certificate or trust the
@@ -837,7 +838,7 @@ Table of Contents
    grant, it MUST NOT bind the access token, or a refresh token that it
    issues, to a key or certificate other than the following:
 
-   *  for a key-bound grant, the grant's key, which is the key of the
+   *  for a DPoP-bound grant, the grant's key, which is the key of the
       DPoP proof (Section 4.2); or
 
    *  for a certificate-bound grant, the grant's certificate or, if the
@@ -845,7 +846,7 @@ Table of Contents
       contains a valid DPoP proof (Section 4.3 of [RFC9449]), the public
       key of that proof.
 
-   A TLS client certificate presented with a key-bound grant therefore
+   A TLS client certificate presented with a DPoP-bound grant therefore
    does not determine the binding, even when the client authenticates
    with it (Section 8.6).  Table 1 summarizes these rules; the access
    token can instead be unbound.
@@ -892,16 +893,18 @@ Table of Contents
    authorization server verifies that the grant identifies the
    authenticated client, in a claim that the profile of the grant
    defines (Section 7), it MAY instead bind the refresh token only to
-   that client.  At a later refresh, this exception applies only if the
-   consuming authorization server retained evidence that the original
-   grant identified the authenticated client; the refresh token's
-   association with that client (Section 6 of [RFC6749]) does not by
-   itself satisfy it.  A binding to a key or certificate is in addition
-   to the binding to the client that Section 10.4 of [RFC6749] requires.
-   It is stricter than Section 5 of [RFC9449], under which a refresh
-   token issued to a confidential client is not bound to the DPoP key,
-   and than the recommendation in Section 4 of [RFC8705]; Section 8.6
-   gives the reason.
+   that client.  The consuming authorization server decides this
+   exception when it redeems the grant, never at a later refresh: the
+   replacement for a refresh token bound only to the client is bound
+   only to that client, and the replacement for a refresh token bound to
+   a key or certificate is bound as described below.  A refresh token's
+   association with the authenticated client (Section 6 of [RFC6749])
+   never qualifies it for the exception.  A binding to a key or
+   certificate is in addition to the binding to the client that
+   Section 10.4 of [RFC6749] requires.  It is stricter than Section 5 of
+   [RFC9449], under which a refresh token issued to a confidential
+   client is not bound to the DPoP key, and than the recommendation in
+   Section 4 of [RFC8705]; Section 8.6 gives the reason.
 
    When a client presents a refresh token that the consuming
    authorization server bound to a key or certificate under this
@@ -1033,17 +1036,18 @@ Table of Contents
    on that value to determine that the consuming authorization server
    verifies the jkt confirmation method (Section 3.4), in metadata that
    it retrieved and validated as described in Section 3 of [RFC8414] for
-   one of the following issuer identifiers:
+   each aud value of the grant, using one of the following issuer
+   identifiers:
 
-   *  the grant's aud value; or
+   *  that aud value; or
 
    *  an issuer identifier that the issuing authorization server's
-      configuration associates with the grant's aud value, for example
-      when that value is a token endpoint URL (Section 4 of [RFC10070]),
-      provided that the token_endpoint value of the metadata equals the
-      aud value.  That equality alone does not establish the
-      association, because only the issuer value of metadata is
-      validated (Section 3.3 of [RFC8414], Section 1 of [RFC10070]).
+      configuration associates with that aud value, for example when it
+      is a token endpoint URL (Section 4 of [RFC10070]), provided that
+      the token_endpoint value of the metadata equals the aud value.
+      That equality alone does not establish the association, because
+      only the issuer value of metadata is validated (Section 3.3 of
+      [RFC8414], Section 1 of [RFC10070]).
 
    The dpop_signing_alg_values_supported (Section 5.1 of [RFC9449]) and
    tls_client_certificate_bound_access_tokens (Section 3.3 of [RFC8705])
@@ -1211,7 +1215,11 @@ Table of Contents
    authorization server requires, can request a grant bound to the
    attacker's own key.  A bound subject_token is protected by the check
    in Section 3.3, except from an authenticated intended audience that
-   the check exempts.  Protection of bearer subject tokens is outside
+   the check exempts.  When the issuing authorization server cannot bind
+   the grant for the consuming authorization server, a client that
+   proves possession of a DPoP-bound subject_token receives an unbound
+   grant (Section 3.1), which is a bearer token, as it would be without
+   this specification.  Protection of bearer subject tokens is outside
    the scope of this specification; see [RFC9700].
 
 8.5.  Proof of Possession and Client Identity
@@ -1264,7 +1272,7 @@ Table of Contents
    *  An unbound access token is usable.
 
    A consuming authorization server that issues unbound access tokens
-   for key-bound grants SHOULD reject a DPoP proof whose jti value it
+   for DPoP-bound grants SHOULD reject a DPoP proof whose jti value it
    has already accepted at its token endpoint within that window
    (Section 11.1 of [RFC9449]).  A server-provided nonce (Section 8 of
    [RFC9449]) shortens the window but does not by itself detect reuse,
@@ -1316,7 +1324,8 @@ Table of Contents
    requests.  A client that needs to avoid such correlation uses a
    separate key for each consuming authorization server.  This is not
    possible when the client exchanges a DPoP-bound subject_token,
-   because the grant is then bound to that token's key (Section 3.3).
+   because a bound grant is then bound to that token's key
+   (Section 3.3).
 
    The cnf response parameter discloses the binding only to the client
    that made the request, which already holds the key or certificate.  A
@@ -1536,10 +1545,11 @@ A.1.  Identity Assertion JWT Authorization Grant
    *  Section 9.11 of [ID-JAG] lets the IdP Authorization Server choose
       a certificate binding, according to local policy, when a request
       carries both a DPoP proof and a TLS client certificate.  This
-      specification requires a grant issued in response to a binding
-      request to be bound to the key of the DPoP proof (Section 3.1).
-      The change is for the IdP Authorization Server to bind the grant
-      to that key whenever the request contains a DPoP proof.
+      specification binds a grant issued in response to a binding
+      request only to the key of the DPoP proof, if it binds it at all
+      (Section 3.1).  The change is for the IdP Authorization Server
+      never to choose a certificate binding when the request contains a
+      DPoP proof.
 
    *  Section 8 of [ID-JAG] requires a client that supports that profile
       to include urn:ietf:params:oauth:grant-type:jwt-bearer in its
@@ -1595,9 +1605,12 @@ Appendix B.  Open Issues
        that a client accepts certificate-bound grants, with the jwt-dpop
        grant type retained for registration policy?
 
-   5.  Alignment with [ID-JAG].  The two conflicts listed in Appendix A
-       need to be resolved, by the proposed changes to that document or
-       by changes to this one.
+   5.  Alignment with [ID-JAG] and [ID-CHAINING].  The conflicts listed
+       in Appendix A, three with [ID-JAG] and one with Appendix B.3 of
+       [ID-CHAINING], need to be resolved, by the proposed changes to
+       those documents or by changes to this one.  For the last, should
+       a profile be able to permit binding the access token to a key
+       that the grant conveys in a requested_cnf claim?
 
 Acknowledgments
 
