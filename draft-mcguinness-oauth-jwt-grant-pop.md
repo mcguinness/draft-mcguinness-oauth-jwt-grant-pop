@@ -83,9 +83,13 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 ## Relationship to Other Documents {#relationship}
 
-This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), while keeping the first for existing clients ({{legacy-jwt-dpop}}). Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant whatever its grant type ({{grant-type-substitution}}), and it returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
+This specification relates to other documents as follows:
 
-This specification generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant. {{profile-examples}} describes that grant as a profile of this specification and lists the conflicts between the two documents.
+* It replaces {{JWT-DPOP-GRANT}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), keeping the former for existing clients ({{legacy-jwt-dpop}}). Unlike that document, it:
+  * verifies the binding of a grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type instead of rejecting it ({{grant-type-substitution}}); and
+  * returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}).
+* It replaces {{TE-CNF}}, whose Token Exchange response parameter it incorporates ({{cnf-param}}). That parameter is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
+* It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant. {{profile-examples}} describes that grant as a profile of this specification and lists the conflicts between the two documents.
 
 ## Conventions and Terminology
 
@@ -109,9 +113,16 @@ Confirmation member:
 : A member of a `cnf` claim or of the `cnf` response parameter, such as `jkt` or `x5t#S256`.
 
 Binding request:
-: A Token Exchange request that contains a DPoP proof ({{binding-request}}).
+: A Token Exchange request that contains a DPoP proof ({{te-request}}).
 
-This specification refers to the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type ({{Section 2.1 of RFC7523}}), the `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), and the `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{legacy-jwt-dpop}}) as the `jwt-bearer`, `jwt-pop`, and `jwt-dpop` grant types.
+This specification refers to grant types by the short names in {{grant-type-names}}.
+
+| Short name | Grant type | Defined in |
+|---|---|---|
+| `jwt-bearer` | `urn:ietf:params:oauth:grant-type:jwt-bearer` | {{Section 2.1 of RFC7523}} |
+| `jwt-pop` | `urn:ietf:params:oauth:grant-type:jwt-pop` | {{jwt-pop}} |
+| `jwt-dpop` | `urn:ietf:params:oauth:grant-type:jwt-dpop` | {{legacy-jwt-dpop}} |
+{: #grant-type-names title="Grant Type Short Names"}
 
 The examples in this specification are non-normative. They use the public key from the examples in {{RFC9449}}, whose JWK SHA-256 Thumbprint is `0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I`, an issuing authorization server at `https://issuer.example/`, and a consuming authorization server at `https://as.example/`. Request bodies are shown with extra line breaks and without URL encoding, and tokens are truncated, for display purposes only.
 
@@ -135,7 +146,7 @@ The examples in this specification are non-normative. They use the public key fr
 ~~~
 {: title="Issuing and Redeeming a DPoP-Bound Grant"}
 
-1. The client sends a Token Exchange request with a DPoP proof for its key K ({{binding-request}}).
+1. The client sends a Token Exchange request with a DPoP proof for its key K ({{te-request}}).
 2. The issuing authorization server issues a grant whose `cnf` claim identifies K ({{bind}}) and returns the binding in the `cnf` response parameter ({{cnf-param}}), which the client checks ({{client-processing}}).
 3. The client presents the grant to the consuming authorization server with a DPoP proof for K ({{token-request}}).
 4. The consuming authorization server verifies the proof against the grant's `cnf` claim ({{processing}}) and issues an access token, normally bound to K ({{token-response}}).
@@ -144,19 +155,17 @@ The client sends a separate DPoP proof to each authorization server, signed with
 
 # Issuing a Bound Grant with Token Exchange {#issuance}
 
-This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request ({{Section 2.1 of RFC8693}}), except for {{cnf-param}}, which applies to any token that Token Exchange issues. The issuing authorization server determines from the `requested_token_type`, `audience`, and `resource` parameters and from its policy whether the issued token is a JWT authorization grant, that is, a JWT whose `aud` claim identifies an authorization server, or another token, such as an access token. An issuing authorization server that supports this specification supports at least one of the `jkt` and `x5t#S256` confirmation methods, and implements {{cnf-param}}.
+This section applies to a JWT authorization grant that an issuing authorization server issues in response to a Token Exchange request ({{Section 2.1 of RFC8693}}); {{cnf-param}} applies to any token that Token Exchange issues. An issued token is a JWT authorization grant if it is a JWT whose `aud` claim identifies an authorization server. The issuing authorization server decides whether to issue one from the `requested_token_type`, `audience`, and `resource` parameters and its policy.
 
-When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
+## Token Exchange Request {#te-request}
 
-## Binding Request {#binding-request}
+A client requests a DPoP-bound grant by including a DPoP proof ({{Section 4 of RFC9449}}) in the DPoP header field of a Token Exchange request, as it would to request a DPoP-bound access token ({{Section 5 of RFC9449}}). Such a request is a binding request. The client signs the DPoP proof with the key that it will use to redeem the grant ({{token-request}}).
 
-A client requests a bound grant by including a DPoP proof ({{Section 4 of RFC9449}}) in the DPoP header field of a Token Exchange request, as it would to request a DPoP-bound access token ({{Section 5 of RFC9449}}). The client signs the DPoP proof with the key that it will use to redeem the grant ({{token-request}}).
+A TLS client certificate is not a binding request: a client presents one for mutual-TLS client authentication ({{Section 2 of RFC8705}}) without necessarily intending to bind the grant. An issuing authorization server binds a grant to that certificate only as {{cert-binding}} describes.
 
-The issuing authorization server MUST validate the DPoP proof as described in {{Section 4.3 of RFC9449}}, and responds to an invalid proof or a missing nonce as described in {{errors}}.
+If the `subject_token` or `actor_token` is bound to a key or certificate, the client proves possession of that key or certificate in the request, with a DPoP proof or over a mutual-TLS connection that uses the certificate, unless {{bound-subject}} exempts it.
 
-In response to a binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued grant to the public key of the DPoP proof ({{bind}}), unless it does not support the `jkt` confirmation method or cannot bind the grant for the consuming authorization server ({{bind}}). In that case, it MUST issue an unbound grant, without the `cnf` response parameter, unless the profile of the grant requires binding; if the profile requires binding, it MUST reject the request with the `invalid_target` error code. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
-
-A client that requires a bound grant discards an unbound one ({{client-processing}}). Issuing an unbound grant keeps working a client that sends a DPoP proof in every token request, and a client that proves possession of a DPoP-bound `subject_token` ({{bound-subject}}), when the consuming authorization server does not verify bindings.
+No request parameter lets a client require a bound grant; a client that requires one checks the response ({{client-processing}}).
 
 The following is an example of a binding request from a client that authenticates with a client secret, for a grant for the consuming authorization server `https://as.example/`:
 
@@ -201,13 +210,21 @@ The decoded JOSE header and claims of the DPoP proof in that request are:
 ~~~
 {: title="DPoP Proof Claims for the Issuing Authorization Server"}
 
-## Certificate Binding {#cert-binding}
+## Issuing Authorization Server Processing {#issuer-processing}
 
-A TLS client certificate is not a binding request: a client presents one for mutual-TLS client authentication ({{Section 2 of RFC8705}}) without necessarily intending to bind the grant.
+An issuing authorization server that supports this specification implements {{cnf-param}} and at least one of the `jkt` and `x5t#S256` confirmation methods, and binds a grant only as described in this section. When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
+
+### DPoP Binding {#binding-request}
+
+The issuing authorization server MUST validate the DPoP proof of a binding request as described in {{Section 4.3 of RFC9449}}, and responds to an invalid proof or a missing nonce as described in {{errors}}.
+
+In response to a binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued grant to the public key of the DPoP proof ({{bind}}), unless it does not support the `jkt` confirmation method or cannot bind the grant for the consuming authorization server ({{bind}}). In that case, it MUST issue an unbound grant, without the `cnf` response parameter, unless the profile of the grant requires binding; if the profile requires binding, it MUST reject the request with the `invalid_target` error code. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
+
+A client that requires a bound grant discards an unbound one ({{client-processing}}). Issuing an unbound grant keeps working a client that sends a DPoP proof in every token request, and a client that proves possession of a DPoP-bound `subject_token` ({{bound-subject}}), when the consuming authorization server does not verify bindings.
+
+### Certificate Binding {#cert-binding}
 
 If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the `x5t#S256` confirmation method MAY bind the grant to that certificate ({{bind}}). It SHOULD NOT do so unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The `tls_client_certificate_bound_access_tokens` client metadata parameter ({{Section 3.4 of RFC8705}}) concerns access tokens and is not such an indication.
-
-An issuing authorization server binds a grant only as described in {{binding-request}} and this section. No request parameter lets a client require a bound grant; a client that requires one checks the response ({{client-processing}}).
 
 The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose configuration at the issuing authorization server indicates that it redeems grants over mutual TLS with the certificate it used to authenticate:
 
@@ -228,7 +245,7 @@ Cache-Control: no-store
 ~~~
 {: #cert-example title="Token Exchange Response for a Certificate-Bound Grant"}
 
-## Bound Subject and Actor Tokens {#bound-subject}
+### Bound Subject and Actor Tokens {#bound-subject}
 
 If the `subject_token` or `actor_token` is bound to a key or certificate, such as a refresh token issued to a public client ({{Section 5 of RFC9449}}), the issuing authorization server MUST reject the request with the `invalid_request` error code ({{Section 2.2.2 of RFC8693}}) unless one of the following holds:
 
@@ -237,7 +254,7 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, such a
 
 The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key, or unbound ({{binding-request}}).
 
-## Binding the Grant {#bind}
+### Binding the Grant {#bind}
 
 To bind a grant, the issuing authorization server includes in it a `cnf` claim ({{Section 3.1 of RFC7800}}) that contains exactly one confirmation member:
 
@@ -292,7 +309,7 @@ Cache-Control: no-store
 ~~~
 {: title="Error Response for a Binding Request That Cannot Be Honored"}
 
-## Confirmation Response Parameter {#cnf-param}
+## Token Exchange Response {#cnf-param}
 
 This specification defines the use of the `cnf` token response parameter, registered by {{RFC9201}}, in a Token Exchange response ({{Section 2.2.1 of RFC8693}}):
 
@@ -407,7 +424,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
 
 The `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients. A consuming authorization server MAY support it, and SHOULD continue to support it while clients are registered for it. A consuming authorization server that supports it SHOULD include it in the `grant_types_supported` metadata parameter, on which an issuing authorization server that implements {{JWT-DPOP-GRANT}} can rely to determine that the consuming authorization server verifies DPoP-bound grants. It processes a request with that grant type by the rules of this specification for the `jwt-pop` grant type ({{jwt-pop}}), and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`. These rules differ from {{JWT-DPOP-GRANT}} as {{relationship}} describes. A new client uses the `jwt-pop` grant type.
 
-## Processing Rules {#processing}
+## Consuming Authorization Server Processing {#processing}
 
 A consuming authorization server validates a JWT authorization grant as defined in {{Section 3 of RFC7523}}, as updated by {{Section 4 of RFC10070}}, and by the profile of the grant. If the grant contains a `cnf` claim, a consuming authorization server that supports this specification MUST also ensure the following, whichever grant type the request uses, and MUST otherwise reject the request with the indicated error code ({{errors}}):
 
