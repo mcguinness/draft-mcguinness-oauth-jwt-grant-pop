@@ -320,7 +320,7 @@ The issuing authorization server determines whether the requesting client is an 
 
 ### Binding the Grant {#bind}
 
-To bind a grant, the issuing authorization server includes in it a `cnf` claim as described in {{format}}: a `jkt` member that identifies the public key in the `jwk` JOSE Header Parameter of the DPoP proof of the binding request, or an `x5t#S256` member that identifies the TLS client certificate of the request ({{cert-binding}}). The issuing authorization server MUST NOT bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.
+To bind a grant, the issuing authorization server includes in it a `cnf` claim as described in {{format}}, whose confirmation member identifies the client's key or certificate. For a binding request, that key is the public key in the `jwk` JOSE Header Parameter of the DPoP proof ({{binding-request}}); for a Token Exchange request bound to a certificate, that certificate is the TLS client certificate ({{cert-binding}}). The issuing authorization server MUST NOT bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.
 
 The issuing authorization server MUST NOT bind a grant using a confirmation method unless it has determined that each authorization server that the grant's `aud` claim identifies verifies that confirmation method as described in {{processing}} (see {{non-enforcing-consumers}}). It makes this determination from configuration, from an established trust relationship, or from the resource authorization server's metadata ({{as-metadata}}). {{binding-request}} defines the response to a binding request when the issuing authorization server cannot bind the grant.
 
