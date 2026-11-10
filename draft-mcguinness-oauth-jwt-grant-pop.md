@@ -783,7 +783,7 @@ This appendix is informative. It shows how two specifications answer the items i
 {{ID-JAG}} would answer the items as follows:
 
 1. The `typ` value is `oauth-id-jag+jwt`, and the `requested_token_type` value is `urn:ietf:params:oauth:token-type:id-jag`.
-2. Both confirmation methods, `jkt` and `x5t#S256`, may be used, and neither is mandatory to implement. A DPoP-bound grant is presented with the `jwt-dpop` grant type ({{Section 4.4 of ID-JAG}}).
+2. Both confirmation methods, `jkt` and `x5t#S256`, may be used, and neither is mandatory to implement. A DPoP-bound grant is presented with the `jwt-dpop` grant type ({{Section 4.4 of ID-JAG}}), which this specification keeps for existing clients ({{legacy-jwt-dpop}}).
 3. Binding is optional.
 4. A Resource Authorization Server may accept a bound grant in place of client authentication. The IdP Authorization Server authenticates the client in the Token Exchange request, binds the grant to the key or certificate for which that request carries proof of possession, and identifies the client in the grant's `client_id` claim.
 5. A Resource Authorization Server also validates a certificate presented for an `x5t#S256`-bound grant as described in {{Section 2 of RFC8705}} ({{Section 9.11.2.2 of ID-JAG}}). It rejects an unbound grant with the `invalid_grant` error code when the resource requires sender-constrained access tokens and the request carries neither a DPoP proof nor a TLS client certificate ({{Section 9.11.1.2.4 of ID-JAG}}, {{Section 9.11.2.2 of ID-JAG}}).
@@ -794,7 +794,7 @@ Version -06 of that document conflicts with this specification in three places. 
 
 * {{Section 9.11.1.1 of ID-JAG}} requires the IdP Authorization Server to include a `cnf` claim whenever the DPoP proof is valid. This specification issues an unbound grant when the issuing authorization server has not determined that the consuming authorization server verifies the binding ({{binding-request}}, {{non-enforcing-consumers}}). The change is to bind the grant only for a Resource Authorization Server known to verify the binding.
 * {{Section 9.11 of ID-JAG}} lets the IdP Authorization Server choose a certificate binding, according to local policy, when a request carries both a DPoP proof and a TLS client certificate. This specification binds a grant issued in response to a binding request only to the key of the DPoP proof, if it binds it at all ({{binding-request}}). The change is for the IdP Authorization Server never to choose a certificate binding when the request contains a DPoP proof.
-* {{Section 8 of ID-JAG}} requires a client that supports that profile to include `urn:ietf:params:oauth:grant-type:jwt-bearer` in its `grant_types`, which prevents a Resource Authorization Server from limiting the client to DPoP-bound grants ({{client-metadata}}). The change is to require `urn:ietf:params:oauth:grant-type:jwt-bearer` or `urn:ietf:params:oauth:grant-type:jwt-dpop`.
+* {{Section 8 of ID-JAG}} requires a client that supports that profile to include `urn:ietf:params:oauth:grant-type:jwt-bearer` in its `grant_types`, which prevents a Resource Authorization Server from limiting the client to bound grants ({{client-metadata}}), and {{Section 4.4 of ID-JAG}} presents a DPoP-bound grant with the `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type. The change is to present a bound grant of either method with the `urn:ietf:params:oauth:grant-type:jwt-pop` grant type, and to require `urn:ietf:params:oauth:grant-type:jwt-bearer` or `urn:ietf:params:oauth:grant-type:jwt-pop`.
 
 ## Identity and Authorization Chaining
 
@@ -804,11 +804,10 @@ Version -06 of that document conflicts with this specification in three places. 
 
 \[Editor's note: this appendix lists questions for the working group. It will be removed before publication.\]
 
-1. Grant type for certificate-bound grants. Resolved by the method-neutral `jwt-pop` grant type ({{jwt-pop}}).
-2. Error for a required binding. When the profile of a grant requires binding and the issuing authorization server cannot bind the grant for the consuming authorization server, this draft returns the `invalid_target` error code ({{binding-request}}). {{Section 2.2.2 of RFC8693}} also uses that code for an unacceptable audience. Should this be `invalid_request` or a new error code instead?
-3. Scope of the response parameter. {{RFC9201}} registers the `cnf` token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?
-4. Discovery independent of grant type. `grant_types_supported` tells an issuing authorization server that a consuming authorization server verifies DPoP-bound grants ({{as-metadata}}). Nothing indicates that a consuming authorization server verifies certificate-bound grants, and no client metadata indicates that a client redeems certificate-bound grants ({{cert-binding}}). Should an authorization server metadata parameter list the confirmation methods that a consuming authorization server verifies for JWT authorization grants, and a client metadata parameter indicate that a client accepts certificate-bound grants, with the `jwt-dpop` grant type retained for registration policy?
-5. Alignment with {{ID-JAG}} and {{ID-CHAINING}}. The conflicts listed in {{profile-examples}}, three with {{ID-JAG}} and one with {{Appendix B.3 of ID-CHAINING}}, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a `requested_cnf` claim?
+1. Error for a required binding. When the profile of a grant requires binding and the issuing authorization server cannot bind the grant for the consuming authorization server, this draft returns the `invalid_target` error code ({{binding-request}}). {{Section 2.2.2 of RFC8693}} also uses that code for an unacceptable audience. Should this be `invalid_request` or a new error code instead?
+2. Scope of the response parameter. {{RFC9201}} registers the `cnf` token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?
+3. Client capability for certificate-bound grants. The `jwt_grant_cnf_methods_supported` metadata parameter tells an issuing authorization server which confirmation methods a consuming authorization server verifies ({{as-metadata}}), but no client metadata indicates that a client redeems certificate-bound grants ({{cert-binding}}). Should a client metadata parameter indicate it?
+4. Alignment with {{ID-JAG}}, {{ID-CHAINING}}, and {{JWT-DPOP-GRANT}}. The conflicts listed in {{profile-examples}}, three with {{ID-JAG}} and one with {{Appendix B.3 of ID-CHAINING}}, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a `requested_cnf` claim? The replacement of the `jwt-dpop` grant type and the compatibility rules in {{legacy-jwt-dpop}} need the agreement of the authors of {{JWT-DPOP-GRANT}}.
 
 # Acknowledgments
 {:numbered="false"}
@@ -821,4 +820,4 @@ This document combines and replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}, and gener
 -00
 
 * Initial version, combining {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
-* Retains the `jwt-dpop` grant type and also verifies bound grants presented with the `jwt-bearer` grant type.
+* Replaces the `jwt-dpop` grant type with the method-neutral `jwt-pop` grant type and the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies bound grants whatever their grant type.
