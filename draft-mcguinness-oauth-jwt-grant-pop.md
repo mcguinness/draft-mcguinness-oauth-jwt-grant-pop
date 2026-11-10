@@ -427,7 +427,7 @@ For an `x5t#S256` member, the consuming authorization server need not authentica
 
 If the profile of the grant requires binding ({{profiles}}) and the grant has no `cnf` claim, the consuming authorization server MUST reject the request with the `invalid_grant` error code.
 
-A consuming authorization server that detects reuse of a grant, for example by its `jti` claim ({{Section 4.1.7 of RFC7519}}), MUST NOT record the grant as used when it rejects the request ({{single-use}}).
+A consuming authorization server that detects reuse of a JWT authorization grant, bound or not, for example by its `jti` claim ({{Section 4.1.7 of RFC7519}}), MUST NOT record the grant as used when it rejects the request ({{single-use}}).
 
 The following `cnf` claim is rejected with the `invalid_grant` error code because it contains two confirmation members:
 
@@ -549,7 +549,7 @@ Client authentication is optional for a JWT authorization grant ({{Section 4.1 o
 
 Such a profile specifies the items listed in item 4 of {{profiles}}. The consuming authorization server then relies on the issuing authorization server's authentication of the client ({{pop-identity}}).
 
-Where a profile allows a bound grant in place of client authentication, a consuming authorization server MUST reject a request that has neither client authentication nor a bound grant with the `invalid_client` error code ({{Section 5.2 of RFC6749}}). This error code takes precedence over the `invalid_grant` error code for an unbound grant ({{processing}}, {{jwt-dpop}}).
+Where a profile allows a bound grant in place of client authentication, a consuming authorization server MUST reject a request that has neither client authentication nor a bound grant with the `invalid_client` error code ({{Section 5.2 of RFC6749}}). For this purpose, a grant that fails validation ({{processing}}) is not a bound grant, and this error code takes precedence over the `invalid_grant` error code.
 
 # Error Responses {#errors}
 
