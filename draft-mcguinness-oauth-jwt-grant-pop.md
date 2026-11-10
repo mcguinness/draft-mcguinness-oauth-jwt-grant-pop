@@ -79,7 +79,7 @@ OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mut
 
 This specification defines both halves of the binding. {{issuance}} defines how a grant is bound when it is issued and how the client learns the binding. {{redemption}} defines how the consuming authorization server verifies the binding, however the grant was issued. {{metadata}} defines discovery and per-client enforcement, and {{profiles}} lists the choices that a specification defining a particular JWT authorization grant makes.
 
-This specification defines no new confirmation method. It uses the `jkt` ({{Section 6.1 of RFC9449}}) and `x5t#S256` ({{Section 3.1 of RFC8705}}) confirmation methods.
+This specification defines no new confirmation method. It uses the `jkt` ({{Section 6.1 of RFC9449}}) and `x5t#S256` ({{Section 3.1 of RFC8705}}) confirmation methods, and also accepts the `jwk` confirmation method ({{Section 3.2 of RFC7800}}) in a grant that it redeems.
 
 ## Relationship to Other Documents
 
@@ -103,7 +103,7 @@ Consuming authorization server:
 : The authorization server to which a client presents a JWT authorization grant in an access token request ({{Section 4.1 of RFC7521}}).
 
 Bound grant:
-: A JWT authorization grant that contains a `cnf` claim ({{Section 3.1 of RFC7800}}).
+: A JWT authorization grant that contains a `cnf` claim ({{Section 3.1 of RFC7800}}). A key-bound grant has a `jkt` or `jwk` confirmation member; a certificate-bound grant has an `x5t#S256` confirmation member.
 
 Confirmation member:
 : A member of a `cnf` claim or of the `cnf` response parameter, such as `jkt` or `x5t#S256`.
@@ -372,7 +372,7 @@ When a JWT authorization grant is issued through an interface other than Token E
 
 The client presents a bound grant in an access token request ({{Section 4.1 of RFC7521}}) and proves possession of the key or certificate identified by the grant's `cnf` claim:
 
-* For a `jkt` member, the client MUST include a DPoP proof ({{Section 4 of RFC9449}}) signed with that key in the DPoP header field of the request, and uses the `jwt-dpop` grant type ({{jwt-dpop}}) or the `jwt-bearer` grant type. The client SHOULD use the `jwt-dpop` grant type if the consuming authorization server advertises it ({{as-metadata}}).
+* For a `jkt` or `jwk` member, the client MUST include a DPoP proof ({{Section 4 of RFC9449}}) signed with that key in the DPoP header field of the request, and uses the `jwt-dpop` grant type ({{jwt-dpop}}) or the `jwt-bearer` grant type. The client SHOULD use the `jwt-dpop` grant type if the consuming authorization server advertises it ({{as-metadata}}).
 * For an `x5t#S256` member, the client MUST send the request, with the `jwt-bearer` grant type, over a mutual-TLS connection that uses that certificate ({{Section 3 of RFC8705}}), to the token endpoint or to its mutual-TLS endpoint alias ({{Section 5 of RFC8705}}).
 
 ### DPoP-Bound Grant Type {#jwt-dpop}
@@ -383,12 +383,12 @@ To use the `jwt-dpop` grant type, the client uses the following parameters, in a
 : REQUIRED. The value `urn:ietf:params:oauth:grant-type:jwt-dpop`.
 
 `assertion`:
-: REQUIRED. A single JWT authorization grant whose `cnf` claim contains a `jkt` member.
+: REQUIRED. A single JWT authorization grant whose `cnf` claim contains a `jkt` or `jwk` member.
 
 `scope`:
 : OPTIONAL. The requested scope, as defined in {{Section 4.1 of RFC7521}}.
 
-The consuming authorization server processes the request as defined in {{processing}}, and MUST also reject it with the `invalid_grant` error code if the grant has no `cnf` claim or if the confirmation member of its `cnf` claim is not `jkt`.
+The consuming authorization server processes the request as defined in {{processing}}, and MUST also reject it with the `invalid_grant` error code if the grant has no `cnf` claim or if the confirmation member of its `cnf` claim is neither `jkt` nor `jwk`.
 
 The following is an example of an access token request that presents the grant in {{ex-grant}} with the `jwt-dpop` grant type, from a client that does not authenticate:
 
@@ -409,12 +409,12 @@ A consuming authorization server validates a JWT authorization grant as defined 
 
 1. For the `cnf` claim:
    * it is a JSON object that contains exactly one confirmation member; otherwise, `invalid_grant`;
-   * that member is `jkt`, `x5t#S256`, or a member for which the profile of the grant defines a proof-of-possession check; otherwise, `invalid_grant`; and
+   * that member is `jkt`, `jwk` ({{Section 3.2 of RFC7800}}), or `x5t#S256`; otherwise, `invalid_grant`; and
    * the consuming authorization server supports its confirmation method; otherwise, `invalid_grant`.
-2. For a `jkt` member:
+2. For a `jkt` or `jwk` member:
    * the request contains a DPoP proof; otherwise, `invalid_grant`;
    * the DPoP proof is valid as described in {{Section 4.3 of RFC9449}}; otherwise, `invalid_dpop_proof`, or `use_dpop_nonce` as described in {{Section 8 of RFC9449}}; and
-   * the JWK SHA-256 Thumbprint {{RFC7638}} of the public key in the `jwk` JOSE Header Parameter of the DPoP proof equals the `jkt` value; otherwise, `invalid_grant`.
+   * the JWK SHA-256 Thumbprint {{RFC7638}} of the public key in the `jwk` JOSE Header Parameter of the DPoP proof equals the `jkt` value, or the JWK SHA-256 Thumbprint of the key in the `jwk` member ({{cnf-comparison}}); otherwise, `invalid_grant`.
 3. For an `x5t#S256` member:
    * the request was received on a TLS connection in whose handshake the client presented a certificate and proved possession of its private key; otherwise, `invalid_grant`; and
    * the SHA-256 thumbprint of the DER encoding of that certificate equals the `x5t#S256` value ({{Section 3.1 of RFC8705}}); otherwise, `invalid_grant`.
@@ -474,14 +474,14 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 
 When the grant is bound, the consuming authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
-* if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof, which for a `jkt`-bound grant is the grant's key ({{processing}}); or
+* if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof, which for a key-bound grant is the grant's key ({{processing}}); or
 * otherwise, the certificate that the grant's `x5t#S256` member identifies.
 
-A TLS client certificate presented with a `jkt`-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound, and a consuming authorization server that does not support DPoP applies the second row in place of the third.
+A TLS client certificate presented with a key-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound, and a consuming authorization server that does not support DPoP applies the second row in place of the third.
 
 | Grant's confirmation member | Proof in the request | Binding of issued tokens |
 |---|---|---|
-| `jkt` | DPoP proof, with or without a TLS client certificate | Grant's key |
+| `jkt` or `jwk` | DPoP proof, with or without a TLS client certificate | Grant's key |
 | `x5t#S256` | TLS client certificate only | Grant's certificate |
 | `x5t#S256` | TLS client certificate and DPoP proof | Key of the DPoP proof |
 {: #binding-outcomes title="Binding of Tokens Issued for a Bound Grant"}
@@ -655,7 +655,7 @@ A separate grant type for bound grants does not by itself prevent substitution: 
 
 The `jwt-dpop` grant type adds no protection against a stolen grant. It lets a consuming authorization server advertise that it verifies DPoP-bound grants ({{as-metadata}}) and refuse unbound grants from a client ({{client-metadata}}). Verifying a bound grant presented with the `jwt-bearer` grant type, instead of rejecting it as {{JWT-DPOP-GRANT}} does, keeps clients registered only for that grant type working.
 
-A consuming authorization server that adopts this specification rejects a grant that it previously accepted if the grant's `cnf` claim contains more than one confirmation member, or a member without a proof-of-possession check.
+A consuming authorization server that adopts this specification rejects a grant that it previously accepted if the grant's `cnf` claim contains more than one confirmation member, or a member other than `jkt`, `jwk`, and `x5t#S256`.
 
 ## Informational Nature of the Response Parameter
 
@@ -682,7 +682,7 @@ A DPoP proof does not cover the grant it accompanies or the TLS connection that 
 * A refresh token bound only to a client as which the attacker authenticates would be usable, at the first refresh or a later one; {{refresh}} binds every refresh token issued for a bound grant, and every replacement, as described in {{token-response}}.
 * An unbound access token is usable.
 
-A consuming authorization server that issues unbound access tokens for `jkt`-bound grants SHOULD reject a DPoP proof whose `jti` value it has already accepted at its token endpoint within that window ({{Section 11.1 of RFC9449}}). A server-provided nonce ({{Section 8 of RFC9449}}) shortens the window but does not by itself detect reuse, because a client can use the same nonce more than once. Neither measure denies an unbound access token to an attacker whose request arrives before the client's; only binding the access token does.
+A consuming authorization server that issues unbound access tokens for key-bound grants SHOULD reject a DPoP proof whose `jti` value it has already accepted at its token endpoint within that window ({{Section 11.1 of RFC9449}}). A server-provided nonce ({{Section 8 of RFC9449}}) shortens the window but does not by itself detect reuse, because a client can use the same nonce more than once. Neither measure denies an unbound access token to an attacker whose request arrives before the client's; only binding the access token does.
 
 ## Exhaustion of Single-Use Grants {#single-use}
 
