@@ -235,7 +235,7 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, such a
 * The request proves possession of that key or certificate, with a DPoP proof signed with the key or a mutual-TLS handshake using the certificate.
 * The requesting client authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received ({{Section 2.3 of RFC8693}}).
 
-The issuing authorization server determines the audience from the token's `aud` claim or from its own records of the token. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key, or unbound ({{binding-request}}).
+The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key, or unbound ({{binding-request}}).
 
 ## Binding the Grant {#bind}
 
