@@ -640,7 +640,7 @@ Support for both the `jwt-pop` and `jwt-dpop` grant types does not permit every 
 
 The `jwt-pop` grant type has no corresponding `response_types` value ({{Section 2.1 of RFC7591}}).
 
-A client lists, in the `authorization_grant_profiles_supported` client metadata parameter ({{Section 8 of ID-JAG}}), the grant profile identifier ({{as-metadata}}) for each confirmation method with which it can redeem a bound grant. At the issuing authorization server, `urn:ietf:params:oauth:grant-profile:pop-x5t-s256` in that parameter indicates that the client redeems certificate-bound grants by presenting the certificate with which it authenticates ({{cert-binding}}).
+A client lists, in the `authorization_grant_profiles_supported` client metadata parameter ({{Section 8 of ID-JAG}}), the grant profile identifier ({{as-metadata}}) for each confirmation method with which it can redeem a bound grant. At the issuing authorization server, `urn:ietf:params:oauth:grant-profile:pop-x5t-s256` in that parameter indicates that the client will redeem a grant bound to the TLS client certificate that it presents in the request for the grant, whatever method of client authentication it uses ({{cert-binding}}).
 
 The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the grant to be bound.
 
