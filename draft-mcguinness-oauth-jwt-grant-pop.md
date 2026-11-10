@@ -47,6 +47,7 @@ normative:
   RFC8705:
   RFC9449:
   RFC10070:
+  ID-JAG: I-D.ietf-oauth-identity-assertion-authz-grant
 
 informative:
   IANA.oauth-parameters:
@@ -57,13 +58,12 @@ informative:
   RFC9201:
   RFC9700:
   ID-CHAINING: I-D.ietf-oauth-identity-chaining
-  ID-JAG: I-D.ietf-oauth-identity-assertion-authz-grant
   JWT-DPOP-GRANT: I-D.parecki-oauth-jwt-dpop-grant
   TE-CNF: I-D.mcguinness-oauth-token-exchange-cnf
 
 --- abstract
 
-This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
+This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and grant profile identifiers with which authorization servers and clients advertise the confirmation methods that they support. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
 
 --- middle
 
@@ -205,11 +205,11 @@ The decoded JOSE header and claims of the DPoP proof in that request are:
 
 A TLS client certificate is not a binding request: a client presents one for mutual-TLS client authentication ({{Section 2 of RFC8705}}) without necessarily intending to bind the grant.
 
-If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the `x5t#S256` confirmation method MAY bind the grant to that certificate ({{bind}}). It SHOULD NOT do so unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The `tls_client_certificate_bound_access_tokens` client metadata parameter ({{Section 3.4 of RFC8705}}) concerns access tokens and is not such an indication.
+If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the `x5t#S256` confirmation method MAY bind the grant to that certificate ({{bind}}). It SHOULD NOT do so unless the profile of the grant requires certificate binding, or the client's registration at the issuing authorization server lists the `urn:ietf:params:oauth:grant-profile:pop-x5t-s256` grant profile identifier ({{client-metadata}}), or the issuing authorization server's configuration for the client indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The `tls_client_certificate_bound_access_tokens` client metadata parameter ({{Section 3.4 of RFC8705}}) concerns access tokens and is not such an indication.
 
 An issuing authorization server binds a grant only as described in {{binding-request}} and this section. No request parameter lets a client require a bound grant; a client that requires one checks the response ({{client-processing}}).
 
-The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose configuration at the issuing authorization server indicates that it redeems grants over mutual TLS with the certificate it used to authenticate:
+The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose registration lists the `urn:ietf:params:oauth:grant-profile:pop-x5t-s256` grant profile identifier and that authenticated with that certificate:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -584,23 +584,31 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 
 ## Authorization Server Metadata {#as-metadata}
 
-A consuming authorization server that supports this specification SHOULD include the following parameter in its authorization server metadata ({{Section 2 of RFC8414}}):
+This specification defines a grant profile identifier for each confirmation method:
 
-`jwt_grant_cnf_methods_supported`:
-: OPTIONAL. A JSON array that lists each confirmation member, such as `jkt`, `jwk`, or `x5t#S256`, whose binding the authorization server verifies in a JWT authorization grant ({{processing}}), whatever the grant type of the request. Listing one member does not indicate support for another; in particular, `jkt` does not indicate `jwk`.
+`urn:ietf:params:oauth:grant-profile:pop-jkt`:
+: The `jkt` confirmation method ({{Section 6.1 of RFC9449}}).
 
-A consuming authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. If it does, it MUST also include a nonempty `jwt_grant_cnf_methods_supported` parameter; the `jwt-pop` value alone indicates no confirmation method.
+`urn:ietf:params:oauth:grant-profile:pop-jwk`:
+: The `jwk` confirmation method ({{Section 3.2 of RFC7800}}).
 
-An issuing authorization server MAY rely on a confirmation member listed in `jwt_grant_cnf_methods_supported` to determine that the consuming authorization server verifies that confirmation method ({{bind}}), in metadata that it retrieved and validated as described in {{Section 3 of RFC8414}} for each `aud` value of the grant, using one of the following issuer identifiers:
+`urn:ietf:params:oauth:grant-profile:pop-x5t-s256`:
+: The `x5t#S256` confirmation method ({{Section 3.1 of RFC8705}}).
+
+A consuming authorization server that supports this specification SHOULD list, in the `authorization_grant_profiles_supported` authorization server metadata parameter ({{Section 7.2 of ID-JAG}}), the identifier for each confirmation method whose binding it verifies in a JWT authorization grant ({{processing}}), whatever the grant type of the request or the profile of the grant. An identifier indicates only the confirmation method that it names; in particular, `pop-jkt` does not indicate `pop-jwk`. As for any value of that parameter, it does not indicate that any particular issuer, client, or grant will be accepted ({{Section 7.2 of ID-JAG}}).
+
+A consuming authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. If it does, it MUST also list at least one of these identifiers in `authorization_grant_profiles_supported`; the `jwt-pop` value alone indicates no confirmation method.
+
+An issuing authorization server MAY rely on an identifier listed in `authorization_grant_profiles_supported` to determine that the consuming authorization server verifies the corresponding confirmation method ({{bind}}), in metadata that it retrieved and validated as described in {{Section 3 of RFC8414}} for each `aud` value of the grant, using one of the following issuer identifiers:
 
 * that `aud` value; or
 * an issuer identifier that the issuing authorization server's configuration associates with that `aud` value, for example when it is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
-Metadata that does not list a confirmation member is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence ({{bind}}). In metadata obtained in the same way, an issuing authorization server MAY also treat the `jwt-dpop` value of `grant_types_supported` as evidence that the consuming authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}).
+Metadata that does not list the identifier for a confirmation method is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence ({{bind}}). In metadata obtained in the same way, an issuing authorization server MAY also treat the `jwt-dpop` value of `grant_types_supported` as evidence that the consuming authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}).
 
 The `dpop_signing_alg_values_supported` ({{Section 5.1 of RFC9449}}) and `tls_client_certificate_bound_access_tokens` ({{Section 3.3 of RFC8705}}) metadata parameters do not indicate that an authorization server verifies bound grants.
 
-The following is an example of metadata on which an issuing authorization server can rely to bind a grant whose `aud` value is `https://as.example/` with the `jkt` or `x5t#S256` confirmation method:
+The following is an example of metadata on which an issuing authorization server can rely to bind an Identity Assertion JWT Authorization Grant {{ID-JAG}} whose `aud` value is `https://as.example/` with the `jkt` or `x5t#S256` confirmation method:
 
 ~~~ json
 {
@@ -612,7 +620,11 @@ The following is an example of metadata on which an issuing authorization server
     "urn:ietf:params:oauth:grant-type:jwt-bearer",
     "urn:ietf:params:oauth:grant-type:jwt-pop"
   ],
-  "jwt_grant_cnf_methods_supported": ["jkt", "x5t#S256"],
+  "authorization_grant_profiles_supported": [
+    "urn:ietf:params:oauth:grant-profile:id-jag",
+    "urn:ietf:params:oauth:grant-profile:pop-jkt",
+    "urn:ietf:params:oauth:grant-profile:pop-x5t-s256"
+  ],
   "dpop_signing_alg_values_supported": ["ES256"]
 }
 ~~~
@@ -627,6 +639,8 @@ A consuming authorization server can instead reject unbound grants by policy whi
 Support for both the `jwt-pop` and `jwt-dpop` grant types does not permit every client to use both: the consuming authorization server rejects a request whose grant type the client's registration does not permit with the `unauthorized_client` error code. A new client is registered for the `jwt-pop` grant type; an existing client keeps the `jwt-dpop` grant type only where its registration permits it.
 
 The `jwt-pop` grant type has no corresponding `response_types` value ({{Section 2.1 of RFC7591}}).
+
+A client lists, in the `authorization_grant_profiles_supported` client metadata parameter ({{Section 8 of ID-JAG}}), the grant profile identifier ({{as-metadata}}) for each confirmation method with which it can redeem a bound grant. At the issuing authorization server, `urn:ietf:params:oauth:grant-profile:pop-x5t-s256` in that parameter indicates that the client redeems certificate-bound grants by presenting the certificate with which it authenticates ({{cert-binding}}).
 
 The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the grant to be bound.
 
@@ -744,7 +758,7 @@ Specification document(s):
 
 ## OAuth URI Registration
 
-This specification requests registration of the following value in the "OAuth URI" registry {{IANA.oauth-parameters}} established by {{RFC6755}}:
+This specification requests registration of the following values in the "OAuth URI" registry {{IANA.oauth-parameters}} established by {{RFC6755}}.
 
 URN:
 : `urn:ietf:params:oauth:grant-type:jwt-pop`
@@ -758,15 +772,35 @@ Change Controller:
 Specification Document(s):
 : {{jwt-pop}} of this document
 
-## OAuth Authorization Server Metadata Registration
+URN:
+: `urn:ietf:params:oauth:grant-profile:pop-jkt`
 
-This specification requests registration of the following value in the "OAuth Authorization Server Metadata" registry {{IANA.oauth-parameters}} established by {{RFC8414}}:
+Common Name:
+: Authorization grant profile identifier for the jkt confirmation method
 
-Metadata Name:
-: `jwt_grant_cnf_methods_supported`
+Change Controller:
+: IETF
 
-Metadata Description:
-: JSON array of the confirmation members whose binding the authorization server verifies in JWT authorization grants
+Specification Document(s):
+: {{as-metadata}} of this document
+
+URN:
+: `urn:ietf:params:oauth:grant-profile:pop-jwk`
+
+Common Name:
+: Authorization grant profile identifier for the jwk confirmation method
+
+Change Controller:
+: IETF
+
+Specification Document(s):
+: {{as-metadata}} of this document
+
+URN:
+: `urn:ietf:params:oauth:grant-profile:pop-x5t-s256`
+
+Common Name:
+: Authorization grant profile identifier for the x5t#S256 confirmation method
 
 Change Controller:
 : IETF
@@ -808,8 +842,7 @@ Version -06 of that document conflicts with this specification in three places. 
 
 1. Error for a required binding. When the profile of a grant requires binding and the issuing authorization server cannot bind the grant for the consuming authorization server, this draft returns the `invalid_target` error code ({{binding-request}}). {{Section 2.2.2 of RFC8693}} also uses that code for an unacceptable audience. Should this be `invalid_request` or a new error code instead?
 2. Scope of the response parameter. {{RFC9201}} registers the `cnf` token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?
-3. Client capability for certificate-bound grants. The `jwt_grant_cnf_methods_supported` metadata parameter tells an issuing authorization server which confirmation methods a consuming authorization server verifies ({{as-metadata}}), but no client metadata indicates that a client redeems certificate-bound grants ({{cert-binding}}). Should a client metadata parameter indicate it?
-4. Alignment with {{ID-JAG}}, {{ID-CHAINING}}, and {{JWT-DPOP-GRANT}}. The conflicts listed in {{profile-examples}}, three with {{ID-JAG}} and one with {{Appendix B.3 of ID-CHAINING}}, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a `requested_cnf` claim? The replacement of the `jwt-dpop` grant type and the compatibility rules in {{legacy-jwt-dpop}} need the agreement of the authors of {{JWT-DPOP-GRANT}}.
+3. Alignment with {{ID-JAG}}, {{ID-CHAINING}}, and {{JWT-DPOP-GRANT}}. The conflicts listed in {{profile-examples}}, three with {{ID-JAG}} and one with {{Appendix B.3 of ID-CHAINING}}, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a `requested_cnf` claim? The replacement of the `jwt-dpop` grant type and the compatibility rules in {{legacy-jwt-dpop}} need the agreement of the authors of {{JWT-DPOP-GRANT}}. This specification also uses the `authorization_grant_profiles_supported` parameter that {{ID-JAG}} defines ({{as-metadata}}, {{client-metadata}}). Should that parameter's definition move to this specification, so that the generic mechanism does not depend on one of its profiles?
 
 # Acknowledgments
 {:numbered="false"}
@@ -822,4 +855,4 @@ This document combines and replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}, and gener
 -00
 
 * Initial version, combining {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
-* Replaces the `jwt-dpop` grant type with the method-neutral `jwt-pop` grant type and the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies bound grants whatever their grant type.
+* Replaces the `jwt-dpop` grant type with the method-neutral `jwt-pop` grant type and grant profile identifiers for each confirmation method, keeps `jwt-dpop` for existing clients, and verifies bound grants whatever their grant type.
