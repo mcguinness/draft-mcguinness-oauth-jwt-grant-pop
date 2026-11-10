@@ -859,7 +859,9 @@ Table of Contents
        identity to its own client registration and policy.
 
    5.  Any error codes or processing beyond those in Section 5 and
-       Section 4.2.
+       Section 4.2, such as an error response for a request that carries
+       no proof of possession when the requested resource requires a
+       sender-constrained access token.
 
    A profile that permits a bound grant in place of client
    authentication MUST require the issuing authorization server to
@@ -1481,43 +1483,41 @@ A.1.  Identity Assertion JWT Authorization Grant
        proof of possession, and identifies the client in the grant's
        client_id claim.
 
-   Version -06 of that document differs from this specification in the
-   following ways, which would need to be aligned:
+   5.  A Resource Authorization Server also validates a certificate
+       presented for an x5t#S256-bound grant as described in Section 2
+       of [RFC8705] (Section 9.11.2.2 of
+       [I-D.ietf-oauth-identity-assertion-authz-grant]).  It rejects an
+       unbound grant with the invalid_grant error code when the resource
+       requires sender-constrained access tokens and the request carries
+       neither a DPoP proof nor a TLS client certificate
+       (Section 9.11.1.2.4 of
+       [I-D.ietf-oauth-identity-assertion-authz-grant], Section 9.11.2.2
+       of [I-D.ietf-oauth-identity-assertion-authz-grant]).
+
+   A client that detects a downgrade from the grant's cnf claim
+   (Section 9.11.1.1 of [I-D.ietf-oauth-identity-assertion-authz-grant],
+   Section 9.11.2.1 of [I-D.ietf-oauth-identity-assertion-authz-grant])
+   follows Section 3.4, which also accepts the cnf response parameter.
+
+   Version -06 of that document conflicts with this specification in two
+   places.  Each would be resolved by a change to that document:
 
    *  Section 9.11 of [I-D.ietf-oauth-identity-assertion-authz-grant]
-      lets the IdP Authorization Server choose a certificate binding
-      when a request carries both a DPoP proof and a TLS client
-      certificate.  This specification requires a grant issued in
-      response to a binding request to be bound to the DPoP key
-      (Section 3.1).
-
-   *  Section 9.11.1.1 of
-      [I-D.ietf-oauth-identity-assertion-authz-grant] and
-      Section 9.11.2.1 of
-      [I-D.ietf-oauth-identity-assertion-authz-grant] have the client
-      read the grant's cnf claim to detect a downgrade.  This
-      specification adds the cnf response parameter, and also accepts
-      the claim (Section 3.4).
-
-   *  Section 9.11.2.2 of
-      [I-D.ietf-oauth-identity-assertion-authz-grant] requires the
-      Resource Authorization Server to validate the certificate per
-      Section 2 of [RFC8705].  This specification requires only proof of
-      possession of the certificate (Section 4.2).
-
-   *  Section 9.11.1.2.4 of
-      [I-D.ietf-oauth-identity-assertion-authz-grant] and
-      Section 9.11.2.2 of
-      [I-D.ietf-oauth-identity-assertion-authz-grant] define an
-      invalid_grant error response when an unbound grant is presented
-      for a resource that requires sender-constrained access tokens.
-      This specification defines no error for that case (Appendix B).
+      lets the IdP Authorization Server choose a certificate binding,
+      according to local policy, when a request carries both a DPoP
+      proof and a TLS client certificate.  This specification requires a
+      grant issued in response to a binding request to be bound to the
+      key of the DPoP proof (Section 3.1).  The change is for the IdP
+      Authorization Server to bind the grant to that key whenever the
+      request contains a DPoP proof.
 
    *  Section 8 of [I-D.ietf-oauth-identity-assertion-authz-grant]
       requires a client that supports that profile to include
       urn:ietf:params:oauth:grant-type:jwt-bearer in its grant_types,
       which prevents a Resource Authorization Server from limiting the
-      client to DPoP-bound grants (Section 6.2).
+      client to DPoP-bound grants (Section 6.2).  The change is to
+      require urn:ietf:params:oauth:grant-type:jwt-bearer or
+      urn:ietf:params:oauth:grant-type:jwt-dpop.
 
 A.2.  Identity and Authorization Chaining
 
@@ -1549,28 +1549,12 @@ Appendix B.  Open Issues
        unbound grant without the cnf response parameter and let the
        client decide (Section 3.4)?
 
-   3.  Bound grants versus sender-constrained access tokens.  A profile
-       that requires bound grants is distinct from a consuming
-       authorization server that requires sender-constrained access
-       tokens for a resource: an unbound grant presented with a DPoP
-       proof or over mutual TLS can still yield a sender-constrained
-       access token (Section 5 of [RFC9449], Section 3 of [RFC8705]).
-       [I-D.ietf-oauth-identity-assertion-authz-grant] rejects an
-       unbound grant in the second case when the request carries neither
-       a DPoP proof nor a TLS client certificate (Section 9.11.1.2.4 of
-       [I-D.ietf-oauth-identity-assertion-authz-grant], Section 9.11.2.2
-       of [I-D.ietf-oauth-identity-assertion-authz-grant]).  Should this
-       specification define an error response for a request that carries
-       no proof of possession when the resource requires a sender-
-       constrained access token, or leave that to [RFC9449] and
-       [RFC8705]?
-
-   4.  Scope of the response parameter.  [RFC9201] registers the cnf
+   3.  Scope of the response parameter.  [RFC9201] registers the cnf
        token response parameter for ACE.  Should this document define
        its use for Token Exchange only, for every token response, or
        move it to a separate specification?
 
-   5.  Discovery independent of grant type. grant_types_supported tells
+   4.  Discovery independent of grant type. grant_types_supported tells
        an issuing authorization server that a consuming authorization
        server verifies DPoP-bound grants (Section 6.1).  Nothing
        indicates that a consuming authorization server verifies
@@ -1584,9 +1568,9 @@ Appendix B.  Open Issues
        certificate-bound grants, with urn:ietf:params:oauth:grant-
        type:jwt-dpop retained for registration policy?
 
-   6.  Alignment with [I-D.ietf-oauth-identity-assertion-authz-grant].
-       The differences listed in Appendix A need to be resolved in one
-       document or the other.
+   5.  Alignment with [I-D.ietf-oauth-identity-assertion-authz-grant].
+       The two conflicts listed in Appendix A need to be resolved, by
+       the proposed changes to that document or by changes to this one.
 
 Acknowledgments
 
