@@ -318,6 +318,8 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, such a
 
 The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key, or unbound ({{binding-request}}).
 
+The issuing authorization server applies these conditions to each bound token separately. A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}), so a request whose `subject_token` and `actor_token` are bound to different DPoP keys proves possession of at most one of them, and is rejected unless the second condition holds for each token whose key the DPoP proof does not match.
+
 ### Binding the Grant {#bind}
 
 To bind a grant, the issuing authorization server includes in it a `cnf` claim as described in {{format}}, whose confirmation member identifies the client's key or certificate. For a binding request, that key is the public key in the `jwk` JOSE Header Parameter of the DPoP proof ({{binding-request}}); for a Token Exchange request bound to a certificate, that certificate is the TLS client certificate ({{cert-binding}}). The issuing authorization server MUST NOT bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.
