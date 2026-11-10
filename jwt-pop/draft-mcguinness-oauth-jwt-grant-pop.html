@@ -7,7 +7,7 @@
 <title>OAuth 2.0 Key-Bound JWT Authorization Grants</title>
 <meta content="Karl McGuinness" name="author">
 <meta content="
-       This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and grant profile identifiers with which authorization servers and clients advertise the confirmation methods that they support. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism. 
+       This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
 <meta content="proof-of-possession" name="keyword">
@@ -1081,7 +1081,7 @@ svg {
 <h1 id="title">OAuth 2.0 Key-Bound JWT Authorization Grants</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and grant profile identifiers with which authorization servers and clients advertise the confirmation methods that they support. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1280,6 +1280,9 @@ svg {
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
                 <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="auto internal xref">10.2</a>.  <a href="#name-oauth-uri-registration" class="internal xref">OAuth URI Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.3">
+                <p id="section-toc.1-1.10.2.3.1"><a href="#section-10.3" class="auto internal xref">10.3</a>.  <a href="#name-oauth-authorization-server-" class="internal xref">OAuth Authorization Server Metadata Registration</a></p>
 </li>
             </ul>
 </li>
@@ -1521,9 +1524,9 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 <a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-certificate-binding" class="section-name selfRef">Certificate Binding</a>
         </h3>
 <p id="section-3.2-1">A TLS client certificate is not a binding request: a client presents one for mutual-TLS client authentication (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-2" class="relref">Section 2</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) without necessarily intending to bind the grant.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.2-2">If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the <code>x5t#S256</code> confirmation method <span class="bcp14">MAY</span> bind the grant to that certificate (<a href="#bind" class="auto internal xref">Section 3.4</a>). It <span class="bcp14">SHOULD NOT</span> do so unless the profile of the grant requires certificate binding, or the client's registration at the issuing authorization server lists the <code>urn:ietf:params:oauth:grant-profile:pop-x5t-s256</code> grant profile identifier (<a href="#client-metadata" class="auto internal xref">Section 6.2</a>), or the issuing authorization server's configuration for the client indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The <code>tls_client_certificate_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.4" class="relref">Section 3.4</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) concerns access tokens and is not such an indication.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.2-2">If a request contains no DPoP proof and arrives over a mutual-TLS connection in which the client presented a TLS client certificate, an issuing authorization server that supports the <code>x5t#S256</code> confirmation method <span class="bcp14">MAY</span> bind the grant to that certificate (<a href="#bind" class="auto internal xref">Section 3.4</a>). It <span class="bcp14">SHOULD NOT</span> do so unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. This is because a client that does not support this specification would receive a grant that it cannot redeem. The <code>tls_client_certificate_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.4" class="relref">Section 3.4</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) concerns access tokens and is not such an indication.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">An issuing authorization server binds a grant only as described in <a href="#binding-request" class="auto internal xref">Section 3.1</a> and this section. No request parameter lets a client require a bound grant; a client that requires one checks the response (<a href="#client-processing" class="auto internal xref">Section 3.6</a>).<a href="#section-3.2-3" class="pilcrow">¶</a></p>
-<p id="section-3.2-4">The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose registration lists the <code>urn:ietf:params:oauth:grant-profile:pop-x5t-s256</code> grant profile identifier and that authenticated with that certificate:<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">The following is an example of a Token Exchange response for a certificate-bound grant, issued to a client whose configuration at the issuing authorization server indicates that it redeems grants over mutual TLS with the certificate it used to authenticate:<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 <span id="name-token-exchange-response-for"></span><div id="cert-example">
 <figure id="figure-5">
           <div class="lang-http-message sourcecode" id="section-3.2-5.1">
@@ -2137,43 +2140,30 @@ Cache-Control: no-store
         <h3 id="name-authorization-server-metada">
 <a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-authorization-server-metada" class="section-name selfRef">Authorization Server Metadata</a>
         </h3>
-<p id="section-6.1-1">This specification defines a grant profile identifier for each confirmation method:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-1">A consuming authorization server that supports this specification <span class="bcp14">SHOULD</span> include the following parameter in its authorization server metadata (<span><a href="https://rfc-editor.org/rfc/rfc8414#section-2" class="relref">Section 2</a> of [<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>):<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-6.1-2">
           <dt id="section-6.1-2.1">
-<code>urn:ietf:params:oauth:grant-profile:pop-jkt</code>:</dt>
+<code>jwt_grant_cnf_methods_supported</code>:</dt>
           <dd style="margin-left: 1.5em" id="section-6.1-2.2">
-            <p id="section-6.1-2.2.1">The <code>jkt</code> confirmation method (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-6.1" class="relref">Section 6.1</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>).<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-6.1-2.3">
-<code>urn:ietf:params:oauth:grant-profile:pop-jwk</code>:</dt>
-          <dd style="margin-left: 1.5em" id="section-6.1-2.4">
-            <p id="section-6.1-2.4.1">The <code>jwk</code> confirmation method (<span><a href="https://rfc-editor.org/rfc/rfc7800#section-3.2" class="relref">Section 3.2</a> of [<a href="#RFC7800" class="cite xref">RFC7800</a>]</span>).<a href="#section-6.1-2.4.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-6.1-2.5">
-<code>urn:ietf:params:oauth:grant-profile:pop-x5t-s256</code>:</dt>
-          <dd style="margin-left: 1.5em" id="section-6.1-2.6">
-            <p id="section-6.1-2.6.1">The <code>x5t#S256</code> confirmation method (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>).<a href="#section-6.1-2.6.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.2.1"><span class="bcp14">OPTIONAL</span>. A JSON array that lists each confirmation member, such as <code>jkt</code>, <code>jwk</code>, or <code>x5t#S256</code>, whose binding the authorization server verifies in a JWT authorization grant (<a href="#processing" class="auto internal xref">Section 4.2</a>), whatever the grant type of the request or the profile of the grant. Listing one member does not indicate support for another; in particular, <code>jkt</code> does not indicate <code>jwk</code>.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-6.1-3">A consuming authorization server that supports this specification <span class="bcp14">SHOULD</span> list, in the <code>authorization_grant_profiles_supported</code> authorization server metadata parameter (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06#section-7.2" class="relref">Section 7.2</a> of [<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span>), the identifier for each confirmation method whose binding it verifies in a JWT authorization grant (<a href="#processing" class="auto internal xref">Section 4.2</a>), whatever the grant type of the request or the profile of the grant. An identifier indicates only the confirmation method that it names; in particular, <code>pop-jkt</code> does not indicate <code>pop-jwk</code>. As for any value of that parameter, it does not indicate that any particular issuer, client, or grant will be accepted (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06#section-7.2" class="relref">Section 7.2</a> of [<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span>).<a href="#section-6.1-3" class="pilcrow">¶</a></p>
-<p id="section-6.1-4">A consuming authorization server that supports the <code>jwt-pop</code> grant type <span class="bcp14">SHOULD</span> include it in the <code>grant_types_supported</code> metadata parameter. If it does, it <span class="bcp14">MUST</span> also list at least one of these identifiers in <code>authorization_grant_profiles_supported</code>; the <code>jwt-pop</code> value alone indicates no confirmation method.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
-<p id="section-6.1-5">An issuing authorization server <span class="bcp14">MAY</span> rely on an identifier listed in <code>authorization_grant_profiles_supported</code> to determine that the consuming authorization server verifies the corresponding confirmation method (<a href="#bind" class="auto internal xref">Section 3.4</a>), in metadata that it retrieved and validated as described in <span><a href="https://rfc-editor.org/rfc/rfc8414#section-3" class="relref">Section 3</a> of [<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> for each <code>aud</code> value of the grant, using one of the following issuer identifiers:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">A consuming authorization server that supports the <code>jwt-pop</code> grant type <span class="bcp14">SHOULD</span> include it in the <code>grant_types_supported</code> metadata parameter. If it does, it <span class="bcp14">MUST</span> also include a nonempty <code>jwt_grant_cnf_methods_supported</code> parameter; the <code>jwt-pop</code> value alone indicates no confirmation method.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">An issuing authorization server <span class="bcp14">MAY</span> rely on a confirmation member listed in <code>jwt_grant_cnf_methods_supported</code> to determine that the consuming authorization server verifies that confirmation method (<a href="#bind" class="auto internal xref">Section 3.4</a>), in metadata that it retrieved and validated as described in <span><a href="https://rfc-editor.org/rfc/rfc8414#section-3" class="relref">Section 3</a> of [<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> for each <code>aud</code> value of the grant, using one of the following issuer identifiers:<a href="#section-6.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-6.1-6.1">
-            <p id="section-6.1-6.1.1">that <code>aud</code> value; or<a href="#section-6.1-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-6.1-5.1">
+            <p id="section-6.1-5.1.1">that <code>aud</code> value; or<a href="#section-6.1-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-6.1-6.2">
-            <p id="section-6.1-6.2.1">an issuer identifier that the issuing authorization server's configuration associates with that <code>aud</code> value, for example when it is a token endpoint URL (<span><a href="https://rfc-editor.org/rfc/rfc10070#section-4" class="relref">Section 4</a> of [<a href="#RFC10070" class="cite xref">RFC10070</a>]</span>), provided that the <code>token_endpoint</code> value of the metadata equals the <code>aud</code> value. That equality alone does not establish the association, because only the <code>issuer</code> value of metadata is validated (<span><a href="https://rfc-editor.org/rfc/rfc8414#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>, <span><a href="https://rfc-editor.org/rfc/rfc10070#section-1" class="relref">Section 1</a> of [<a href="#RFC10070" class="cite xref">RFC10070</a>]</span>).<a href="#section-6.1-6.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-6.1-5.2">
+            <p id="section-6.1-5.2.1">an issuer identifier that the issuing authorization server's configuration associates with that <code>aud</code> value, for example when it is a token endpoint URL (<span><a href="https://rfc-editor.org/rfc/rfc10070#section-4" class="relref">Section 4</a> of [<a href="#RFC10070" class="cite xref">RFC10070</a>]</span>), provided that the <code>token_endpoint</code> value of the metadata equals the <code>aud</code> value. That equality alone does not establish the association, because only the <code>issuer</code> value of metadata is validated (<span><a href="https://rfc-editor.org/rfc/rfc8414#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>, <span><a href="https://rfc-editor.org/rfc/rfc10070#section-1" class="relref">Section 1</a> of [<a href="#RFC10070" class="cite xref">RFC10070</a>]</span>).<a href="#section-6.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-6.1-7">Metadata that does not list the identifier for a confirmation method is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence (<a href="#bind" class="auto internal xref">Section 3.4</a>). In metadata obtained in the same way, an issuing authorization server <span class="bcp14">MAY</span> also treat the <code>jwt-dpop</code> value of <code>grant_types_supported</code> as evidence that the consuming authorization server verifies the <code>jkt</code> confirmation method (<a href="#legacy-jwt-dpop" class="auto internal xref">Section 4.1.2</a>).<a href="#section-6.1-7" class="pilcrow">¶</a></p>
-<p id="section-6.1-8">The <code>dpop_signing_alg_values_supported</code> (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) and <code>tls_client_certificate_bound_access_tokens</code> (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) metadata parameters do not indicate that an authorization server verifies bound grants.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
-<p id="section-6.1-9">The following is an example of metadata on which an issuing authorization server can rely to bind an Identity Assertion JWT Authorization Grant <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> whose <code>aud</code> value is <code>https://as.example/</code> with the <code>jkt</code> or <code>x5t#S256</code> confirmation method:<a href="#section-6.1-9" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">Metadata that does not list a confirmation member is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence (<a href="#bind" class="auto internal xref">Section 3.4</a>). In metadata obtained in the same way, an issuing authorization server <span class="bcp14">MAY</span> also treat the <code>jwt-dpop</code> value of <code>grant_types_supported</code> as evidence that the consuming authorization server verifies the <code>jkt</code> confirmation method (<a href="#legacy-jwt-dpop" class="auto internal xref">Section 4.1.2</a>).<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-7">The <code>dpop_signing_alg_values_supported</code> (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.1" class="relref">Section 5.1</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) and <code>tls_client_certificate_bound_access_tokens</code> (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-3.3" class="relref">Section 3.3</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>) metadata parameters do not indicate that an authorization server verifies bound grants.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1-8">The following is an example of metadata on which an issuing authorization server can rely to bind a grant whose <code>aud</code> value is <code>https://as.example/</code> with the <code>jkt</code> or <code>x5t#S256</code> confirmation method:<a href="#section-6.1-8" class="pilcrow">¶</a></p>
 <span id="name-authorization-server-metadat"></span><figure id="figure-18">
-          <div class="lang-json sourcecode" id="section-6.1-10.1">
+          <div class="lang-json sourcecode" id="section-6.1-9.1">
 <pre>
 {
   "issuer": "https://as.example/",
@@ -2184,11 +2174,7 @@ Cache-Control: no-store
     "urn:ietf:params:oauth:grant-type:jwt-bearer",
     "urn:ietf:params:oauth:grant-type:jwt-pop"
   ],
-  "authorization_grant_profiles_supported": [
-    "urn:ietf:params:oauth:grant-profile:id-jag",
-    "urn:ietf:params:oauth:grant-profile:pop-jkt",
-    "urn:ietf:params:oauth:grant-profile:pop-x5t-s256"
-  ],
+  "jwt_grant_cnf_methods_supported": ["jkt", "x5t#S256"],
   "dpop_signing_alg_values_supported": ["ES256"]
 }
 </pre>
@@ -2207,11 +2193,10 @@ Cache-Control: no-store
 <p id="section-6.2-2">A consuming authorization server can instead reject unbound grants by policy while accepting the <code>jwt-bearer</code> grant type, but <code>grant_types</code> then does not express that the client is limited to bound grants.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.2-3">Support for both the <code>jwt-pop</code> and <code>jwt-dpop</code> grant types does not permit every client to use both: the consuming authorization server rejects a request whose grant type the client's registration does not permit with the <code>unauthorized_client</code> error code. A new client is registered for the <code>jwt-pop</code> grant type; an existing client keeps the <code>jwt-dpop</code> grant type only where its registration permits it.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <p id="section-6.2-4">The <code>jwt-pop</code> grant type has no corresponding <code>response_types</code> value (<span><a href="https://rfc-editor.org/rfc/rfc7591#section-2.1" class="relref">Section 2.1</a> of [<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>).<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">A client lists, in the <code>authorization_grant_profiles_supported</code> client metadata parameter (<span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06#section-8" class="relref">Section 8</a> of [<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span>), the grant profile identifier (<a href="#as-metadata" class="auto internal xref">Section 6.1</a>) for each confirmation method with which it can redeem a bound grant. At the issuing authorization server, <code>urn:ietf:params:oauth:grant-profile:pop-x5t-s256</code> in that parameter indicates that the client will redeem a grant bound to the TLS client certificate that it presents in the request for the grant, whatever method of client authentication it uses (<a href="#cert-binding" class="auto internal xref">Section 3.2</a>).<a href="#section-6.2-5" class="pilcrow">¶</a></p>
-<p id="section-6.2-6">The <code>dpop_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.2" class="relref">Section 5.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) requires a DPoP proof in each token request, but does not require the grant to be bound.<a href="#section-6.2-6" class="pilcrow">¶</a></p>
-<p id="section-6.2-7">The following is an example of client metadata for a client that the consuming authorization server limits to bound grants:<a href="#section-6.2-7" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">The <code>dpop_bound_access_tokens</code> client metadata parameter (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.2" class="relref">Section 5.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) requires a DPoP proof in each token request, but does not require the grant to be bound.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+<p id="section-6.2-6">The following is an example of client metadata for a client that the consuming authorization server limits to bound grants:<a href="#section-6.2-6" class="pilcrow">¶</a></p>
 <span id="name-client-metadata-limiting-a-"></span><figure id="figure-19">
-          <div class="lang-json sourcecode" id="section-6.2-8.1">
+          <div class="lang-json sourcecode" id="section-6.2-7.1">
 <pre>
 {
   "grant_types": [
@@ -2416,7 +2401,7 @@ Cache-Control: no-store
         <h3 id="name-oauth-uri-registration">
 <a href="#section-10.2" class="section-number selfRef">10.2. </a><a href="#name-oauth-uri-registration" class="section-name selfRef">OAuth URI Registration</a>
         </h3>
-<p id="section-10.2-1">This specification requests registration of the following values in the "OAuth URI" registry <span>[<a href="#IANA.oauth-parameters" class="cite xref">IANA.oauth-parameters</a>]</span> established by <span>[<a href="#RFC6755" class="cite xref">RFC6755</a>]</span>.<a href="#section-10.2-1" class="pilcrow">¶</a></p>
+<p id="section-10.2-1">This specification requests registration of the following value in the "OAuth URI" registry <span>[<a href="#IANA.oauth-parameters" class="cite xref">IANA.oauth-parameters</a>]</span> established by <span>[<a href="#RFC6755" class="cite xref">RFC6755</a>]</span>:<a href="#section-10.2-1" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-10.2-2">
           <dt id="section-10.2-2.1">URN:</dt>
           <dd style="margin-left: 1.5em" id="section-10.2-2.2">
@@ -2437,65 +2422,35 @@ Cache-Control: no-store
           <dd style="margin-left: 1.5em" id="section-10.2-2.8">
             <p id="section-10.2-2.8.1"><a href="#jwt-pop" class="auto internal xref">Section 4.1.1</a> of this document<a href="#section-10.2-2.8.1" class="pilcrow">¶</a></p>
 </dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.9">URN:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.10">
-            <p id="section-10.2-2.10.1"><code>urn:ietf:params:oauth:grant-profile:pop-jkt</code><a href="#section-10.2-2.10.1" class="pilcrow">¶</a></p>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="oauth-authorization-server-metadata-registration">
+<section id="section-10.3">
+        <h3 id="name-oauth-authorization-server-">
+<a href="#section-10.3" class="section-number selfRef">10.3. </a><a href="#name-oauth-authorization-server-" class="section-name selfRef">OAuth Authorization Server Metadata Registration</a>
+        </h3>
+<p id="section-10.3-1">This specification requests registration of the following value in the "OAuth Authorization Server Metadata" registry <span>[<a href="#IANA.oauth-parameters" class="cite xref">IANA.oauth-parameters</a>]</span> established by <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>:<a href="#section-10.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-10.3-2">
+          <dt id="section-10.3-2.1">Metadata Name:</dt>
+          <dd style="margin-left: 1.5em" id="section-10.3-2.2">
+            <p id="section-10.3-2.2.1"><code>jwt_grant_cnf_methods_supported</code><a href="#section-10.3-2.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-10.2-2.11">Common Name:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.12">
-            <p id="section-10.2-2.12.1">Authorization grant profile identifier for the jkt confirmation method<a href="#section-10.2-2.12.1" class="pilcrow">¶</a></p>
+<dt id="section-10.3-2.3">Metadata Description:</dt>
+          <dd style="margin-left: 1.5em" id="section-10.3-2.4">
+            <p id="section-10.3-2.4.1">JSON array of the confirmation members whose binding the authorization server verifies in JWT authorization grants<a href="#section-10.3-2.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-10.2-2.13">Change Controller:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.14">
-            <p id="section-10.2-2.14.1">IETF<a href="#section-10.2-2.14.1" class="pilcrow">¶</a></p>
+<dt id="section-10.3-2.5">Change Controller:</dt>
+          <dd style="margin-left: 1.5em" id="section-10.3-2.6">
+            <p id="section-10.3-2.6.1">IETF<a href="#section-10.3-2.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-10.2-2.15">Specification Document(s):</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.16">
-            <p id="section-10.2-2.16.1"><a href="#as-metadata" class="auto internal xref">Section 6.1</a> of this document<a href="#section-10.2-2.16.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.17">URN:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.18">
-            <p id="section-10.2-2.18.1"><code>urn:ietf:params:oauth:grant-profile:pop-jwk</code><a href="#section-10.2-2.18.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.19">Common Name:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.20">
-            <p id="section-10.2-2.20.1">Authorization grant profile identifier for the jwk confirmation method<a href="#section-10.2-2.20.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.21">Change Controller:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.22">
-            <p id="section-10.2-2.22.1">IETF<a href="#section-10.2-2.22.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.23">Specification Document(s):</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.24">
-            <p id="section-10.2-2.24.1"><a href="#as-metadata" class="auto internal xref">Section 6.1</a> of this document<a href="#section-10.2-2.24.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.25">URN:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.26">
-            <p id="section-10.2-2.26.1"><code>urn:ietf:params:oauth:grant-profile:pop-x5t-s256</code><a href="#section-10.2-2.26.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.27">Common Name:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.28">
-            <p id="section-10.2-2.28.1">Authorization grant profile identifier for the x5t#S256 confirmation method<a href="#section-10.2-2.28.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.29">Change Controller:</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.30">
-            <p id="section-10.2-2.30.1">IETF<a href="#section-10.2-2.30.1" class="pilcrow">¶</a></p>
-</dd>
-          <dd class="break"></dd>
-<dt id="section-10.2-2.31">Specification Document(s):</dt>
-          <dd style="margin-left: 1.5em" id="section-10.2-2.32">
-            <p id="section-10.2-2.32.1"><a href="#as-metadata" class="auto internal xref">Section 6.1</a> of this document<a href="#section-10.2-2.32.1" class="pilcrow">¶</a></p>
+<dt id="section-10.3-2.7">Specification Document(s):</dt>
+          <dd style="margin-left: 1.5em" id="section-10.3-2.8">
+            <p id="section-10.3-2.8.1"><a href="#as-metadata" class="auto internal xref">Section 6.1</a> of this document<a href="#section-10.3-2.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -2514,10 +2469,6 @@ Cache-Control: no-store
 <a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
-<dt id="ID-JAG">[ID-JAG]</dt>
-        <dd>
-<span class="refAuthor">Parecki, A.</span>, <span class="refAuthor">McGuinness, K.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"Identity Assertion JWT Authorization Grant"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-identity-assertion-authz-grant-06</span>, <time datetime="2026-10-30" class="refDate">30 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
@@ -2586,6 +2537,10 @@ Cache-Control: no-store
 <dt id="ID-CHAINING">[ID-CHAINING]</dt>
         <dd>
 <span class="refAuthor">Schwenkschuster, A.</span>, <span class="refAuthor">Kasselman, P.</span>, <span class="refAuthor">Burgin, K.</span>, <span class="refAuthor">Jenkins, M. J.</span>, <span class="refAuthor">Campbell, B.</span>, and <span class="refAuthor">A. Parecki</span>, <span class="refTitle">"OAuth Identity and Authorization Chaining Across Domains"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-identity-chaining-17</span>, <time datetime="2026-07-19" class="refDate">19 July 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-chaining-17">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-chaining-17</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="ID-JAG">[ID-JAG]</dt>
+        <dd>
+<span class="refAuthor">Parecki, A.</span>, <span class="refAuthor">McGuinness, K.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"Identity Assertion JWT Authorization Grant"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-oauth-identity-assertion-authz-grant-06</span>, <time datetime="2026-10-30" class="refDate">30 October 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06">https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="JWT-DPOP-GRANT">[JWT-DPOP-GRANT]</dt>
         <dd>
@@ -2692,7 +2647,10 @@ Cache-Control: no-store
           <p id="appendix-B-2.2.1">Scope of the response parameter. <span>[<a href="#RFC9201" class="cite xref">RFC9201</a>]</span> registers the <code>cnf</code> token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li id="appendix-B-2.3">
-          <p id="appendix-B-2.3.1">Alignment with <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span>, <span>[<a href="#ID-CHAINING" class="cite xref">ID-CHAINING</a>]</span>, and <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>. The conflicts listed in <a href="#profile-examples" class="auto internal xref">Appendix A</a>, three with <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> and one with <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-chaining-17#appendix-B.3" class="relref">Appendix B.3</a> of [<a href="#ID-CHAINING" class="cite xref">ID-CHAINING</a>]</span>, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a <code>requested_cnf</code> claim? The replacement of the <code>jwt-dpop</code> grant type and the compatibility rules in <a href="#legacy-jwt-dpop" class="auto internal xref">Section 4.1.2</a> need the agreement of the authors of <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>. This specification also uses the <code>authorization_grant_profiles_supported</code> parameter that <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> defines (<a href="#as-metadata" class="auto internal xref">Section 6.1</a>, <a href="#client-metadata" class="auto internal xref">Section 6.2</a>). Should that parameter's definition move to this specification, so that the generic mechanism does not depend on one of its profiles?<a href="#appendix-B-2.3.1" class="pilcrow">¶</a></p>
+          <p id="appendix-B-2.3.1">Client opt-in to certificate binding. Binding a grant to the TLS client certificate that the client presents at issuance is an issuance policy that the client opts into, not only a capability: a client can support certificate-bound grants and still reserve the certificate it presents to the issuing authorization server for that relationship. This draft leaves the opt-in to the issuing authorization server's configuration for the client (<a href="#cert-binding" class="auto internal xref">Section 3.2</a>). Should a client metadata parameter express it? The <code>authorization_grant_profiles_supported</code> parameter of <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> could carry such a signal, at the cost of mixing grant profiles with proof capabilities in one list.<a href="#appendix-B-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li id="appendix-B-2.4">
+          <p id="appendix-B-2.4.1">Alignment with <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span>, <span>[<a href="#ID-CHAINING" class="cite xref">ID-CHAINING</a>]</span>, and <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>. The conflicts listed in <a href="#profile-examples" class="auto internal xref">Appendix A</a>, three with <span>[<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> and one with <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-chaining-17#appendix-B.3" class="relref">Appendix B.3</a> of [<a href="#ID-CHAINING" class="cite xref">ID-CHAINING</a>]</span>, need to be resolved, by the proposed changes to those documents or by changes to this one. For the last, should a profile be able to permit binding the access token to a key that the grant conveys in a <code>requested_cnf</code> claim? The replacement of the <code>jwt-dpop</code> grant type and the compatibility rules in <a href="#legacy-jwt-dpop" class="auto internal xref">Section 4.1.2</a> need the agreement of the authors of <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 </section>
@@ -2716,7 +2674,7 @@ Cache-Control: no-store
           <p id="appendix-D-2.1.1">Initial version, combining <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> and <span>[<a href="#TE-CNF" class="cite xref">TE-CNF</a>]</span>.<a href="#appendix-D-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="appendix-D-2.2">
-          <p id="appendix-D-2.2.1">Replaces the <code>jwt-dpop</code> grant type with the method-neutral <code>jwt-pop</code> grant type and grant profile identifiers for each confirmation method, keeps <code>jwt-dpop</code> for existing clients, and verifies bound grants whatever their grant type.<a href="#appendix-D-2.2.1" class="pilcrow">¶</a></p>
+          <p id="appendix-D-2.2.1">Replaces the <code>jwt-dpop</code> grant type with the method-neutral <code>jwt-pop</code> grant type and the <code>jwt_grant_cnf_methods_supported</code> metadata parameter, keeps <code>jwt-dpop</code> for existing clients, and verifies bound grants whatever their grant type.<a href="#appendix-D-2.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
