@@ -580,10 +580,10 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 
 ## Authorization Server Metadata {#as-metadata}
 
-A consuming authorization server that supports the `jwt-dpop` grant type SHOULD include it in the `grant_types_supported` parameter of its authorization server metadata ({{Section 2 of RFC8414}}). A consuming authorization server that supports that grant type verifies the `jkt` confirmation method, whether it implements this specification or {{JWT-DPOP-GRANT}}. An issuing authorization server MAY therefore rely on that value to determine that the consuming authorization server verifies the `jkt` confirmation method ({{bind}}), in metadata that it retrieved and validated as described in {{Section 3 of RFC8414}} for one of the following issuer identifiers:
+A consuming authorization server that supports the `jwt-dpop` grant type SHOULD include it in the `grant_types_supported` parameter of its authorization server metadata ({{Section 2 of RFC8414}}). A consuming authorization server that supports that grant type verifies the `jkt` confirmation method, whether it implements this specification or {{JWT-DPOP-GRANT}}. An issuing authorization server MAY therefore rely on that value to determine that the consuming authorization server verifies the `jkt` confirmation method ({{bind}}), in metadata that it retrieved and validated as described in {{Section 3 of RFC8414}} for each `aud` value of the grant, using one of the following issuer identifiers:
 
-* the grant's `aud` value; or
-* an issuer identifier that the issuing authorization server's configuration associates with the grant's `aud` value, for example when that value is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
+* that `aud` value; or
+* an issuer identifier that the issuing authorization server's configuration associates with that `aud` value, for example when it is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
 The `dpop_signing_alg_values_supported` ({{Section 5.1 of RFC9449}}) and `tls_client_certificate_bound_access_tokens` ({{Section 3.3 of RFC8705}}) metadata parameters do not indicate that an authorization server verifies bound grants.
 
