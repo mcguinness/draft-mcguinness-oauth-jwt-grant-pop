@@ -584,12 +584,12 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 
 ## Authorization Server Metadata {#as-metadata}
 
-A consuming authorization server that supports this specification SHOULD include the following parameter in its authorization server metadata ({{Section 2 of RFC8414}}):
+This specification defines the following authorization server metadata parameter ({{Section 2 of RFC8414}}):
 
 `jwt_grant_cnf_methods_supported`:
-: OPTIONAL. A JSON array that lists each confirmation member, such as `jkt`, `jwk`, or `x5t#S256`, whose binding the authorization server verifies in a JWT authorization grant ({{processing}}), whatever the grant type of the request or the profile of the grant. Listing one member does not indicate support for another; in particular, `jkt` does not indicate `jwk`.
+: RECOMMENDED for a consuming authorization server that supports this specification; REQUIRED if its `grant_types_supported` parameter contains the `jwt-pop` grant type. A nonempty JSON array of Confirmation Method Values from the "JWT Confirmation Methods" registry ({{Section 6.2 of RFC7800}}) that lists each confirmation method, among `jkt`, `jwk`, and `x5t#S256`, whose binding the authorization server verifies in a JWT authorization grant ({{processing}}), whatever the grant type of the request or the profile of the grant. Listing one member does not indicate support for another; in particular, `jkt` does not indicate `jwk`.
 
-A consuming authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. If it does, it MUST also include a nonempty `jwt_grant_cnf_methods_supported` parameter; the `jwt-pop` value alone indicates no confirmation method.
+A consuming authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. The `jwt-pop` value alone indicates no confirmation method.
 
 An issuing authorization server MAY rely on a confirmation member listed in `jwt_grant_cnf_methods_supported` to determine that the consuming authorization server verifies that confirmation method ({{bind}}), in metadata that it retrieved and validated as described in {{Section 3 of RFC8414}} for each `aud` value of the grant, using one of the following issuer identifiers:
 
@@ -778,7 +778,7 @@ Metadata Name:
 : `jwt_grant_cnf_methods_supported`
 
 Metadata Description:
-: JSON array of the confirmation members whose binding the authorization server verifies in JWT authorization grants
+: JSON array of the Confirmation Method Values whose binding the authorization server verifies in JWT authorization grants
 
 Change Controller:
 : IETF
