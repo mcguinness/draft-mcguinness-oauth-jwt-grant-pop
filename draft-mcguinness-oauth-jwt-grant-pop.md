@@ -103,7 +103,7 @@ Consuming authorization server:
 : The authorization server to which a client presents a JWT authorization grant in an access token request ({{Section 4.1 of RFC7521}}).
 
 Bound grant:
-: A JWT authorization grant that contains a `cnf` claim ({{Section 3.1 of RFC7800}}). A key-bound grant has a `jkt` or `jwk` confirmation member; a certificate-bound grant has an `x5t#S256` confirmation member.
+: A JWT authorization grant that contains a `cnf` claim ({{Section 3.1 of RFC7800}}). A DPoP-bound grant has a `jkt` or `jwk` confirmation member; a certificate-bound grant has an `x5t#S256` confirmation member.
 
 Confirmation member:
 : A member of a `cnf` claim or of the `cnf` response parameter, such as `jkt` or `x5t#S256`.
@@ -421,7 +421,7 @@ A consuming authorization server validates a JWT authorization grant as defined 
 
 Item 1 overrides the rule in {{Section 3.1 of RFC7800}} that implementations ignore confirmation members they do not understand. Client authentication does not take the place of any of these checks.
 
-A consuming authorization server that supports DPoP validates a DPoP proof in the request, including its nonce, before it validates the grant, and rejects an invalid proof as {{Section 5 of RFC9449}} requires, whatever the binding of the grant. A request for a key-bound grant that carries no DPoP proof is rejected with the `invalid_grant` error code (item 2), not `use_dpop_nonce`, unless {{client-auth}} requires the `invalid_client` error code.
+A consuming authorization server that supports DPoP validates a DPoP proof in the request, including its nonce, before it validates the grant, and rejects an invalid proof as {{Section 5 of RFC9449}} requires, whatever the binding of the grant. A request for a DPoP-bound grant that carries no DPoP proof is rejected with the `invalid_grant` error code (item 2), not `use_dpop_nonce`, unless {{client-auth}} requires the `invalid_client` error code.
 
 For an `x5t#S256` member, the consuming authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}). How the certificate reaches a consuming authorization server behind a TLS-terminating proxy is outside the scope of this specification, as it is in {{Section 6.5 of RFC8705}}.
 
@@ -476,10 +476,10 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 
 When the grant is bound, the consuming authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
-* for a key-bound grant, the grant's key, which is the key of the DPoP proof ({{processing}}); or
+* for a DPoP-bound grant, the grant's key, which is the key of the DPoP proof ({{processing}}); or
 * for a certificate-bound grant, the grant's certificate or, if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof.
 
-A TLS client certificate presented with a key-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound.
+A TLS client certificate presented with a DPoP-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound.
 
 | Grant's confirmation member | Proof in the request | Binding of issued tokens |
 |---|---|---|
@@ -682,7 +682,7 @@ A DPoP proof does not cover the grant it accompanies or the TLS connection that 
 * A refresh token bound only to a client as which the attacker authenticates would be usable, at the first refresh or a later one; {{refresh}} therefore binds every refresh token issued for a bound grant, and every replacement, to its key or certificate, unless the consuming authorization server verifies that the grant identifies the authenticated client, which an attacker that authenticates as its own client cannot satisfy.
 * An unbound access token is usable.
 
-A consuming authorization server that issues unbound access tokens for key-bound grants SHOULD reject a DPoP proof whose `jti` value it has already accepted at its token endpoint within that window ({{Section 11.1 of RFC9449}}). A server-provided nonce ({{Section 8 of RFC9449}}) shortens the window but does not by itself detect reuse, because a client can use the same nonce more than once. Neither measure denies an unbound access token to an attacker whose request arrives before the client's; only binding the access token does.
+A consuming authorization server that issues unbound access tokens for DPoP-bound grants SHOULD reject a DPoP proof whose `jti` value it has already accepted at its token endpoint within that window ({{Section 11.1 of RFC9449}}). A server-provided nonce ({{Section 8 of RFC9449}}) shortens the window but does not by itself detect reuse, because a client can use the same nonce more than once. Neither measure denies an unbound access token to an attacker whose request arrives before the client's; only binding the access token does.
 
 ## Exhaustion of Single-Use Grants {#single-use}
 
