@@ -673,12 +673,12 @@ Table of Contents
    type if the consuming authorization server advertises it
    (Section 6.1) and the client's registration permits it (Section 6.2).
    If the consuming authorization server advertises the jwt-dpop grant
-   type and not the jwt-pop grant type, a client that presents a grant
-   with a jkt member SHOULD use the jwt-dpop grant type, because a
-   server that implements only [JWT-DPOP-GRANT] rejects such a grant
-   presented with the jwt-bearer grant type.  The client proves
-   possession of the key or certificate identified by the grant's cnf
-   claim:
+   type and not the jwt-pop grant type, and the client's registration
+   permits it, a client that presents a grant with a jkt member SHOULD
+   use the jwt-dpop grant type, because a server that implements only
+   [JWT-DPOP-GRANT] rejects such a grant presented with the jwt-bearer
+   grant type.  The client proves possession of the key or certificate
+   identified by the grant's cnf claim:
 
    *  For a jkt or jwk member, the client MUST include a DPoP proof
       (Section 4 of [RFC9449]) signed with that key in the DPoP header
@@ -1725,11 +1725,14 @@ Appendix B.  Open Issues
        client metadata parameter, as dpop_bound_access_tokens does
        (Section 5.2 of [RFC9449]).  That would remove the jwt-pop grant
        type and the conflict with Section 8 of [ID-JAG].  It would also
-       lose the per-request requirement (Section 4.1.1) and fail open: a
+       lose the per-request requirement (Section 4.1.1), and a client
+       would need to confirm that the registration policy took effect: a
        consuming authorization server ignores client metadata that it
-       does not understand (Section 2 of [RFC7591]), but rejects an
-       unsupported grant type (Section 5.2 of [RFC6749]).  Which should
-       the working group prefer?
+       does not understand (Section 2 of [RFC7591]), but returns all
+       registered metadata, which the client can check (Section 3.2.1 of
+       [RFC7591]), whereas it rejects an unsupported grant type outright
+       (Section 5.2 of [RFC6749]).  Which should the working group
+       prefer?
 
 Acknowledgments
 
