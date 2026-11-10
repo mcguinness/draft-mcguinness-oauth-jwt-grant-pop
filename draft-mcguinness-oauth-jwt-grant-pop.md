@@ -450,7 +450,7 @@ A resource authorization server validates a JWT authorization grant as defined i
 
 Item 1 overrides the rule in {{Section 3.1 of RFC7800}} that implementations ignore confirmation members they do not understand. Client authentication does not take the place of any of these checks.
 
-A resource authorization server that supports DPoP validates a DPoP proof in the request, including its nonce, before it validates the grant, and rejects an invalid proof as {{Section 5 of RFC9449}} requires, whatever the binding of the grant. A request for a DPoP-bound grant that carries no DPoP proof is rejected with the `invalid_grant` error code (item 2), not `use_dpop_nonce`, unless {{client-auth}} requires the `invalid_client` error code.
+A resource authorization server that supports DPoP validates a DPoP proof in the request, including its nonce, before it validates the grant, and rejects an invalid proof as {{Section 5 of RFC9449}} requires, whatever the binding of the grant. A request for a DPoP-bound grant that carries no DPoP proof is rejected with the `invalid_grant` error code (item 2), not `use_dpop_nonce`.
 
 For an `x5t#S256` member, the resource authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}). How the certificate reaches a resource authorization server behind a TLS-terminating proxy is outside the scope of this specification, as it is in {{Section 6.5 of RFC8705}}.
 
@@ -578,7 +578,7 @@ Client authentication is optional for a JWT authorization grant ({{Section 4.1 o
 
 Such a profile specifies the items listed in item 4 of {{profiles}}. The resource authorization server then relies on the issuing authorization server's authentication of the client ({{pop-identity}}).
 
-Where a profile allows a bound grant in place of client authentication, a resource authorization server MUST reject a request that has neither client authentication nor a bound grant with the `invalid_client` error code ({{Section 5.2 of RFC6749}}). For this purpose, a grant that fails validation ({{processing}}) is not a bound grant, and this error code takes precedence over the `invalid_grant` error code.
+Where a profile allows a bound grant in place of client authentication, a resource authorization server MUST reject a request that has no client authentication, and whose grant has no `cnf` claim but passes the checks of {{processing}} and of the request's grant type, with the `invalid_client` error code ({{Section 5.2 of RFC6749}}). A grant that fails one of those checks is rejected with the error code that the check names ({{errors}}), as {{Section 3.1 of RFC7523}} requires the `invalid_grant` error code for a JWT that is not valid.
 
 # Error Responses {#errors}
 
@@ -600,7 +600,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At the resource authorization server, a check in {{processing}}, {{jwt-pop}}, {{legacy-jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails, or the grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
 
 `invalid_client`:
-: At the resource authorization server, the request has neither client authentication nor a bound grant, where a profile allows a bound grant in place of client authentication ({{client-auth}}).
+: At the resource authorization server, where a profile allows a bound grant in place of client authentication, the request has no client authentication, and its grant has no `cnf` claim but passes every check of {{processing}} and of the request's grant type ({{client-auth}}).
 
 `unauthorized_client`:
 : At the resource authorization server, the client is not registered for the grant type of the request ({{client-metadata}}).
