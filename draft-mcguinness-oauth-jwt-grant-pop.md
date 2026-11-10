@@ -164,7 +164,7 @@ An issuing authorization server binds a grant by including in it a `cnf` claim (
 * `jkt` ({{Section 6.1 of RFC9449}}), in a DPoP-bound grant, contains the JWK SHA-256 Thumbprint {{RFC7638}} of the client's public key.
 * `x5t#S256` ({{Section 3.1 of RFC8705}}), in a certificate-bound grant, contains the SHA-256 thumbprint of the DER encoding of the client's certificate.
 
-An issuing authorization server uses only these members. A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}). Requiring exactly one member is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key".
+The `cnf` claim of a grant that an issuing authorization server binds MUST contain exactly one of these members. A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}). Requiring exactly one member is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key".
 
 The following are the claims of a DPoP-bound grant:
 
@@ -276,7 +276,7 @@ The decoded JOSE header and claims of the DPoP proof in that request are:
 
 ## Issuing Authorization Server Processing {#issuer-processing}
 
-An issuing authorization server that supports this specification implements {{cnf-param}} and at least one of the `jkt` and `x5t#S256` confirmation methods, and binds a grant only as described in this section. When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
+An issuing authorization server that supports this specification MUST support the `cnf` response parameter ({{cnf-param}}) and at least one of the `jkt` and `x5t#S256` confirmation methods, and MUST NOT bind a grant other than as described in this section. When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
 
 ### DPoP Binding {#binding-request}
 
