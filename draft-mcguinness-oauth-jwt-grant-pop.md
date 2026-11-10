@@ -81,7 +81,7 @@ This specification defines both halves of the binding. {{issuance}} defines how 
 
 This specification defines no new confirmation method. It uses the `jkt` ({{Section 6.1 of RFC9449}}) and `x5t#S256` ({{Section 3.1 of RFC8705}}) confirmation methods, and also accepts the `jwk` confirmation method ({{Section 3.2 of RFC7800}}) in a grant that it redeems.
 
-## Relationship to Other Documents
+## Relationship to Other Documents {#relationship}
 
 This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), while keeping the first for existing clients ({{legacy-jwt-dpop}}). Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant whatever its grant type ({{grant-type-substitution}}), and it returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
 
@@ -405,7 +405,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
 
 ### Legacy DPoP-Bound Grant Type {#legacy-jwt-dpop}
 
-A consuming authorization server MAY continue to support the `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{Section 4.1 of JWT-DPOP-GRANT}}) for existing clients. It processes a request with that grant type as {{jwt-pop}} defines, and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`, as {{Section 5 of JWT-DPOP-GRANT}} requires. A new client uses the `jwt-pop` grant type.
+The `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients. A consuming authorization server MAY support it. It processes a request with that grant type by the rules of this specification for the `jwt-pop` grant type ({{jwt-pop}}), and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`. These rules differ from {{JWT-DPOP-GRANT}} as {{relationship}} describes. A new client uses the `jwt-pop` grant type.
 
 ## Processing Rules {#processing}
 
@@ -744,7 +744,7 @@ Specification document(s):
 
 ## OAuth URI Registration
 
-This specification requests registration of the following value in the "OAuth URI" registry {{IANA.oauth-parameters}} established by {{RFC6755}}:
+This specification requests registration of the following values in the "OAuth URI" registry {{IANA.oauth-parameters}} established by {{RFC6755}}:
 
 URN:
 : `urn:ietf:params:oauth:grant-type:jwt-pop`
@@ -757,6 +757,18 @@ Change Controller:
 
 Specification Document(s):
 : {{jwt-pop}} of this document
+
+URN:
+: `urn:ietf:params:oauth:grant-type:jwt-dpop`
+
+Common Name:
+: DPoP-Bound JWT Authorization Grant (legacy)
+
+Change Controller:
+: IETF
+
+Specification Document(s):
+: {{legacy-jwt-dpop}} of this document
 
 ## OAuth Authorization Server Metadata Registration
 
