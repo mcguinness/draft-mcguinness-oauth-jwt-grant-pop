@@ -83,7 +83,7 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 ## Relationship to Other Documents
 
-This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}). Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant whatever its grant type ({{grant-type-substitution}}), and it returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
+This specification replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), while keeping the first for existing clients ({{legacy-jwt-dpop}}). Unlike that document, which rejects a DPoP-bound grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type, this specification verifies the binding of a grant whatever its grant type ({{grant-type-substitution}}), and it returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}). It incorporates the second's Token Exchange response parameter ({{cnf-param}}), which is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
 
 This specification generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant. {{profile-examples}} describes that grant as a profile of this specification and lists the conflicts between the two documents.
 
@@ -111,7 +111,7 @@ Confirmation member:
 Binding request:
 : A Token Exchange request that contains a DPoP proof ({{binding-request}}).
 
-This specification refers to the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type ({{Section 2.1 of RFC7523}}) and the `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}) as the `jwt-bearer` and `jwt-pop` grant types.
+This specification refers to the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type ({{Section 2.1 of RFC7523}}), the `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), and the `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{legacy-jwt-dpop}}) as the `jwt-bearer`, `jwt-pop`, and `jwt-dpop` grant types.
 
 The examples in this specification are non-normative. They use the public key from the examples in {{RFC9449}}, whose JWK SHA-256 Thumbprint is `0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I`, an issuing authorization server at `https://issuer.example/`, and a consuming authorization server at `https://as.example/`. Request bodies are shown with extra line breaks and without URL encoding, and tokens are truncated, for display purposes only.
 
@@ -403,6 +403,10 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
 ~~~
 {: #ex-redeem title="Access Token Request with a DPoP-Bound Grant"}
 
+### Legacy DPoP-Bound Grant Type {#legacy-jwt-dpop}
+
+A consuming authorization server MAY continue to support the `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type ({{Section 4.1 of JWT-DPOP-GRANT}}) for existing clients. It processes a request with that grant type as {{jwt-pop}} defines, and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`, as {{Section 5 of JWT-DPOP-GRANT}} requires. A new client uses the `jwt-pop` grant type.
+
 ## Processing Rules {#processing}
 
 A consuming authorization server validates a JWT authorization grant as defined in {{Section 3 of RFC7523}}, as updated by {{Section 4 of RFC10070}}, and by the profile of the grant. If the grant contains a `cnf` claim, a consuming authorization server that supports this specification MUST also ensure the following, whichever grant type the request uses, and MUST otherwise reject the request with the indicated error code ({{errors}}):
@@ -568,7 +572,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At the issuing authorization server, the profile of the grant requires binding and a binding request cannot be honored for the consuming authorization server ({{binding-request}}).
 
 `invalid_grant`:
-: At the consuming authorization server, a check in {{processing}}, {{jwt-pop}}, or {{refresh}} that names `invalid_grant` fails, or the grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
+: At the consuming authorization server, a check in {{processing}}, {{jwt-pop}}, {{legacy-jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails, or the grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
 
 `invalid_client`:
 : At the consuming authorization server, the request has neither client authentication nor a bound grant, where a profile allows a bound grant in place of client authentication ({{client-auth}}).
@@ -592,7 +596,7 @@ An issuing authorization server MAY rely on a confirmation member listed in `jwt
 * that `aud` value; or
 * an issuer identifier that the issuing authorization server's configuration associates with that `aud` value, for example when it is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
-Metadata that does not list a confirmation member is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence ({{bind}}).
+Metadata that does not list a confirmation member is no evidence that the consuming authorization server verifies it; configuration or an established trust relationship can still provide that evidence ({{bind}}). In metadata obtained in the same way, an issuing authorization server MAY also treat the `jwt-dpop` value of `grant_types_supported` as evidence that the consuming authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}).
 
 The `dpop_signing_alg_values_supported` ({{Section 5.1 of RFC9449}}) and `tls_client_certificate_bound_access_tokens` ({{Section 3.3 of RFC8705}}) metadata parameters do not indicate that an authorization server verifies bound grants.
 
@@ -617,6 +621,10 @@ The following is an example of metadata on which an issuing authorization server
 ## Client Registration Metadata {#client-metadata}
 
 A consuming authorization server can require a client to present bound grants by registering the client with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes the `jwt-pop` grant type and not the `jwt-bearer` grant type. The consuming authorization server then rejects a request from that client that uses the `jwt-bearer` grant type with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-pop}} rejects an unbound grant. This applies only to a request in which the consuming authorization server identifies the client: by client authentication or, when a bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration.
+
+A consuming authorization server can instead reject unbound grants by policy while accepting the `jwt-bearer` grant type, but `grant_types` then does not express that the client is limited to bound grants.
+
+Support for both the `jwt-pop` and `jwt-dpop` grant types does not permit every client to use both: the consuming authorization server rejects a request whose grant type the client's registration does not permit with the `unauthorized_client` error code. A new client is registered for the `jwt-pop` grant type; an existing client keeps the `jwt-dpop` grant type only where its registration permits it.
 
 The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the grant to be bound.
 
