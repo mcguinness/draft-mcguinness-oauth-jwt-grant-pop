@@ -347,7 +347,7 @@ For example, the following `jwk` member matches a `jkt` member with the value `0
 
 ## Client Processing of the Response {#client-processing}
 
-When the issued token is a JWT authorization grant, a client that sent a binding request, or that presented a TLS client certificate and requires a bound grant, processes the Token Exchange response as follows:
+When the `token_type` response parameter is `N_A`, as it is for a JWT authorization grant ({{bind}}), a client that sent a binding request, or that presented a TLS client certificate and requires a bound grant, processes the Token Exchange response as follows:
 
 1. If the `cnf` parameter is present and is not a JSON object that contains exactly one confirmation member, the client MUST discard the issued token.
 2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the grant is not bound, and a client that requires a bound grant MUST discard it.
@@ -356,7 +356,7 @@ When the issued token is a JWT authorization grant, a client that sent a binding
    * the `cnf` claim, if readable, contains exactly one confirmation member; and
    * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
-The client does not infer the binding of a grant from the `token_type` response parameter, which is `N_A` ({{bind}}). For an access token, the client determines the binding from the `token_type` response parameter ({{Section 5 of RFC9449}}) and can also compare the `cnf` parameter with its own key or certificate ({{cnf-comparison}}).
+For an access token, a `token_type` of `DPoP` indicates a DPoP binding ({{Section 5 of RFC9449}}). {{RFC8705}} defines no `token_type` value, so the `token_type` does not show a certificate binding; the `cnf` parameter, if present, identifies the key or certificate of either binding ({{cnf-comparison}}).
 
 A client that did not send a binding request but receives a `cnf` parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it SHOULD treat the response as an error.
 
