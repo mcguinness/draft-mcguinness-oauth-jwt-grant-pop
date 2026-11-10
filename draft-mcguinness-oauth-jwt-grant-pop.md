@@ -347,7 +347,7 @@ Cache-Control: no-store
 This specification defines the use of the `cnf` token response parameter, registered by {{RFC9201}}, in a Token Exchange response ({{Section 2.2.1 of RFC8693}}):
 
 `cnf`:
-: REQUIRED if the authorization server bound the token in the `access_token` response parameter to a key or certificate and the `token_type` response parameter is `N_A`, and OPTIONAL if it bound the token and the `token_type` response parameter has another value; otherwise, it MUST NOT be present. A JSON object containing exactly one confirmation member, which identifies that key or certificate. Its syntax and member semantics are those of the `cnf` claim ({{Section 3.1 of RFC7800}}).
+: REQUIRED if the authorization server bound the token in the `access_token` response parameter to a key or certificate and the `token_type` response parameter is `N_A`. For a bound token with another `token_type` value, OPTIONAL unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a symmetric proof-of-possession key. It MUST NOT be present if the token is not bound. A JSON object containing exactly one confirmation member, which identifies that key or certificate. Its syntax and member semantics are those of the `cnf` claim ({{Section 3.1 of RFC7800}}).
 
 The parameter describes only the token in the `access_token` response parameter, whatever its `issued_token_type`, including an opaque or encrypted token and an access token whose `token_type` also indicates the binding. It does not describe a `refresh_token` in the same response.
 
