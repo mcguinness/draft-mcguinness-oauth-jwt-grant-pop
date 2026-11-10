@@ -1165,8 +1165,9 @@ Table of Contents
    identifier (Section 6.1) for each confirmation method with which it
    can redeem a bound grant.  At the issuing authorization server,
    urn:ietf:params:oauth:grant-profile:pop-x5t-s256 in that parameter
-   indicates that the client redeems certificate-bound grants by
-   presenting the certificate with which it authenticates (Section 3.2).
+   indicates that the client will redeem a grant bound to the TLS client
+   certificate that it presents in the request for the grant, whatever
+   method of client authentication it uses (Section 3.2).
 
    The dpop_bound_access_tokens client metadata parameter (Section 5.2
    of [RFC9449]) requires a DPoP proof in each token request, but does
