@@ -377,10 +377,8 @@ A JWT authorization grant can also be issued through an interface other than Tok
 
 The client presents a bound grant in an access token request ({{Section 4.1 of RFC7521}}) and proves possession of the key or certificate identified by the grant's `cnf` claim:
 
-* For a `jkt` member, the client MUST include a DPoP proof ({{Section 4 of RFC9449}}) signed with that key in the DPoP header field of the request, and uses the `jwt-dpop` grant type ({{jwt-dpop}}) or the `jwt-bearer` grant type ({{Section 2.1 of RFC7523}}). The client SHOULD use the `jwt-dpop` grant type if the consuming authorization server advertises it ({{as-metadata}}).
+* For a `jkt` member, the client MUST include a DPoP proof ({{Section 4 of RFC9449}}) signed with that key in the DPoP header field of the request, and uses the `jwt-dpop` grant type ({{jwt-dpop}}) or the `jwt-bearer` grant type. The client SHOULD use the `jwt-dpop` grant type if the consuming authorization server advertises it ({{as-metadata}}).
 * For an `x5t#S256` member, the client MUST send the request, with the `jwt-bearer` grant type, over a mutual-TLS connection that uses that certificate ({{Section 3 of RFC8705}}), to the token endpoint or to its mutual-TLS endpoint alias ({{Section 5 of RFC8705}}).
-
-Whether the client also authenticates is determined by the consuming authorization server's policy and the profile of the grant ({{client-auth}}).
 
 ### DPoP-Bound Grant Type {#jwt-dpop}
 
@@ -397,7 +395,7 @@ To use the `jwt-dpop` grant type, the client uses the following parameters, in a
 
 The consuming authorization server processes the request as defined in {{processing}}, and MUST also reject it with the `invalid_grant` error code if the grant has no `cnf` claim or if the confirmation member of its `cnf` claim is not `jkt`.
 
-The following is an example of an access token request that presents the grant in {{ex-grant}} with the `jwt-dpop` grant type and a DPoP proof for the same key, whose `htu` claim is `https://as.example/token`. The client does not authenticate, which the consuming authorization server's policy permits:
+The following is an example of an access token request that presents the grant in {{ex-grant}} with the `jwt-dpop` grant type, from a client that does not authenticate:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -426,9 +424,15 @@ A consuming authorization server validates a JWT authorization grant as defined 
    * the request was received on a TLS connection in whose handshake the client presented a certificate and proved possession of its private key; otherwise, `invalid_grant`; and
    * the SHA-256 thumbprint of the DER encoding of that certificate equals the `x5t#S256` value ({{Section 3.1 of RFC8705}}); otherwise, `invalid_grant`.
 
-Item 1 is an application requirement in the sense of {{Section 3.1 of RFC7800}}, which otherwise requires implementations to ignore confirmation members they do not understand.
+Item 1 overrides the rule in {{Section 3.1 of RFC7800}} that implementations ignore confirmation members they do not understand. Client authentication does not take the place of any of these checks.
 
-For example, a consuming authorization server rejects a grant with the following `cnf` claim with the `invalid_grant` error code, because the claim contains two confirmation members:
+For an `x5t#S256` member, the consuming authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}). How the certificate reaches a consuming authorization server behind a TLS-terminating proxy is outside the scope of this specification, as it is in {{Section 6.5 of RFC8705}}.
+
+If the profile of the grant requires binding ({{profiles}}) and the grant has no `cnf` claim, the consuming authorization server MUST reject the request with the `invalid_grant` error code.
+
+A consuming authorization server that detects reuse of a grant, for example by its `jti` claim ({{Section 4.1.7 of RFC7519}}), MUST NOT record the grant as used when it rejects the request ({{single-use}}).
+
+The following `cnf` claim is rejected with the `invalid_grant` error code because it contains two confirmation members:
 
 ~~~ json
 {
@@ -454,13 +458,7 @@ Cache-Control: no-store
 ~~~
 {: title="Error Response for a Missing DPoP Proof"}
 
-For an `x5t#S256` member, the consuming authorization server verifies possession of the certificate's private key. It need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}). When TLS is terminated before the consuming authorization server, how the certificate is conveyed to it is outside the scope of this specification, as it is in {{Section 6.5 of RFC8705}}. Client authentication, when present, does not take the place of these checks.
-
-If the profile of the grant requires binding ({{profiles}}) and the grant has no `cnf` claim, the consuming authorization server MUST reject the request with the `invalid_grant` error code.
-
-A consuming authorization server that detects reuse of a grant, for example by its `jti` claim ({{Section 4.1.7 of RFC7519}}), MUST NOT record the grant as used when it rejects the request ({{single-use}}).
-
-For example, a consuming authorization server that requires a DPoP nonce ({{Section 8 of RFC9449}}) responds to the request in {{ex-redeem}} as follows, without recording the grant as used:
+A consuming authorization server that requires a DPoP nonce ({{Section 8 of RFC9449}}) responds to the request in {{ex-redeem}} as follows, without recording the grant as used. The client then repeats the request with the same grant and a DPoP proof that contains the nonce.
 
 ~~~ http-message
 HTTP/1.1 400 Bad Request
@@ -475,20 +473,16 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 ~~~
 {: title="Nonce Challenge for a DPoP-Bound Grant"}
 
-The client then repeats the request with the same grant and a new DPoP proof whose `nonce` claim contains the supplied value.
-
-A grant without a `cnf` claim, presented with the `jwt-bearer` grant type, is otherwise processed as defined in {{RFC7523}}. {{Section 5 of RFC9449}} and {{Section 3 of RFC8705}} apply to the access token request whether or not the grant is bound, except as {{token-response}} restricts the binding of tokens issued for a bound grant.
-
 ## Access Token Response {#token-response}
+
+{{Section 5 of RFC9449}} and {{Section 3 of RFC8705}} determine the binding of the tokens that the consuming authorization server issues, except as this section and {{refresh}} restrict it for a bound grant.
 
 When the grant is bound, the consuming authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
 * if the consuming authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof, which for a `jkt`-bound grant is the grant's key ({{processing}}); or
 * otherwise, the certificate that the grant's `x5t#S256` member identifies.
 
-A TLS client certificate presented with a `jkt`-bound grant does not determine the binding, even when the client authenticates with it, because the request does not show that the holder of the certificate holds the grant's key ({{proof-replay}}). A DPoP proof presented with an `x5t#S256`-bound grant does determine the binding: the mutual-TLS handshake shows that the request comes from the holder of the grant's certificate, and the DPoP proof is the request for a DPoP-bound access token defined in {{Section 5 of RFC9449}}.
-
-{{binding-outcomes}} summarizes these rules for a request that the consuming authorization server accepts. The access token can instead be unbound; a refresh token is always bound as shown ({{refresh}}). A consuming authorization server that does not support DPoP treats the last row as the second.
+A TLS client certificate presented with a `jkt`-bound grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound, and a consuming authorization server that does not support DPoP applies the second row in place of the third.
 
 | Grant's confirmation member | Proof in the request | Binding of issued tokens |
 |---|---|---|
@@ -512,19 +506,15 @@ Cache-Control: no-store
 ~~~
 {: title="Access Token Response"}
 
-If the response also contained a refresh token, the client would present it with a DPoP proof for the same key ({{refresh}}).
-
-The client redeems the certificate-bound grant in {{cert-example}} with the `jwt-bearer` grant type over a mutual-TLS connection that uses the same certificate. If the client also includes a DPoP proof in that request, the consuming authorization server binds the access token to the key of the DPoP proof and returns a `token_type` of `DPoP`.
-
 ## Refresh Tokens {#refresh}
 
-If the consuming authorization server issues a refresh token for a bound grant, it MUST bind the refresh token as described in {{token-response}}, whether or not the client authenticates. This binding is in addition to the binding to the client that {{Section 10.4 of RFC6749}} requires. It is stricter than {{Section 5 of RFC9449}}, under which a refresh token issued to a confidential client is not bound to the DPoP key, and than the recommendation in {{Section 4 of RFC8705}}. A refresh token bound only to the client would let a party that replays a captured grant and DPoP proof, while authenticating as its own client, obtain new access tokens without the grant's key ({{proof-replay}}).
+If the consuming authorization server issues a refresh token for a bound grant, it MUST bind the refresh token as described in {{token-response}}, whether or not the client authenticates. This binding is in addition to the binding to the client that {{Section 10.4 of RFC6749}} requires. It is stricter than {{Section 5 of RFC9449}}, under which a refresh token issued to a confidential client is not bound to the DPoP key, and than the recommendation in {{Section 4 of RFC8705}}; {{proof-replay}} gives the reason.
 
-When a client presents a refresh token bound under this section, the consuming authorization server MUST verify its binding as items 2 and 3 of {{processing}} verify the binding of a grant, with the same error codes. It MUST apply {{token-response}} and this section to the access token and to any refresh token that it issues in response, with the presented refresh token's key or certificate in place of the grant's. Every replacement refresh token is therefore bound under the same rules as the first, whether or not the client authenticates. At a consuming authorization server that supports DPoP, a valid DPoP proof presented with a certificate-bound refresh token determines the binding of the issued tokens ({{binding-outcomes}}); the binding of the presented refresh token does not change.
+When a client presents a refresh token bound under this section, the consuming authorization server MUST verify its binding as items 2 and 3 of {{processing}} verify the binding of a grant, with the same error codes. It MUST apply {{token-response}} and this section to the access token and to any refresh token that it issues in response, with the presented refresh token's key or certificate in place of the grant's. The binding of the presented refresh token does not change, even when the issued tokens are bound to the key of a DPoP proof ({{binding-outcomes}}).
 
-The response does not always show which binding was applied to a refresh token. For example, a consuming authorization server that does not support DPoP binds the refresh token to the certificate even when the request contained a DPoP proof ({{binding-outcomes}}), and returns a `token_type` of `Bearer`. The client therefore presents a refresh token issued for a bound grant with each proof of possession that it presented in the request in which it obtained that refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both.
+The client presents a refresh token issued for a bound grant with each proof of possession that it presented in the request in which it obtained that refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. The response does not always show which binding was applied; for example, a consuming authorization server that does not support DPoP binds to the certificate and returns a `token_type` of `Bearer`.
 
-The client redeemed the grant in {{cert-example}} without a DPoP proof, and the consuming authorization server bound the refresh token that it issued to the certificate. The following is an example of a refresh request for that refresh token. The client sends it over a mutual-TLS connection that uses the certificate, authenticates with the same certificate ({{Section 2 of RFC8705}}), and adds a DPoP proof:
+The following is an example of a refresh request for a refresh token bound to the certificate in {{cert-example}}. The client sends it over a mutual-TLS connection that uses that certificate, with which it also authenticates ({{Section 2 of RFC8705}}), and adds a DPoP proof:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -538,7 +528,7 @@ grant_type=refresh_token
 ~~~
 {: title="Refresh Request with a Certificate-Bound Refresh Token"}
 
-The consuming authorization server verifies the certificate against the refresh token's binding, even though the client authenticates. It binds the new access token and the replacement refresh token to the key of the DPoP proof:
+The consuming authorization server verifies the certificate against the refresh token's binding and binds the issued tokens to the key of the DPoP proof:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -554,13 +544,13 @@ Cache-Control: no-store
 ~~~
 {: title="Refresh Response with DPoP-Bound Tokens"}
 
-The replacement refresh token is bound to the key of the DPoP proof; the presented refresh token stays bound to the certificate. The client obtained the replacement with both proofs, so it presents both when it uses the replacement: a DPoP proof for the same key, over a mutual-TLS connection that uses the same certificate. The consuming authorization server verifies the DPoP proof.
+The client presents the replacement refresh token with both proofs, because it obtained it with both; the consuming authorization server verifies the DPoP proof.
 
 ## Bound Grant in Place of Client Authentication {#client-auth}
 
 Client authentication is optional for a JWT authorization grant ({{Section 4.1 of RFC7521}}, {{Section 3.1 of RFC7523}}). A profile ({{profiles}}) can allow a consuming authorization server to accept a bound grant from a client that does not authenticate, with proof of possession of the grant's key or certificate taking the place of client authentication.
 
-Proof of possession does not by itself identify a client ({{Section 3 of RFC9449}}). The consuming authorization server relies instead on the issuing authorization server, which authenticates the client in the request in which it verifies proof of possession and identifies that client in the grant. A profile that allows a bound grant in place of client authentication specifies the items listed in item 4 of {{profiles}}.
+Such a profile specifies the items listed in item 4 of {{profiles}}. The consuming authorization server then relies on the issuing authorization server's authentication of the client ({{pop-identity}}).
 
 Where a profile allows a bound grant in place of client authentication, a consuming authorization server MUST reject a request that has neither client authentication nor a bound grant with the `invalid_client` error code ({{Section 5.2 of RFC6749}}). This error code takes precedence over the `invalid_grant` error code for an unbound grant ({{processing}}, {{jwt-dpop}}).
 
@@ -682,7 +672,7 @@ The token endpoint requires TLS ({{Section 3.2 of RFC6749}}), which prevents an 
 
 Binding the issued grant does not protect a bearer `subject_token` that is stolen before the exchange. An attacker that holds such a subject token, and can satisfy any client authentication that the issuing authorization server requires, can request a grant bound to the attacker's own key. A bound `subject_token` is protected by the check in {{bound-subject}}. That check does not apply to an authenticated client that is an intended audience of the token, other than the client to which the token was issued; such a client can exchange the token without the key. Protection of bearer subject tokens is outside the scope of this specification; see {{RFC9700}}.
 
-## Proof of Possession and Client Identity
+## Proof of Possession and Client Identity {#pop-identity}
 
 Proof of possession shows that the presenter holds the key or certificate, not which client the presenter is. Even at the issuing authorization server, a DPoP proof is not cryptographically bound to the client authentication that accompanies it ({{Section 11.11 of RFC9449}}). A consuming authorization server that accepts a bound grant in place of client authentication ({{client-auth}}) therefore depends on the issuing authorization server's authentication of the client and on the client's protection of its private key: any party that obtains the key can use a grant bound to it.
 
@@ -693,7 +683,7 @@ The DPoP proof replay protections of {{Section 11.1 of RFC9449}} and the authori
 A DPoP proof does not cover the grant it accompanies or the TLS connection that carries it. An attacker that captures a grant together with a DPoP proof for its key can replay both, over its own TLS connection, within the window in which the consuming authorization server accepts the proof ({{Section 11.1 of RFC9449}}). What the attacker obtains depends on the binding of the issued tokens:
 
 * An access token or refresh token bound to the grant's key is of no use to the attacker.
-* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding.
+* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding. The reverse case is safe: for an `x5t#S256`-bound grant, the mutual-TLS handshake shows that a DPoP proof comes from the holder of the grant's certificate, so {{token-response}} lets that proof determine the binding.
 * A refresh token bound only to a client as which the attacker authenticates would be usable, at the first refresh or a later one; {{refresh}} binds every refresh token issued for a bound grant, and every replacement, as described in {{token-response}}.
 * An unbound access token is usable.
 
