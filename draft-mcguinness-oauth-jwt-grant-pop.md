@@ -144,7 +144,7 @@ The client sends a separate DPoP proof to each authorization server, signed with
 
 # Issuing a Bound Grant with Token Exchange {#issuance}
 
-This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request ({{Section 2.1 of RFC8693}}), except for {{cnf-param}} and {{client-processing}}, which apply to any token that Token Exchange issues. An issuing authorization server that supports this specification supports at least one of the `jkt` and `x5t#S256` confirmation methods, and implements {{cnf-param}}.
+This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request ({{Section 2.1 of RFC8693}}), except for {{cnf-param}}, which applies to any token that Token Exchange issues. An issuing authorization server that supports this specification supports at least one of the `jkt` and `x5t#S256` confirmation methods, and implements {{cnf-param}}.
 
 When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
 
@@ -345,15 +345,15 @@ For example, the following `jwk` member matches a `jkt` member with the value `0
 
 ## Client Processing of the Response {#client-processing}
 
-A client that sent a binding request, or that presented a TLS client certificate and requires a bound token, processes the Token Exchange response as follows:
+When the issued token is a JWT authorization grant, a client that sent a binding request, or that presented a TLS client certificate and requires a bound grant, processes the Token Exchange response as follows:
 
 1. If the `cnf` parameter is present and is not a JSON object that contains exactly one confirmation member, the client MUST discard the issued token.
-2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the issued token is not bound, and a client that requires a bound token MUST discard it.
+2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the grant is not bound, and a client that requires a bound grant MUST discard it.
 3. The client MUST verify the following, and MUST discard the issued token if any check fails:
    * the `cnf` claim, if readable, contains exactly one confirmation member; and
    * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
-The client does not infer the binding from the `token_type` response parameter.
+The client does not infer the binding of a grant from the `token_type` response parameter, which is `N_A` ({{bind}}). For an access token, the client determines the binding from the `token_type` response parameter ({{Section 5 of RFC9449}}) and can also compare the `cnf` parameter with its own key or certificate ({{cnf-comparison}}).
 
 A client that receives the `invalid_target` error code in response to a binding request, and does not require a bound grant, MAY repeat the request without a DPoP proof.
 
