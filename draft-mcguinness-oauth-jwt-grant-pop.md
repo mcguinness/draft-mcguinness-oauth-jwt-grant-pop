@@ -47,9 +47,9 @@ normative:
   RFC8705:
   RFC9449:
   RFC10070:
-  IANA.oauth-parameters:
 
 informative:
+  IANA.oauth-parameters:
   RFC6755:
   RFC7516:
   RFC7591:
