@@ -405,7 +405,7 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
 
 ### Legacy DPoP-Bound Grant Type {#legacy-jwt-dpop}
 
-The `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients. A consuming authorization server MAY support it. It processes a request with that grant type by the rules of this specification for the `jwt-pop` grant type ({{jwt-pop}}), and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`. These rules differ from {{JWT-DPOP-GRANT}} as {{relationship}} describes. A new client uses the `jwt-pop` grant type.
+The `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients. A consuming authorization server MAY support it, and SHOULD continue to support it while clients are registered for it. A consuming authorization server that supports it SHOULD include it in the `grant_types_supported` metadata parameter, on which an issuing authorization server that implements {{JWT-DPOP-GRANT}} can rely to determine that the consuming authorization server verifies DPoP-bound grants. It processes a request with that grant type by the rules of this specification for the `jwt-pop` grant type ({{jwt-pop}}), and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`. These rules differ from {{JWT-DPOP-GRANT}} as {{relationship}} describes. A new client uses the `jwt-pop` grant type.
 
 ## Processing Rules {#processing}
 
