@@ -352,6 +352,7 @@ When the issued token is a JWT authorization grant, a client that sent a binding
 1. If the `cnf` parameter is present and is not a JSON object that contains exactly one confirmation member, the client MUST discard the issued token.
 2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the grant is not bound, and a client that requires a bound grant MUST discard it.
 3. The client MUST verify the following, and MUST discard the issued token if any check fails:
+   * if the `cnf` parameter is present and the client can read the grant, the grant contains a `cnf` claim;
    * the `cnf` claim, if readable, contains exactly one confirmation member; and
    * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
