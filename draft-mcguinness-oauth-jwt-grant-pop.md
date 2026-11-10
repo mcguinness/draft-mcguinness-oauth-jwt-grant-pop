@@ -626,6 +626,8 @@ A consuming authorization server can instead reject unbound grants by policy whi
 
 Support for both the `jwt-pop` and `jwt-dpop` grant types does not permit every client to use both: the consuming authorization server rejects a request whose grant type the client's registration does not permit with the `unauthorized_client` error code. A new client is registered for the `jwt-pop` grant type; an existing client keeps the `jwt-dpop` grant type only where its registration permits it.
 
+The `jwt-pop` grant type has no corresponding `response_types` value ({{Section 2.1 of RFC7591}}).
+
 The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the grant to be bound.
 
 The following is an example of client metadata for a client that the consuming authorization server limits to bound grants:
