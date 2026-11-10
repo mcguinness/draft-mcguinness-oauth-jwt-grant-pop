@@ -40,11 +40,13 @@ normative:
   RFC7519:
   RFC7521:
   RFC7523:
+  RFC7591:
   RFC7638:
   RFC7800:
   RFC8414:
   RFC8693:
   RFC8705:
+  RFC9201:
   RFC9449:
   RFC10070:
 
@@ -52,9 +54,7 @@ informative:
   IANA.oauth-parameters:
   RFC6755:
   RFC7516:
-  RFC7591:
   RFC8725:
-  RFC9201:
   RFC9700:
   ID-CHAINING: I-D.ietf-oauth-identity-chaining
   ID-JAG: I-D.ietf-oauth-identity-assertion-authz-grant
