@@ -144,7 +144,7 @@ The client sends a separate DPoP proof to each authorization server, signed with
 
 # Issuing a Bound Grant with Token Exchange {#issuance}
 
-This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request ({{Section 2.1 of RFC8693}}), except for {{cnf-param}}, which applies to any token that Token Exchange issues. An issuing authorization server that supports this specification supports at least one of the `jkt` and `x5t#S256` confirmation methods, and implements {{cnf-param}}.
+This section applies when an issuing authorization server issues a JWT authorization grant in response to a Token Exchange request ({{Section 2.1 of RFC8693}}), except for {{cnf-param}}, which applies to any token that Token Exchange issues. The issuing authorization server determines from the `requested_token_type`, `audience`, and `resource` parameters and from its policy whether the issued token is a JWT authorization grant, that is, a JWT whose `aud` claim identifies an authorization server, or another token, such as an access token. An issuing authorization server that supports this specification supports at least one of the `jkt` and `x5t#S256` confirmation methods, and implements {{cnf-param}}.
 
 When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
 
