@@ -154,7 +154,9 @@ A client requests a bound grant by including a DPoP proof ({{Section 4 of RFC944
 
 The issuing authorization server MUST validate the DPoP proof as described in {{Section 4.3 of RFC9449}}, and responds to an invalid proof or a missing nonce as described in {{errors}}.
 
-If an issuing authorization server that supports the `jkt` confirmation method receives a binding request with a valid DPoP proof, it MUST either bind the issued grant to the public key of the DPoP proof ({{bind}}) or reject the request ({{errors}}). It MUST NOT issue an unbound grant, or a grant bound to another key or certificate, in response to a binding request, including when the client also presents a TLS client certificate.
+In response to a binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued grant to the public key of the DPoP proof ({{bind}}), unless it does not support the `jkt` confirmation method or cannot bind the grant for the consuming authorization server ({{bind}}). In that case, it MUST issue an unbound grant, without the `cnf` response parameter, unless the profile of the grant requires binding; if the profile requires binding, it MUST reject the request with the `invalid_target` error code. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
+
+A client that requires a bound grant discards an unbound one ({{client-processing}}). Issuing an unbound grant keeps working a client that sends a DPoP proof in every token request, and a client that proves possession of a DPoP-bound `subject_token` ({{bound-subject}}), when the consuming authorization server does not verify bindings.
 
 The following is an example of a binding request from a client that authenticates with a client secret, for a grant for the consuming authorization server `https://as.example/`:
 
@@ -233,7 +235,7 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, such a
 * The request proves possession of that key or certificate, with a DPoP proof signed with the key or a mutual-TLS handshake using the certificate.
 * The requesting client authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received ({{Section 2.3 of RFC8693}}).
 
-The issuing authorization server determines the audience from the token's `aud` claim or from its own records of the token. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key ({{binding-request}}).
+The issuing authorization server determines the audience from the token's `aud` claim or from its own records of the token. A grant issued in response to a binding request that proves possession of a DPoP-bound `subject_token` is therefore bound to the same key, or unbound ({{binding-request}}).
 
 ## Binding the Grant {#bind}
 
@@ -244,7 +246,7 @@ To bind a grant, the issuing authorization server includes in it a `cnf` claim (
 
 This is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key". The issuing authorization server MUST NOT bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.
 
-The issuing authorization server MUST NOT bind a grant using a confirmation method unless it has determined that each authorization server that the grant's `aud` claim identifies verifies that confirmation method as described in {{processing}} (see {{non-enforcing-consumers}}). It makes this determination from configuration, from an established trust relationship, or, for the `jkt` confirmation method, from the consuming authorization server's metadata ({{as-metadata}}). If the issuing authorization server cannot bind the grant for the consuming authorization server in response to a binding request, it MUST reject the request with the `invalid_target` error code ({{errors}}).
+The issuing authorization server MUST NOT bind a grant using a confirmation method unless it has determined that each authorization server that the grant's `aud` claim identifies verifies that confirmation method as described in {{processing}} (see {{non-enforcing-consumers}}). It makes this determination from configuration, from an established trust relationship, or, for the `jkt` confirmation method, from the consuming authorization server's metadata ({{as-metadata}}). {{binding-request}} defines the response to a binding request when the issuing authorization server cannot bind the grant.
 
 When the issued token is a bound grant, the issuing authorization server MUST set the `token_type` response parameter to `N_A` ({{Section 2.2.1 of RFC8693}}); the `DPoP` value that {{Section 5 of RFC9449}} requires applies only to a DPoP-bound access token.
 
@@ -276,7 +278,7 @@ A certificate-bound grant instead contains a `cnf` claim such as the following:
 ~~~
 {: title="Confirmation Claim of a Certificate-Bound Grant"}
 
-The following is an example of the `invalid_target` error response:
+The following is an example of the `invalid_target` error response to a binding request for a grant whose profile requires binding:
 
 ~~~ http-message
 HTTP/1.1 400 Bad Request
@@ -354,8 +356,6 @@ When the issued token is a JWT authorization grant, a client that sent a binding
    * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
 The client does not infer the binding of a grant from the `token_type` response parameter, which is `N_A` ({{bind}}). For an access token, the client determines the binding from the `token_type` response parameter ({{Section 5 of RFC9449}}) and can also compare the `cnf` parameter with its own key or certificate ({{cnf-comparison}}).
-
-A client that receives the `invalid_target` error code in response to a binding request, and does not require a bound grant, MAY repeat the request without a DPoP proof.
 
 A client that did not send a binding request but receives a `cnf` parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it SHOULD treat the response as an error.
 
@@ -562,7 +562,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At the issuing authorization server, the `subject_token` or `actor_token` is bound, and the request meets neither condition listed in {{bound-subject}}.
 
 `invalid_target`:
-: At the issuing authorization server, a binding request cannot be honored for the consuming authorization server ({{bind}}).
+: At the issuing authorization server, the profile of the grant requires binding and a binding request cannot be honored for the consuming authorization server ({{binding-request}}).
 
 `invalid_grant`:
 : At the consuming authorization server, a check in {{processing}}, {{jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails, or the grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
@@ -755,8 +755,9 @@ This appendix is informative. It shows how two specifications answer the items i
 
 A client that detects a downgrade from the grant's `cnf` claim ({{Section 9.11.1.1 of ID-JAG}}, {{Section 9.11.2.1 of ID-JAG}}) follows {{client-processing}}, which also accepts the `cnf` response parameter.
 
-Version -06 of that document conflicts with this specification in two places. Each would be resolved by a change to that document:
+Version -06 of that document conflicts with this specification in three places. Each would be resolved by a change to that document:
 
+* {{Section 9.11.1.1 of ID-JAG}} requires the IdP Authorization Server to include a `cnf` claim whenever the DPoP proof is valid. This specification issues an unbound grant when the issuing authorization server has not determined that the consuming authorization server verifies the binding ({{binding-request}}, {{non-enforcing-consumers}}). The change is to bind the grant only for a Resource Authorization Server known to verify the binding.
 * {{Section 9.11 of ID-JAG}} lets the IdP Authorization Server choose a certificate binding, according to local policy, when a request carries both a DPoP proof and a TLS client certificate. This specification requires a grant issued in response to a binding request to be bound to the key of the DPoP proof ({{binding-request}}). The change is for the IdP Authorization Server to bind the grant to that key whenever the request contains a DPoP proof.
 * {{Section 8 of ID-JAG}} requires a client that supports that profile to include `urn:ietf:params:oauth:grant-type:jwt-bearer` in its `grant_types`, which prevents a Resource Authorization Server from limiting the client to DPoP-bound grants ({{client-metadata}}). The change is to require `urn:ietf:params:oauth:grant-type:jwt-bearer` or `urn:ietf:params:oauth:grant-type:jwt-dpop`.
 
@@ -769,7 +770,7 @@ Version -06 of that document conflicts with this specification in two places. Ea
 \[Editor's note: this appendix lists questions for the working group. It will be removed before publication.\]
 
 1. Grant type for certificate-bound grants. The `jwt-dpop` grant type covers only DPoP-bound grants ({{jwt-dpop}}). Should certificate-bound grants have an equivalent grant type, or should one method-neutral grant type replace the `jwt-dpop` grant type, at the cost of breaking deployments that use it?
-2. Unhonored binding request. This draft rejects a binding request that the issuing authorization server cannot honor for the consuming authorization server ({{bind}}) with the `invalid_target` error code. Because {{Section 2.2.2 of RFC8693}} also uses that code for an unacceptable audience, a client cannot tell whether a retry without a DPoP proof would succeed. Should this be `invalid_request` or a new error code instead? Alternatively, should the issuing authorization server issue an unbound grant without the `cnf` response parameter and let the client decide ({{client-processing}})?
+2. Error for a required binding. When the profile of a grant requires binding and the issuing authorization server cannot bind the grant for the consuming authorization server, this draft returns the `invalid_target` error code ({{binding-request}}). {{Section 2.2.2 of RFC8693}} also uses that code for an unacceptable audience. Should this be `invalid_request` or a new error code instead?
 3. Scope of the response parameter. {{RFC9201}} registers the `cnf` token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?
 4. Discovery independent of grant type. `grant_types_supported` tells an issuing authorization server that a consuming authorization server verifies DPoP-bound grants ({{as-metadata}}). Nothing indicates that a consuming authorization server verifies certificate-bound grants, or verifies bound grants presented with the `jwt-bearer` grant type, and no client metadata indicates that a client redeems certificate-bound grants ({{cert-binding}}). Should an authorization server metadata parameter list the confirmation methods that a consuming authorization server verifies for JWT authorization grants, and a client metadata parameter indicate that a client accepts certificate-bound grants, with the `jwt-dpop` grant type retained for registration policy?
 5. Alignment with {{ID-JAG}}. The two conflicts listed in {{profile-examples}} need to be resolved, by the proposed changes to that document or by changes to this one.
