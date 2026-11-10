@@ -100,29 +100,23 @@ Table of Contents
      6.1.  Authorization Server Metadata
      6.2.  Client Registration Metadata
    7.  Profiling This Specification
-   8.  Examples
-     8.1.  Token Exchange with a Binding Request
-     8.2.  Redeeming a DPoP-Bound Grant
-     8.3.  Certificate-Bound Grant
-     8.4.  Refreshing a Certificate-Bound Token with a DPoP Proof
-     8.5.  Binding Request Rejected
-   9.  Security Considerations
-     9.1.  Non-Enforcing Consuming Authorization Servers
-     9.2.  Grant Type Substitution
-     9.3.  Informational Nature of the Response Parameter
-     9.4.  Theft of the Subject Token
-     9.5.  Proof of Possession and Client Identity
-     9.6.  DPoP Proof Replay
-     9.7.  Exhaustion of Single-Use Grants
-     9.8.  Replay by the Key Holder
-     9.9.  Cross-JWT Confusion
-   10. Privacy Considerations
-   11. IANA Considerations
-     11.1.  OAuth Parameters Registration
-     11.2.  OAuth URI Registration
-   12. References
-     12.1.  Normative References
-     12.2.  Informative References
+   8.  Security Considerations
+     8.1.  Non-Enforcing Consuming Authorization Servers
+     8.2.  Grant Type Substitution
+     8.3.  Informational Nature of the Response Parameter
+     8.4.  Theft of the Subject Token
+     8.5.  Proof of Possession and Client Identity
+     8.6.  DPoP Proof Replay
+     8.7.  Exhaustion of Single-Use Grants
+     8.8.  Replay by the Key Holder
+     8.9.  Cross-JWT Confusion
+   9.  Privacy Considerations
+   10. IANA Considerations
+     10.1.  OAuth Parameters Registration
+     10.2.  OAuth URI Registration
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
    Appendix A.  Profiles of This Specification
      A.1.  Identity Assertion JWT Authorization Grant
      A.2.  Identity and Authorization Chaining
@@ -187,7 +181,7 @@ Table of Contents
    TLS.  Unlike that document, which rejects a DPoP-bound grant
    presented with the urn:ietf:params:oauth:grant-type:jwt-bearer grant
    type, this specification verifies the binding of a grant presented
-   with either grant type (Section 9.2).  It incorporates the second's
+   with either grant type (Section 8.2).  It incorporates the second's
    Token Exchange response parameter (Section 3.5).
 
    [RFC9201] registers cnf as a token response parameter for the
@@ -239,6 +233,14 @@ Table of Contents
    type:jwt-bearer grant type (Section 2.1 of [RFC7523]) and the
    urn:ietf:params:oauth:grant-type:jwt-dpop grant type (Section 4.1.1)
    as the jwt-bearer and jwt-dpop grant types.
+
+   The examples in this specification are non-normative.  They use the
+   public key from the examples in [RFC9449], whose JWK SHA-256
+   Thumbprint is 0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I, an issuing
+   authorization server at https://issuer.example/, and a consuming
+   authorization server at https://as.example/. Request bodies are shown
+   with extra line breaks and without URL encoding, and tokens are
+   truncated, for display purposes only.
 
 2.  Protocol Overview
 
@@ -309,6 +311,49 @@ Table of Contents
    the DPoP proof with the key that it will use to redeem the grant
    (Section 4.1).
 
+   The following is an example of a binding request from a client that
+   authenticates with a client secret, for a grant for the consuming
+   authorization server https://as.example/:
+
+   POST /token HTTP/1.1
+   Host: issuer.example
+   Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+   Content-Type: application/x-www-form-urlencoded
+   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
+
+   grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+   &requested_token_type=urn:ietf:params:oauth:token-type:jwt
+   &audience=https://as.example/
+   &subject_token=eyJraWQiOiJzMTZ0cVNtODhwREo4VGZCXzdrSEtQ...
+   &subject_token_type=urn:ietf:params:oauth:token-type:id_token
+
+             Figure 2: Token Exchange Request with a DPoP Proof
+
+   The decoded JOSE header and claims of the DPoP proof in that request
+   are:
+
+   {
+     "typ": "dpop+jwt",
+     "alg": "ES256",
+     "jwk": {
+       "kty": "EC",
+       "x": "l8tFrhx-34tV3hRICRDY9zCkDlpBhF42UQUfWVAWBFs",
+       "y": "9VE4jf_Ok_o64zbTTlcuNJajHmt6v9TDVrU0CdvGRDA",
+       "crv": "P-256"
+     }
+   }
+
+                      Figure 3: DPoP Proof JOSE Header
+
+   {
+     "jti": "e1j3V_bKic8-LAEB",
+     "htm": "POST",
+     "htu": "https://issuer.example/token",
+     "iat": 1730000000
+   }
+
+      Figure 4: DPoP Proof Claims for the Issuing Authorization Server
+
    The issuing authorization server MUST validate the DPoP proof as
    described in Section 4.3 of [RFC9449], and responds to an invalid
    proof or a missing nonce as described in Section 5.
@@ -347,6 +392,29 @@ Table of Contents
    parameter by which a client requires a bound grant; a client that
    requires one enforces the requirement when it processes the response
    (Section 3.6).
+
+   The following is an example of a Token Exchange response in which the
+   issuing authorization server binds the grant to the TLS client
+   certificate that the client used for mutual-TLS client
+   authentication.  The request contained no DPoP proof, and the issuing
+   authorization server's configuration for the client indicates that
+   the client redeems grants over mutual TLS with that certificate:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...",
+     "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
+     "token_type": "N_A",
+     "expires_in": 300,
+     "cnf": {
+       "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
+     }
+   }
+
+      Figure 5: Token Exchange Response for a Certificate-Bound Grant
 
 3.3.  Bound Subject and Actor Tokens
 
@@ -388,6 +456,34 @@ Table of Contents
       client's certificate, which for a Token Exchange request is the
       TLS client certificate.
 
+   For example, a grant issued in response to the binding request in
+   Figure 2 has the following claims:
+
+   {
+     "iss": "https://issuer.example/",
+     "sub": "U019488227",
+     "aud": "https://as.example/",
+     "iat": 1730000000,
+     "exp": 1730000300,
+     "jti": "9e43f81b64a33f20116179",
+     "cnf": {
+       "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
+     }
+   }
+
+                   Figure 6: Claims of a DPoP-Bound Grant
+
+   A certificate-bound grant instead contains a cnf claim such as the
+   following:
+
+   {
+     "cnf": {
+       "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
+     }
+   }
+
+         Figure 7: Confirmation Claim of a Certificate-Bound Grant
+
    This is narrower than Section 3.1 of [RFC7800], which requires only
    that a cnf claim "represent only a single proof-of-possession key".
    The issuing authorization server MUST NOT bind a grant to a key or
@@ -398,13 +494,26 @@ Table of Contents
    confirmation method unless it has determined that the consuming
    authorization server identified by the grant's aud claim verifies
    that confirmation method as described in Section 4.2 (see
-   Section 9.1).  It makes this determination from configuration, from
+   Section 8.1).  It makes this determination from configuration, from
    an established trust relationship, or, for the jkt confirmation
    method, from the consuming authorization server's metadata
    (Section 6.1).  If the issuing authorization server cannot bind the
    grant for the consuming authorization server in response to a binding
    request, it MUST reject the request with the invalid_target error
    code (Section 5).
+
+   The following is an example of that error response:
+
+   HTTP/1.1 400 Bad Request
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "error": "invalid_target",
+     "error_description": "Audience does not accept bound grants"
+   }
+
+   Figure 8: Error Response for a Binding Request That Cannot Be Honored
 
    When the issued token is a bound grant, the issuing authorization
    server MUST set the token_type response parameter to N_A
@@ -441,11 +550,30 @@ Table of Contents
    (Section 3.5.1).  The authorization server SHOULD use the same
    confirmation member in the parameter as in the claim, and SHOULD use
    a thumbprint member, such as jkt or x5t#S256, rather than a jwk
-   member (Section 10).
+   member (Section 9).
 
    A client that does not support this specification ignores the
    parameter, as it ignores any unrecognized response parameter
    (Section 5.1 of [RFC6749]).
+
+   The following is an example of the Token Exchange response to the
+   binding request in Figure 2:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...",
+     "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
+     "token_type": "N_A",
+     "expires_in": 300,
+     "cnf": {
+       "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
+     }
+   }
+
+          Figure 9: Token Exchange Response with the cnf Parameter
 
 3.5.1.  Comparing Confirmation Values
 
@@ -465,6 +593,22 @@ Table of Contents
 
    *  Members of different confirmation methods, other than a jwk and
       jkt pair, do not match.
+
+   For example, the following confirmation value, which carries the
+   client's public key in a jwk member, matches a jkt member with the
+   value 0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I, because that value
+   is the JWK SHA-256 Thumbprint of the key:
+
+   {
+     "jwk": {
+       "kty": "EC",
+       "crv": "P-256",
+       "x": "l8tFrhx-34tV3hRICRDY9zCkDlpBhF42UQUfWVAWBFs",
+       "y": "9VE4jf_Ok_o64zbTTlcuNJajHmt6v9TDVrU0CdvGRDA"
+     }
+   }
+
+              Figure 10: Confirmation Value with a jwk Member
 
 3.6.  Client Processing of the Response
 
@@ -493,6 +637,10 @@ Table of Contents
           public key of its DPoP proof; otherwise, its TLS client
           certificate.  A confirmation member that the client does not
           recognize does not match.
+
+   For the response in Figure 9, the client verifies that the jkt value
+   in the cnf response parameter equals the JWK SHA-256 Thumbprint of
+   its DPoP public key.
 
    The client determines the binding from the cnf parameter and claim,
    not from the token_type response parameter.  It cannot distinguish an
@@ -565,6 +713,22 @@ Table of Contents
    code if the grant has no cnf claim or if the confirmation member of
    its cnf claim is not jkt.
 
+   The following is an example of an access token request that presents
+   the grant in Figure 6 with the jwt-dpop grant type and a DPoP proof
+   for the same key, whose htu claim is https://as.example/token.  The
+   client does not authenticate, which the consuming authorization
+   server's policy permits:
+
+   POST /token HTTP/1.1
+   Host: as.example
+   Content-Type: application/x-www-form-urlencoded
+   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
+
+   grant_type=urn:ietf:params:oauth:grant-type:jwt-dpop
+   &assertion=eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...
+
+          Figure 11: Access Token Request with a DPoP-Bound Grant
+
 4.2.  Processing Rules
 
    A consuming authorization server validates a JWT authorization grant
@@ -613,6 +777,33 @@ Table of Contents
    [RFC7800], which otherwise requires implementations to ignore
    confirmation members they do not understand.
 
+   For example, a consuming authorization server rejects a grant with
+   the following cnf claim with the invalid_grant error code, because
+   the claim contains two confirmation members:
+
+   {
+     "cnf": {
+       "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+       "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
+     }
+   }
+
+        Figure 12: Confirmation Claim with Two Confirmation Members
+
+   The following is an example of the error response when the request in
+   Figure 11 carries no DPoP proof:
+
+   HTTP/1.1 400 Bad Request
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "error": "invalid_grant",
+     "error_description": "Proof of possession required for this grant"
+   }
+
+             Figure 13: Error Response for a Missing DPoP Proof
+
    For an x5t#S256 member, the consuming authorization server verifies
    possession of the certificate's private key.  It need not
    authenticate the client with the certificate or trust the
@@ -629,7 +820,26 @@ Table of Contents
 
    A consuming authorization server that detects reuse of a grant, for
    example by its jti claim (Section 4.1.7 of [RFC7519]), MUST NOT
-   record the grant as used when it rejects the request (Section 9.7).
+   record the grant as used when it rejects the request (Section 8.7).
+
+   For example, a consuming authorization server that requires a DPoP
+   nonce (Section 8 of [RFC9449]) responds to the request in Figure 11
+   as follows, without recording the grant as used:
+
+   HTTP/1.1 400 Bad Request
+   Content-Type: application/json
+   Cache-Control: no-store
+   DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
+
+   {
+     "error": "use_dpop_nonce",
+     "error_description": "Nonce required in DPoP proof"
+   }
+
+             Figure 14: Nonce Challenge for a DPoP-Bound Grant
+
+   The client then repeats the request with the same grant and a new
+   DPoP proof whose nonce claim contains the supplied value.
 
    A grant without a cnf claim, presented with the jwt-bearer grant
    type, is otherwise processed as defined in [RFC7523].  Section 5 of
@@ -656,7 +866,7 @@ Table of Contents
    A TLS client certificate presented with a jkt-bound grant does not
    determine the binding, even when the client authenticates with it,
    because the request does not show that the holder of the certificate
-   holds the grant's key (Section 9.6).  A DPoP proof presented with an
+   holds the grant's key (Section 8.6).  A DPoP proof presented with an
    x5t#S256-bound grant does determine the binding: the mutual-TLS
    handshake shows that the request comes from the holder of the grant's
    certificate, and the DPoP proof is the request for a DPoP-bound
@@ -686,6 +896,30 @@ Table of Contents
 
             Table 1: Binding of Tokens Issued for a Bound Grant
 
+   The following is an example of the access token response to the
+   request in Figure 11:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "access_token": "Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU",
+     "token_type": "DPoP",
+     "expires_in": 300
+   }
+
+                      Figure 15: Access Token Response
+
+   If the response also contained a refresh token, the client would
+   present it with a DPoP proof for the same key (Section 4.4).
+
+   The client redeems the certificate-bound grant in Figure 5 with the
+   jwt-bearer grant type over a mutual-TLS connection that uses the same
+   certificate.  If the client also includes a DPoP proof in that
+   request, the consuming authorization server binds the access token to
+   the key of the DPoP proof and returns a token_type of DPoP.
+
 4.4.  Refresh Tokens
 
    If the consuming authorization server issues a refresh token for a
@@ -698,7 +932,7 @@ Table of Contents
    [RFC8705].  A refresh token bound only to the client would let a
    party that replays a captured grant and DPoP proof, while
    authenticating as its own client, obtain new access tokens without
-   the grant's key (Section 9.6).
+   the grant's key (Section 8.6).
 
    When a client presents a refresh token bound under this section, the
    consuming authorization server MUST verify its binding as items 2 and
@@ -722,6 +956,49 @@ Table of Contents
    presented in the request in which it obtained that refresh token: a
    DPoP proof for the same key, a mutual-TLS connection that uses the
    same certificate, or both.
+
+   The client redeemed the grant in Figure 5 without a DPoP proof, and
+   the consuming authorization server bound the refresh token that it
+   issued to the certificate.  The following is an example of a refresh
+   request for that refresh token.  The client sends it over a mutual-
+   TLS connection that uses the certificate, authenticates with the same
+   certificate (Section 2 of [RFC8705]), and adds a DPoP proof:
+
+   POST /token HTTP/1.1
+   Host: as.example
+   Content-Type: application/x-www-form-urlencoded
+   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
+
+   grant_type=refresh_token
+   &client_id=s6BhdRkqt
+   &refresh_token=Q..Zkm29lexi8VnWg2zPW1x-tgGad0Ibc3s3EwM_Ni4-g
+
+     Figure 16: Refresh Request with a Certificate-Bound Refresh Token
+
+   The consuming authorization server verifies the certificate against
+   the refresh token's binding, even though the client authenticates.
+   It binds the new access token and the replacement refresh token to
+   the key of the DPoP proof:
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+   Cache-Control: no-store
+
+   {
+     "access_token": "Rk3Lq0x_bVz9Ty2Wd8nPe4Hs1Uj6Yc7Ma5Gf",
+     "token_type": "DPoP",
+     "expires_in": 300,
+     "refresh_token": "4LTC8lb0acc6Oy4esc1Nk9BWC0imAwH-hPRPxchW2gs"
+   }
+
+             Figure 17: Refresh Response with DPoP-Bound Tokens
+
+   The replacement refresh token is bound to the key of the DPoP proof;
+   the presented refresh token stays bound to the certificate.  The
+   client obtained the replacement with both proofs, so it presents both
+   when it uses the replacement: a DPoP proof for the same key, over a
+   mutual-TLS connection that uses the same certificate.  The consuming
+   authorization server verifies the DPoP proof.
 
 4.5.  Bound Grant in Place of Client Authentication
 
@@ -776,7 +1053,7 @@ Table of Contents
    invalid_grant:  At the consuming authorization server, a check in
       Section 4.2, Section 4.1.1, or Section 4.4 that names
       invalid_grant fails, or the grant lacks the typ value that its
-      profile defines (Section 9.9).
+      profile defines (Section 8.9).
 
    invalid_client:  At the consuming authorization server, the request
       has neither client authentication nor a bound grant, where a
@@ -813,6 +1090,26 @@ Table of Contents
    that association, because only the issuer value is validated
    (Section 3.3 of [RFC8414], Section 1 of [RFC10070]).
 
+   The following is an example of authorization server metadata for the
+   consuming authorization server https://as.example/. An issuing
+   authorization server that retrieves and validates it for the grant's
+   aud value https://as.example/ can rely on it to bind grants with the
+   jkt confirmation method:
+
+   {
+     "issuer": "https://as.example/",
+     "token_endpoint": "https://as.example/token",
+     "grant_types_supported": [
+       "authorization_code",
+       "refresh_token",
+       "urn:ietf:params:oauth:grant-type:jwt-bearer",
+       "urn:ietf:params:oauth:grant-type:jwt-dpop"
+     ],
+     "dpop_signing_alg_values_supported": ["ES256"]
+   }
+
+   Figure 18: Authorization Server Metadata with the jwt-dpop Grant Type
+
    Support for DPoP-bound or certificate-bound access tokens, as
    indicated by the dpop_signing_alg_values_supported (Section 5.1 of
    [RFC9449]) or tls_client_certificate_bound_access_tokens (Section 3.3
@@ -831,6 +1128,19 @@ Table of Contents
    grant.  When a bound grant takes the place of client authentication
    (Section 4.5), the client is the one that the profile identifies from
    the grant.
+
+   The following is an example of client metadata for a client that the
+   consuming authorization server limits to DPoP-bound grants:
+
+   {
+     "grant_types": [
+       "urn:ietf:params:oauth:grant-type:jwt-dpop",
+       "refresh_token"
+     ],
+     "token_endpoint_auth_method": "client_secret_basic"
+   }
+
+     Figure 19: Client Metadata Limiting a Client to DPoP-Bound Grants
 
    The dpop_bound_access_tokens client metadata parameter (Section 5.2
    of [RFC9449]) requires a DPoP proof in each token request, but does
@@ -884,267 +1194,12 @@ Table of Contents
       server's policy (Section 3.1 of [RFC7523]), and Section 4.5 does
       not apply.
 
-8.  Examples
-
-   The examples in this section are non-normative.  They use the public
-   key from the examples in [RFC9449], whose JWK SHA-256 Thumbprint is
-   0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I.  Request bodies are
-   shown with extra line breaks and without URL encoding, and tokens are
-   truncated, for display purposes only.
-
-8.1.  Token Exchange with a Binding Request
-
-   The following is an example of a Token Exchange request, from a
-   client that authenticates with a client secret, for a grant for the
-   consuming authorization server https://as.example/:
-
-   POST /token HTTP/1.1
-   Host: issuer.example
-   Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-   Content-Type: application/x-www-form-urlencoded
-   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
-
-   grant_type=urn:ietf:params:oauth:grant-type:token-exchange
-   &requested_token_type=urn:ietf:params:oauth:token-type:jwt
-   &audience=https://as.example/
-   &subject_token=eyJraWQiOiJzMTZ0cVNtODhwREo4VGZCXzdrSEtQ...
-   &subject_token_type=urn:ietf:params:oauth:token-type:id_token
-
-             Figure 2: Token Exchange Request with a DPoP Proof
-
-   The decoded JOSE header of the DPoP proof in that request is:
-
-   {
-     "typ": "dpop+jwt",
-     "alg": "ES256",
-     "jwk": {
-       "kty": "EC",
-       "x": "l8tFrhx-34tV3hRICRDY9zCkDlpBhF42UQUfWVAWBFs",
-       "y": "9VE4jf_Ok_o64zbTTlcuNJajHmt6v9TDVrU0CdvGRDA",
-       "crv": "P-256"
-     }
-   }
-
-                      Figure 3: DPoP Proof JOSE Header
-
-   Its decoded claims are:
-
-   {
-     "jti": "e1j3V_bKic8-LAEB",
-     "htm": "POST",
-     "htu": "https://issuer.example/token",
-     "iat": 1730000000
-   }
-
-      Figure 4: DPoP Proof Claims for the Issuing Authorization Server
-
-   The issuing authorization server binds the grant and returns the
-   binding in the cnf response parameter:
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...",
-     "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
-     "token_type": "N_A",
-     "expires_in": 300,
-     "cnf": {
-       "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
-     }
-   }
-
-          Figure 5: Token Exchange Response with the cnf Parameter
-
-   The claims of the issued grant are:
-
-   {
-     "iss": "https://issuer.example/",
-     "sub": "U019488227",
-     "aud": "https://as.example/",
-     "iat": 1730000000,
-     "exp": 1730000300,
-     "jti": "9e43f81b64a33f20116179",
-     "cnf": {
-       "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
-     }
-   }
-
-                   Figure 6: Claims of a DPoP-Bound Grant
-
-   The client verifies that the jkt value in the cnf response parameter
-   equals the JWK SHA-256 Thumbprint of its DPoP public key.
-
-8.2.  Redeeming a DPoP-Bound Grant
-
-   The following is an example of an access token request that presents
-   the grant with the jwt-dpop grant type and a DPoP proof for the same
-   key.  The htu claim of this DPoP proof is https://as.example/token.
-   The client does not authenticate, which the consuming authorization
-   server's policy permits.
-
-   POST /token HTTP/1.1
-   Host: as.example
-   Content-Type: application/x-www-form-urlencoded
-   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
-
-   grant_type=urn:ietf:params:oauth:grant-type:jwt-dpop
-   &assertion=eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...
-
-           Figure 7: Access Token Request with a DPoP-Bound Grant
-
-   If the consuming authorization server requires a DPoP nonce
-   (Section 8 of [RFC9449]), it rejects the request without recording
-   the grant as used (Section 4.2):
-
-   HTTP/1.1 400 Bad Request
-   Content-Type: application/json
-   Cache-Control: no-store
-   DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
-
-   {
-     "error": "use_dpop_nonce",
-     "error_description": "Nonce required in DPoP proof"
-   }
-
-              Figure 8: Nonce Challenge for a DPoP-Bound Grant
-
-   The client repeats the request with the same grant and a new DPoP
-   proof whose nonce claim contains the supplied value.  The consuming
-   authorization server verifies that DPoP proof against the grant's cnf
-   claim and issues a DPoP-bound access token:
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "access_token": "Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU",
-     "token_type": "DPoP",
-     "expires_in": 300
-   }
-
-                      Figure 9: Access Token Response
-
-   If the response also contained a refresh token, the client would
-   present it with a DPoP proof for the same key (Section 4.4).
-
-   If the request carries no DPoP proof, the consuming authorization
-   server rejects it:
-
-   HTTP/1.1 400 Bad Request
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "error": "invalid_grant",
-     "error_description": "Proof of possession required for this grant"
-   }
-
-             Figure 10: Error Response for a Missing DPoP Proof
-
-8.3.  Certificate-Bound Grant
-
-   The following is an example of a Token Exchange response in which the
-   issuing authorization server binds the grant to the TLS client
-   certificate that the client used for mutual-TLS client
-   authentication.  The request contained no DPoP proof, and the issuing
-   authorization server's configuration for the client indicates that
-   the client redeems grants over mutual TLS with that certificate
-   (Section 3.2).
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...",
-     "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
-     "token_type": "N_A",
-     "expires_in": 300,
-     "cnf": {
-       "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
-     }
-   }
-
-      Figure 11: Token Exchange Response for a Certificate-Bound Grant
-
-   The client redeems the grant with the jwt-bearer grant type over a
-   mutual-TLS connection that uses the same certificate.  If the client
-   also includes a DPoP proof in that request, the consuming
-   authorization server binds the access token to the key of the DPoP
-   proof and returns a token_type of DPoP (Table 1).
-
-8.4.  Refreshing a Certificate-Bound Token with a DPoP Proof
-
-   The client redeemed the grant in Section 8.3 without a DPoP proof,
-   and the consuming authorization server bound the refresh token that
-   it issued to the certificate.  The following is an example of a
-   refresh request for that refresh token.  The client sends it over a
-   mutual-TLS connection that uses the certificate, authenticates with
-   the same certificate (Section 2 of [RFC8705]), and adds a DPoP proof:
-
-   POST /token HTTP/1.1
-   Host: as.example
-   Content-Type: application/x-www-form-urlencoded
-   DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2IiwiandrIjp7Imt0eSI6...
-
-   grant_type=refresh_token
-   &client_id=s6BhdRkqt
-   &refresh_token=Q..Zkm29lexi8VnWg2zPW1x-tgGad0Ibc3s3EwM_Ni4-g
-
-     Figure 12: Refresh Request with a Certificate-Bound Refresh Token
-
-   The consuming authorization server verifies the certificate against
-   the refresh token's binding, even though the client authenticates.
-   It binds the new access token and the replacement refresh token to
-   the key of the DPoP proof (Section 4.4):
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "access_token": "Rk3Lq0x_bVz9Ty2Wd8nPe4Hs1Uj6Yc7Ma5Gf",
-     "token_type": "DPoP",
-     "expires_in": 300,
-     "refresh_token": "4LTC8lb0acc6Oy4esc1Nk9BWC0imAwH-hPRPxchW2gs"
-   }
-
-             Figure 13: Refresh Response with DPoP-Bound Tokens
-
-   The replacement refresh token is bound to the key of the DPoP proof;
-   the presented refresh token stays bound to the certificate.  The
-   client obtained the replacement with both proofs, so it presents both
-   when it uses the replacement: a DPoP proof for the same key, over a
-   mutual-TLS connection that uses the same certificate.  The consuming
-   authorization server verifies the DPoP proof.
-
-8.5.  Binding Request Rejected
-
-   The following is an example of an error response from an issuing
-   authorization server that has not determined that the consuming
-   authorization server verifies DPoP-bound grants:
-
-   HTTP/1.1 400 Bad Request
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "error": "invalid_target",
-     "error_description": "Audience does not accept bound grants"
-   }
-
-       Figure 14: Error Response for a Binding Request That Cannot Be
-                                  Honored
-
-9.  Security Considerations
+8.  Security Considerations
 
    The security considerations of [RFC7521], [RFC7523], [RFC8693],
    [RFC9449], and [RFC8705] apply to this specification.
 
-9.1.  Non-Enforcing Consuming Authorization Servers
+8.1.  Non-Enforcing Consuming Authorization Servers
 
    Section 3.1 of [RFC7800] requires implementations to ignore
    confirmation members they do not understand, and [RFC7523] does not
@@ -1156,7 +1211,7 @@ Table of Contents
    authorization server to bind a grant for a consuming authorization
    server that it has not determined verifies the binding.
 
-9.2.  Grant Type Substitution
+8.2.  Grant Type Substitution
 
    A separate grant type for bound grants does not by itself prevent
    substitution: a party holding a stolen bound grant can present it
@@ -1178,14 +1233,14 @@ Table of Contents
    contains more than one confirmation member, or a member without a
    proof-of-possession check.
 
-9.3.  Informational Nature of the Response Parameter
+8.3.  Informational Nature of the Response Parameter
 
    The cnf response parameter is informational.  The binding is enforced
    when the issued token is presented to its consumer, which verifies
    the token's cnf claim against the presenter's proof.  A verified cnf
    parameter tells the client only that the authorization server applied
    the binding; it does not tell the client that the consumer enforces
-   it (Section 9.1).  The check protects against an authorization server
+   it (Section 8.1).  The check protects against an authorization server
    that fails to apply a binding through error or misconfiguration, not
    against a malicious one, which controls the contents of the token.
 
@@ -1193,7 +1248,7 @@ Table of Contents
    prevents an on-path attacker from removing or modifying the cnf
    parameter.
 
-9.4.  Theft of the Subject Token
+8.4.  Theft of the Subject Token
 
    Binding the issued grant does not protect a bearer subject_token that
    is stolen before the exchange.  An attacker that holds such a subject
@@ -1206,7 +1261,7 @@ Table of Contents
    without the key.  Protection of bearer subject tokens is outside the
    scope of this specification; see [RFC9700].
 
-9.5.  Proof of Possession and Client Identity
+8.5.  Proof of Possession and Client Identity
 
    Proof of possession shows that the presenter holds the key or
    certificate, not which client the presenter is.  Even at the issuing
@@ -1218,7 +1273,7 @@ Table of Contents
    client and on the client's protection of its private key: any party
    that obtains the key can use a grant bound to it.
 
-9.6.  DPoP Proof Replay
+8.6.  DPoP Proof Replay
 
    The DPoP proof replay protections of Section 11.1 of [RFC9449] and
    the authorization server-provided nonce of Section 8 of [RFC9449]
@@ -1258,7 +1313,7 @@ Table of Contents
    measure denies an unbound access token to an attacker whose request
    arrives before the client's; only binding the access token does.
 
-9.7.  Exhaustion of Single-Use Grants
+8.7.  Exhaustion of Single-Use Grants
 
    A consuming authorization server that limits a grant to a single use,
    as Section 5.5 of [ID-CHAINING] suggests, could mark a bound grant as
@@ -1270,7 +1325,7 @@ Table of Contents
    applies the same rule to a single-use subject_token at the issuing
    authorization server.
 
-9.8.  Replay by the Key Holder
+8.8.  Replay by the Key Holder
 
    Binding limits who can redeem a grant, not how often.  A client, or
    an attacker that has obtained the client's key, can redeem a bound
@@ -1279,7 +1334,7 @@ Table of Contents
    enforcement (Section 5.5 of [ID-CHAINING]) remain applicable to bound
    grants.
 
-9.9.  Cross-JWT Confusion
+8.9.  Cross-JWT Confusion
 
    A bound grant and a DPoP-bound JWT access token for the same client
    can carry the same jkt value.  A party that receives one could
@@ -1291,7 +1346,7 @@ Table of Contents
    reject a grant that does not carry it with the invalid_grant error
    code.
 
-10.  Privacy Considerations
+9.  Privacy Considerations
 
    The privacy considerations of [RFC9449] and [RFC8705] apply to this
    specification.
@@ -1310,9 +1365,9 @@ Table of Contents
    for the client to verify the binding, which is why Section 3.5
    recommends it.
 
-11.  IANA Considerations
+10.  IANA Considerations
 
-11.1.  OAuth Parameters Registration
+10.1.  OAuth Parameters Registration
 
    The cnf parameter is registered in the "OAuth Parameters" registry
    [IANA.oauth-parameters] with the usage location "token response" by
@@ -1328,7 +1383,7 @@ Table of Contents
    Specification document(s):  Section 5 of [RFC9201] and Section 3.5 of
       this document
 
-11.2.  OAuth URI Registration
+10.2.  OAuth URI Registration
 
    This specification requests registration of the following value in
    the "OAuth URI" registry [IANA.oauth-parameters] established by
@@ -1342,9 +1397,9 @@ Table of Contents
 
    Specification Document(s):  Section 4.1.1 of this document
 
-12.  References
+11.  References
 
-12.1.  Normative References
+11.1.  Normative References
 
    [IANA.oauth-parameters]
               IANA, "OAuth Parameters",
@@ -1413,7 +1468,7 @@ Table of Contents
               RFC 10070, DOI 10.17487/RFC10070, November 2026,
               <https://www.rfc-editor.org/rfc/rfc10070>.
 
-12.2.  Informative References
+11.2.  Informative References
 
    [ID-CHAINING]
               Schwenkschuster, A., Kasselman, P., Burgin, K., Jenkins,
