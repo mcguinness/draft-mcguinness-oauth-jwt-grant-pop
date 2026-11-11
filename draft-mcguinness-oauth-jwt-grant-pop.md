@@ -63,21 +63,27 @@ informative:
 
 --- abstract
 
-This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a key-bound grant and an authorization server metadata parameter that lists the confirmation methods that an authorization server verifies in JWT authorization grants. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
+This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies the binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied. It also defines a grant type that requires a key-bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies in JWT authorization grants, and it lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
 
 --- middle
 
 # Introduction
 
-A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. {{Section 5.5 of ID-CHAINING}} notes that "The authorization grant obtained from the Token Exchange process is a bearer token": any party that obtains the grant can redeem it until it expires. The mitigations listed there do not include binding the grant to a key.
+A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. These grants are bearer tokens ({{Section 5.5 of ID-CHAINING}}): any party that obtains one can redeem it until it expires. The mitigations listed there do not include binding the grant to a key.
 
-OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mutual-TLS {{RFC8705}} bind the access token, and in some cases the refresh token, issued in a token response to a key or certificate held by the client. They do not define:
+OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mutual-TLS {{RFC8705}} bind access tokens, and sometimes refresh tokens, to a key or certificate held by the client. They do not define:
 
 * how an authorization server binds a JWT authorization grant that Token Exchange issues, for which the `token_type` response parameter is `N_A` ({{Section 2.2.1 of RFC8693}});
-* how an authorization server that receives a JWT authorization grant containing a `cnf` claim {{RFC7800}} verifies proof of possession; or
-* how a client learns which binding was applied when it cannot read the issued token, for example because the token is opaque or is encrypted {{RFC7516}} for its consumer.
+* how the authorization server that receives a grant with a `cnf` claim {{RFC7800}} verifies proof of possession; or
+* how a client learns which binding was applied when it cannot read the issued token, for example because the token is opaque or encrypted for its consumer {{RFC7516}}.
 
-This specification defines how a binding is applied and how it is verified. {{format}} defines what a key-bound authorization grant contains. {{issuance}} defines how a grant is bound when it is issued and how the client learns the binding. {{redemption}} defines how the resource authorization server verifies the binding, however the grant was issued. {{metadata}} defines discovery and per-client enforcement, and {{profiles}} lists the choices that a specification defining a particular JWT authorization grant makes.
+This specification defines how a binding is applied and how it is verified:
+
+* {{format}}: what a key-bound authorization grant contains;
+* {{issuance}}: how a grant is bound when it is issued, and how the client learns the binding;
+* {{redemption}}: how the resource authorization server verifies the binding, however the grant was issued;
+* {{metadata}}: discovery and per-client enforcement; and
+* {{profiles}}: the choices that a specification defining a particular JWT authorization grant makes.
 
 This specification defines no new confirmation method. It uses the `jkt` ({{Section 6.1 of RFC9449}}) and `x5t#S256` ({{Section 3.1 of RFC8705}}) confirmation methods, and lets a resource authorization server also accept the `jwk` confirmation method ({{Section 3.2 of RFC7800}}).
 
@@ -85,10 +91,10 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 This specification relates to other documents as follows:
 
-* It replaces {{JWT-DPOP-GRANT}}. It extends that document from DPoP to mutual TLS, and generalizes its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type into the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), keeping the former for existing clients ({{legacy-jwt-dpop}}). Unlike that document, it:
-  * binds an authorization grant without first determining that the resource authorization server verifies the binding ({{non-enforcing-consumers}}), contrary to the recommendation in {{Section 7.1 of JWT-DPOP-GRANT}};
-  * verifies the binding of an authorization grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type instead of rejecting it ({{grant-type-substitution}}); and
-  * at the resource authorization server, returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that presents a DPoP-bound authorization grant without a DPoP proof ({{processing}}).
+* It replaces {{JWT-DPOP-GRANT}} and extends it from DPoP to mutual TLS. It generalizes the `jwt-dpop` grant type of that document into the method-neutral `jwt-pop` grant type ({{jwt-pop}}) and keeps `jwt-dpop` for existing clients ({{legacy-jwt-dpop}}). Unlike that document, this specification:
+  * binds an authorization grant without first checking that the resource authorization server verifies the binding ({{non-enforcing-consumers}}), contrary to the recommendation in {{Section 7.1 of JWT-DPOP-GRANT}};
+  * verifies, instead of rejecting, a key-bound grant presented with the `jwt-bearer` grant type ({{grant-type-substitution}}); and
+  * returns `invalid_grant`, not `invalid_dpop_proof`, when a resource authorization server receives a DPoP-bound grant without a DPoP proof ({{processing}}).
 * It replaces {{TE-CNF}}, whose Token Exchange response parameter it incorporates ({{cnf-param}}). That parameter is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
 * It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant, and {{profile-examples}} shows that grant as a profile of this specification and lists the conflicts between the two documents.
 
