@@ -768,7 +768,7 @@ A bound grant and a DPoP-bound JWT access token for the same client can carry th
 
 ## DPoP Proof Replay {#proof-replay}
 
-The DPoP proof replay protections of {{Section 11.1 of RFC9449}} and the authorization server-provided nonce of {{Section 8 of RFC9449}} apply at the token endpoints of both the issuing and the resource authorization server. A DPoP proof sent to one cannot be replayed at the other, because the `htu` claim identifies the token endpoint ({{Section 4.3 of RFC9449}}).
+The DPoP proof replay protections of {{Section 11.1 of RFC9449}} and the authorization server-provided nonce of {{Section 8 of RFC9449}} apply at the token endpoints of both the issuing and the resource authorization server. When their token endpoints differ, a DPoP proof sent to one cannot be replayed at the other, because the `htu` claim identifies the token endpoint ({{Section 4.3 of RFC9449}}).
 
 A DPoP proof does not cover the grant it accompanies or the TLS connection that carries it. An attacker that captures a grant together with a DPoP proof for its key can replay both, over its own TLS connection, within the window in which the resource authorization server accepts the proof ({{Section 11.1 of RFC9449}}). What the attacker obtains depends on the binding of the issued tokens:
 
