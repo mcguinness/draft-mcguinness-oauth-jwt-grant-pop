@@ -63,7 +63,7 @@ informative:
 
 --- abstract
 
-This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
+This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies that binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied, and it defines a grant type that requires a bound grant and an authorization server metadata parameter that lists the confirmation methods that an authorization server verifies in JWT authorization grants. It also lists the choices that a specification defining a particular JWT authorization grant makes to use this mechanism.
 
 --- middle
 
@@ -77,7 +77,7 @@ OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mut
 * how an authorization server that receives a JWT authorization grant containing a `cnf` claim {{RFC7800}} verifies proof of possession; or
 * how a client learns which binding was applied when it cannot read the issued token, for example because the token is opaque or is encrypted {{RFC7516}} for its consumer.
 
-This specification defines both halves of the binding. {{format}} defines what a bound grant contains. {{issuance}} defines how a grant is bound when it is issued and how the client learns the binding. {{redemption}} defines how the resource authorization server verifies the binding, however the grant was issued. {{metadata}} defines discovery and per-client enforcement, and {{profiles}} lists the choices that a specification defining a particular JWT authorization grant makes.
+This specification defines how a binding is applied and how it is verified. {{format}} defines what a bound grant contains. {{issuance}} defines how a grant is bound when it is issued and how the client learns the binding. {{redemption}} defines how the resource authorization server verifies the binding, however the grant was issued. {{metadata}} defines discovery and per-client enforcement, and {{profiles}} lists the choices that a specification defining a particular JWT authorization grant makes.
 
 This specification defines no new confirmation method. It uses the `jkt` ({{Section 6.1 of RFC9449}}) and `x5t#S256` ({{Section 3.1 of RFC8705}}) confirmation methods, and lets a resource authorization server also accept the `jwk` confirmation method ({{Section 3.2 of RFC7800}}).
 
@@ -85,11 +85,11 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 This specification relates to other documents as follows:
 
-* It replaces {{JWT-DPOP-GRANT}}. It extends that document from DPoP to mutual TLS, and replaces its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type with the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), keeping the former for existing clients ({{legacy-jwt-dpop}}). Unlike that document, it:
+* It replaces {{JWT-DPOP-GRANT}}. It extends that document from DPoP to mutual TLS, and generalizes its `urn:ietf:params:oauth:grant-type:jwt-dpop` grant type into the method-neutral `urn:ietf:params:oauth:grant-type:jwt-pop` grant type ({{jwt-pop}}), keeping the former for existing clients ({{legacy-jwt-dpop}}). Unlike that document, it:
   * verifies the binding of a grant presented with the `urn:ietf:params:oauth:grant-type:jwt-bearer` grant type instead of rejecting it ({{grant-type-substitution}}); and
   * returns the `invalid_grant` error code, not `invalid_dpop_proof`, for a request that carries no DPoP proof ({{processing}}).
 * It replaces {{TE-CNF}}, whose Token Exchange response parameter it incorporates ({{cnf-param}}). That parameter is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
-* It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant. {{profile-examples}} describes that grant as a profile of this specification and lists the conflicts between the two documents.
+* It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant, and {{profile-examples}} shows that grant as a profile of this specification and lists the conflicts between the two documents.
 
 ## Conventions and Terminology
 
@@ -397,6 +397,8 @@ When a JWT authorization grant is issued through an interface other than Token E
 
 # Redeeming a Bound Grant {#redemption}
 
+This section defines how a client presents a bound grant, how the resource authorization server verifies its binding, and how that server binds the access and refresh tokens that it issues.
+
 ## Access Token Request {#token-request}
 
 The client presents a bound grant in an access token request ({{Section 4.1 of RFC7521}}) with the `jwt-pop` grant type ({{jwt-pop}}), the `jwt-bearer` grant type, or, where {{legacy-jwt-dpop}} applies, the `jwt-dpop` grant type. It SHOULD use the `jwt-pop` grant type if the resource authorization server advertises it ({{as-metadata}}) and the client's registration permits it ({{client-metadata}}). Otherwise, a client that presents a grant with a `jkt` member SHOULD use the `jwt-dpop` grant type if the resource authorization server advertises it and the client's registration permits it. The `jwt-bearer` grant type is not a reliable fallback: the client's registration might not permit it, and a server that implements only {{JWT-DPOP-GRANT}} rejects such a grant presented with it.
@@ -625,6 +627,8 @@ When more than one of these error codes, or the `invalid_client` error code for 
 
 # Metadata {#metadata}
 
+This section defines how a resource authorization server advertises the confirmation methods that it verifies, and how client registration can limit a client to bound grants.
+
 ## Authorization Server Metadata {#as-metadata}
 
 This specification defines the following authorization server metadata parameter ({{Section 2 of RFC8414}}):
@@ -731,7 +735,7 @@ The DPoP proof replay protections of {{Section 11.1 of RFC9449}} and the authori
 A DPoP proof does not cover the grant it accompanies or the TLS connection that carries it. An attacker that captures a grant together with a DPoP proof for its key can replay both, over its own TLS connection, within the window in which the resource authorization server accepts the proof ({{Section 11.1 of RFC9449}}). What the attacker obtains depends on the binding of the issued tokens:
 
 * An access token or refresh token bound to the grant's key is of no use to the attacker.
-* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding. The reverse case is safe: for an `x5t#S256`-bound grant, the mutual-TLS handshake shows that a DPoP proof comes from the holder of the grant's certificate, so {{token-response}} lets the issued tokens be bound to the key of that proof.
+* An access token bound to a TLS client certificate that the attacker presents would be usable; {{token-response}} forbids that binding. The reverse case is safe: for a certificate-bound grant, the mutual-TLS handshake shows that a DPoP proof comes from the holder of the grant's certificate, so {{token-response}} lets the issued tokens be bound to the key of that proof.
 * A refresh token bound only to a client as which the attacker authenticates would be usable, at the first refresh or a later one; {{refresh}} therefore binds every refresh token issued for a bound grant, and every replacement, to a key or certificate, unless the resource authorization server verifies that the grant identifies the authenticated client, which an attacker that authenticates as its own client cannot satisfy.
 * An unbound access token is usable.
 
@@ -767,7 +771,7 @@ The token endpoint requires TLS ({{Section 3.2 of RFC6749}}), which prevents an 
 
 The privacy considerations of {{RFC9449}} and {{RFC8705}} apply to this specification.
 
-A confirmation member is a stable identifier for the bound key or certificate. A client that uses the same key or certificate with several resource authorization servers lets them correlate its requests. A client that needs to avoid such correlation uses a separate key for each resource authorization server. This is not possible when the client exchanges a DPoP-bound `subject_token`, because a bound grant is then bound to that token's key ({{bound-subject}}).
+A confirmation member is a stable identifier for the bound key or certificate. A client that uses the same key or certificate with several resource authorization servers lets them correlate its requests. A client that needs to avoid such correlation uses a separate key or certificate for each resource authorization server. This is not possible when the client exchanges a DPoP-bound `subject_token`, because a bound grant is then bound to that token's key ({{bound-subject}}).
 
 The `cnf` response parameter discloses the binding only to the client that made the request, which already holds the key or certificate. A thumbprint member discloses less than a `jwk` member and is sufficient for the client to verify the binding, which is why {{cnf-param}} recommends it.
 
@@ -775,7 +779,7 @@ The `cnf` response parameter discloses the binding only to the client that made 
 
 ## OAuth Parameters Registration
 
-The `cnf` parameter is registered in the "OAuth Parameters" registry {{IANA.oauth-parameters}} with the usage location "token response" by {{RFC9201}}. This specification requests that IANA add this document as a reference for that entry:
+{{RFC9201}} registers the `cnf` parameter in the "OAuth Parameters" registry {{IANA.oauth-parameters}} with the usage location "token response". This specification requests that IANA add this document as a reference for that entry:
 
 Parameter name:
 : `cnf`
@@ -837,7 +841,7 @@ Specification Document(s):
 
 # Profiles of This Specification {#profile-examples}
 
-This appendix is informative. It shows how two specifications answer the items in {{profiles}}.
+This appendix is informative. It shows how {{ID-JAG}} would answer the items in {{profiles}} and how the defaults of {{profiles}} apply to {{ID-CHAINING}}, and lists the conflicts between each document and this specification.
 
 ## Identity Assertion JWT Authorization Grant
 
