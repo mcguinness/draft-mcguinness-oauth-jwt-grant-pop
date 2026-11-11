@@ -159,12 +159,14 @@ This section defines the `cnf` claim of a bound grant and how confirmation value
 
 ## Confirmation Claim {#cnf-claim}
 
-An issuing authorization server binds a grant by including in it a `cnf` claim ({{Section 3.1 of RFC7800}}) that contains exactly one confirmation member ({{bind}}). The member identifies the key or certificate whose possession the client proves when it redeems the grant:
+An issuing authorization server binds a grant by including in it a `cnf` claim ({{Section 3.1 of RFC7800}}, {{bind}}). The confirmation member of the claim identifies the key or certificate whose possession the client proves when it redeems the grant:
 
 * `jkt` ({{Section 6.1 of RFC9449}}), in a DPoP-bound grant, contains the JWK SHA-256 Thumbprint {{RFC7638}} of the client's public key.
 * `x5t#S256` ({{Section 3.1 of RFC8705}}), in a certificate-bound grant, contains the SHA-256 thumbprint of the DER encoding of the client's certificate.
 
-The `cnf` claim of a grant that an issuing authorization server binds MUST contain exactly one of these members. A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}). Requiring exactly one member is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key".
+The `cnf` claim of a grant that an issuing authorization server binds MUST contain exactly one of these members. Requiring exactly one member is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key".
+
+A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}).
 
 The following are the claims of a DPoP-bound grant:
 
@@ -538,7 +540,9 @@ Cache-Control: no-store
 
 ## Refresh Tokens {#refresh}
 
-If the resource authorization server issues a refresh token for a bound grant, it MUST bind the refresh token as described in {{token-response}}, whether or not the client authenticates, with one exception: if the client authenticates and the resource authorization server verifies that the grant identifies the authenticated client, in a claim that the profile of the grant defines ({{profiles}}), it MAY instead bind the refresh token only to that client. The resource authorization server decides this exception when it redeems the grant, never at a later refresh: the replacement for a refresh token bound only to the client is bound only to that client, and the replacement for a refresh token bound to a key or certificate is bound as described below. A refresh token's association with the authenticated client ({{Section 6 of RFC6749}}) never qualifies it for the exception. A binding to a key or certificate is in addition to the binding to the client that {{Section 10.4 of RFC6749}} requires. It is stricter than {{Section 5 of RFC9449}}, under which a refresh token issued to a confidential client is not bound to the DPoP key, and than the recommendation in {{Section 4 of RFC8705}}; {{proof-replay}} gives the reason.
+If the resource authorization server issues a refresh token for a bound grant, it MUST bind the refresh token as described in {{token-response}}, whether or not the client authenticates, with one exception: if the client authenticates and the resource authorization server verifies that the grant identifies the authenticated client, in a claim that the profile of the grant defines ({{profiles}}), it MAY instead bind the refresh token only to that client. The resource authorization server decides this exception when it redeems the grant, never at a later refresh: the replacement for a refresh token bound only to the client is bound only to that client, and the replacement for a refresh token bound to a key or certificate is bound as described below. A refresh token's association with the authenticated client ({{Section 6 of RFC6749}}) never qualifies it for the exception.
+
+A binding to a key or certificate is in addition to the binding to the client that {{Section 10.4 of RFC6749}} requires. It is stricter than {{Section 5 of RFC9449}}, under which a refresh token issued to a confidential client is not bound to the DPoP key, and than the recommendation in {{Section 4 of RFC8705}}; {{proof-replay}} gives the reason.
 
 When a client presents a refresh token that the resource authorization server bound to a key or certificate under this section, the resource authorization server treats that key or certificate as the grant's. It MUST verify the binding as items 2 and 3 of {{processing}} do, with the same error codes, and MUST bind the tokens that it issues in response as {{token-response}} and this section require. The binding of the presented refresh token does not change, even when the issued tokens are bound to the key of a DPoP proof ({{binding-outcomes}}).
 
@@ -704,7 +708,7 @@ The security considerations of {{RFC7521}}, {{RFC7523}}, {{RFC8693}}, {{RFC9449}
 
 ## Non-Enforcing Resource Authorization Servers {#non-enforcing-consumers}
 
-{{Section 3.1 of RFC7800}} requires implementations to ignore confirmation members they do not understand, and {{RFC7523}} does not process the `cnf` claim. A resource authorization server that does not support this specification therefore accepts a bound grant as a bearer grant, and a party that obtains the grant can redeem it without the key. {{bind}} therefore forbids an issuing authorization server to bind a grant for a resource authorization server that it has not determined verifies the binding.
+{{Section 3.1 of RFC7800}} requires implementations to ignore confirmation members they do not understand, and {{RFC7523}} does not process the `cnf` claim. A resource authorization server that does not support this specification therefore accepts a bound grant as a bearer grant, and a party that obtains the grant can redeem it without the key. For this reason, {{bind}} forbids an issuing authorization server to bind a grant for a resource authorization server that it has not determined verifies the binding.
 
 ## Grant Type Substitution {#grant-type-substitution}
 
@@ -745,7 +749,11 @@ Proof of possession shows that the presenter holds the key or certificate, not w
 
 ## Theft of the Subject Token
 
-Binding the issued grant does not protect a bearer `subject_token` that is stolen before the exchange. An attacker that holds such a subject token, and can satisfy any client authentication that the issuing authorization server requires, can request a grant bound to the attacker's own key. A bound `subject_token` is protected by the check in {{bound-subject}}, except from an authenticated intended audience that the check exempts. The exemption extends to every authenticated client, other than the one to which the token was issued, that the issuing authorization server associates with the token's `aud` claim or its records of the token: when that claim identifies a resource that several resource servers serve, any of them that obtains the token, for example from another of them, can exchange it without the key. An issuing authorization server that associates several clients with one audience value weakens the binding of tokens for that audience. When the issuing authorization server cannot bind the grant for the resource authorization server, a client that proves possession of a DPoP-bound `subject_token` receives an unbound grant ({{binding-request}}), which is a bearer token, as it would be without this specification. Protection of bearer subject tokens is outside the scope of this specification; see {{RFC9700}}.
+Binding the issued grant does not protect a bearer `subject_token` that is stolen before the exchange. An attacker that holds such a subject token, and can satisfy any client authentication that the issuing authorization server requires, can request a grant bound to the attacker's own key. Protection of bearer subject tokens is outside the scope of this specification; see {{RFC9700}}.
+
+A bound `subject_token` is protected by the check in {{bound-subject}}, except from an authenticated intended audience that the check exempts. The exemption extends to every authenticated client, other than the one to which the token was issued, that the issuing authorization server associates with the token's `aud` claim or its records of the token: when that claim identifies a resource that several resource servers serve, any of them that obtains the token, for example from another of them, can exchange it without the key. An issuing authorization server that associates several clients with one audience value weakens the binding of tokens for that audience.
+
+When the issuing authorization server cannot bind the grant for the resource authorization server, a client that proves possession of a DPoP-bound `subject_token` receives an unbound grant ({{binding-request}}), which is a bearer token, as it would be without this specification.
 
 ## Informational Nature of the Response Parameter
 
