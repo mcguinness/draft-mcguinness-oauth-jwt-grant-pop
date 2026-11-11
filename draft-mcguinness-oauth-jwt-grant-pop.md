@@ -229,7 +229,7 @@ For example, the following `jwk` member matches a `jkt` member with the value `0
 
 This section covers a JWT authorization grant that an issuing authorization server issues in response to a Token Exchange request ({{Section 2.1 of RFC8693}}). {{cnf-param}} applies to any token that Token Exchange issues, and {{other-issuance}} covers other issuance interfaces.
 
-An issued token is a JWT authorization grant if the issuing authorization server issues it as a JWT for the client to present to an authorization server as an authorization grant ({{Section 2.1 of RFC7523}}). The issuing authorization server decides this, and whether to issue the grant at all, from its policy, from its configuration for the `audience` and `resource` values, and from the `requested_token_type` value, which a profile can define.
+An issued token is a JWT authorization grant if the issuing authorization server issues it as a JWT for the client to present to an authorization server as an authorization grant. The issuing authorization server decides this, and whether to issue the grant at all, from its policy, from its configuration for the `audience` and `resource` values, and from the `requested_token_type` value, which a profile can define.
 
 ## Token Exchange Request {#te-request}
 
@@ -391,7 +391,7 @@ Cache-Control: no-store
 
 ## Token Exchange Response {#cnf-param}
 
-This specification defines the use of the `cnf` token response parameter, registered by {{RFC9201}}, in a Token Exchange response ({{Section 2.2.1 of RFC8693}}):
+This specification defines the use of the `cnf` token response parameter, registered by {{RFC9201}}, in a Token Exchange response:
 
 `cnf`:
 : REQUIRED if the authorization server bound the token in the `access_token` response parameter to a key or certificate and the `token_type` response parameter is `N_A`. For a bound token with another `token_type` value, OPTIONAL unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a symmetric proof-of-possession key. It MUST NOT be present if the token is not bound. A JSON object containing exactly one confirmation member, which identifies that key or certificate. Its syntax and member semantics are those of the `cnf` claim ({{Section 3.1 of RFC7800}}).
@@ -491,7 +491,7 @@ A resource authorization server validates a JWT authorization grant as defined i
 
 1. For the `cnf` claim:
    * it is a JSON object that contains exactly one confirmation member; otherwise, `invalid_grant`;
-   * that member is `jkt`, `jwk` ({{Section 3.2 of RFC7800}}), or `x5t#S256`; otherwise, `invalid_grant`; and
+   * that member is `jkt`, `jwk`, or `x5t#S256`; otherwise, `invalid_grant`; and
    * the resource authorization server supports its confirmation method; otherwise, `invalid_grant`.
 2. For a `jkt` or `jwk` member:
    * the request contains a DPoP proof; otherwise, `invalid_grant`;
@@ -561,7 +561,7 @@ The resource authorization server does not record the authorization grant as use
 When the authorization grant is bound, the resource authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a key-bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
 * for a DPoP-bound authorization grant, the grant's key, which is the key of the DPoP proof; or
-* for a certificate-bound authorization grant, the grant's certificate or, if the resource authorization server supports DPoP and the request contains a valid DPoP proof ({{Section 4.3 of RFC9449}}), the public key of that proof.
+* for a certificate-bound authorization grant, the grant's certificate or, if the resource authorization server supports DPoP and the request contains a valid DPoP proof, the public key of that proof.
 
 A TLS client certificate presented with a DPoP-bound authorization grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound.
 
@@ -603,7 +603,7 @@ The client presents a refresh token issued for a key-bound authorization grant w
 
 A client that knows the binding of the refresh token, because the profile of the grant or an arrangement with the resource authorization server establishes it, need not present a proof of possession that the binding does not require, and needs none for a refresh token bound only to the client. It still presents a DPoP proof where its registration requires one ({{Section 5.2 of RFC9449}}) or where it needs DPoP-bound tokens, and it still needs a certificate that it uses for client authentication.
 
-The following is an example of a refresh request. The refresh token is bound to the certificate in {{cert-example}}, and the client obtained it in a request that carried both that certificate and a DPoP proof. The client therefore sends the request over a mutual-TLS connection that uses the certificate, with which it also authenticates ({{Section 2 of RFC8705}}), and adds a DPoP proof signed with the key that it used in that earlier request:
+The following is an example of a refresh request. The refresh token is bound to the certificate in {{cert-example}}, and the client obtained it in a request that carried both that certificate and a DPoP proof. The client therefore sends the request over a mutual-TLS connection that uses the certificate, with which it also authenticates, and adds a DPoP proof signed with the key that it used in that earlier request:
 
 ~~~ http-message
 POST /token HTTP/1.1
