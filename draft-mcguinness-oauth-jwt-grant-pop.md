@@ -280,9 +280,15 @@ The decoded JOSE header and claims of the DPoP proof in that request are:
 
 An issuing authorization server that supports this specification MUST support the `cnf` response parameter ({{cnf-param}}) and at least one of the `jkt` and `x5t#S256` confirmation methods, and MUST NOT bind a grant other than as described in this section. When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
 
-### DPoP Binding {#binding-request}
+For a Token Exchange request for a JWT authorization grant, the issuing authorization server MUST also ensure the following, and MUST otherwise reject the request with the indicated error code ({{errors}}):
 
-The issuing authorization server MUST validate the DPoP proof of a binding request as described in {{Section 4.3 of RFC9449}}, and responds to an invalid proof or a missing nonce as described in {{errors}}.
+1. Any DPoP proof that the request contains is valid as described in {{Section 4.3 of RFC9449}}; otherwise, `invalid_dpop_proof`, or `use_dpop_nonce` as described in {{Section 8 of RFC9449}}.
+2. For each `subject_token` or `actor_token` that is bound to a key or certificate, the request proves possession of that key or certificate, or the requesting client is exempt ({{bound-subject}}); otherwise, `invalid_request` ({{Section 2.2.2 of RFC8693}}).
+3. The profile of the grant does not require binding, or the issuing authorization server binds the grant ({{bind}}); otherwise, `invalid_target` ({{Section 2.2.2 of RFC8693}}).
+
+The following subsections define how the issuing authorization server binds a grant, and when it issues an unbound one.
+
+### DPoP Binding {#binding-request}
 
 In response to a binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued grant to the public key of the DPoP proof, unless it does not support the `jkt` confirmation method or cannot bind the grant for the resource authorization server ({{bind}}). In that case, it MUST issue an unbound grant, without the `cnf` response parameter, unless the profile of the grant requires binding ({{bind}}). It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
 
@@ -313,20 +319,17 @@ Cache-Control: no-store
 
 ### Bound Subject and Actor Tokens {#bound-subject}
 
-If the `subject_token` or `actor_token` is bound to a key or certificate, such as a refresh token issued to a public client ({{Section 5 of RFC9449}}), the issuing authorization server MUST reject the request with the `invalid_request` error code ({{Section 2.2.2 of RFC8693}}) unless one of the following holds:
-
-* The request proves possession of that key or certificate, with a DPoP proof signed with the key or a mutual-TLS handshake using the certificate.
-* The requesting client authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received ({{Section 2.3 of RFC8693}}).
+Item 2 of {{issuer-processing}} applies to a `subject_token` or `actor_token` that is bound to a key or certificate, such as a refresh token issued to a public client ({{Section 5 of RFC9449}}). A request proves possession of that key or certificate with a DPoP proof signed with the key, or with a mutual-TLS handshake that uses the certificate. The requesting client is exempt if it authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received ({{Section 2.3 of RFC8693}}).
 
 The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. A binding request that proves possession of a DPoP-bound `subject_token` carries a DPoP proof signed with that token's key, so a grant issued in response to it is bound to the same key, or unbound ({{binding-request}}).
 
-The issuing authorization server applies these conditions to each bound token separately. A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}), so a request whose `subject_token` and `actor_token` are bound to different DPoP keys proves possession of at most one of them, and is rejected unless the second condition holds for each token whose key the DPoP proof does not match.
+The issuing authorization server applies item 2 to each bound token separately. A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}), so a request whose `subject_token` and `actor_token` are bound to different DPoP keys proves possession of at most one of them, and is rejected unless the requesting client is exempt for each token whose key the DPoP proof does not match.
 
 ### Binding the Grant {#bind}
 
 To bind a grant, the issuing authorization server includes in it a `cnf` claim as described in {{format}}, whose confirmation member identifies the client's key or certificate. For a binding request, that key is the public key in the `jwk` JOSE Header Parameter of the DPoP proof ({{binding-request}}); for a certificate binding, that certificate is the TLS client certificate that the client presented ({{cert-binding}}). The issuing authorization server MUST NOT bind a grant to a key or certificate whose possession the client has not proven in the request for the grant.
 
-The issuing authorization server MUST NOT bind a grant using a confirmation method unless it has determined that each authorization server that the grant's `aud` claim identifies verifies that confirmation method as described in {{processing}} (see {{non-enforcing-consumers}}). It makes this determination from configuration, from an established trust relationship, or from the resource authorization server's metadata ({{as-metadata}}). If the profile of the grant requires binding and the issuing authorization server does not bind the grant, it MUST NOT issue the grant. In response to a Token Exchange request, it MUST instead return the `invalid_target` error code, whether or not the request is a binding request. When the profile does not require binding, {{binding-request}} defines the response to a binding request when the issuing authorization server cannot bind the grant.
+The issuing authorization server MUST NOT bind a grant using a confirmation method unless it has determined that each authorization server that the grant's `aud` claim identifies verifies that confirmation method as described in {{processing}} (see {{non-enforcing-consumers}}). It makes this determination from configuration, from an established trust relationship, or from the resource authorization server's metadata ({{as-metadata}}). If the profile of the grant requires binding and the issuing authorization server does not bind the grant, it MUST NOT issue the grant; in response to a Token Exchange request, it returns the error code that item 3 of {{issuer-processing}} names. When the profile does not require binding, {{binding-request}} defines the response to a binding request when the issuing authorization server cannot bind the grant.
 
 When the issued token is a bound grant, the issuing authorization server MUST set the `token_type` response parameter to `N_A` ({{Section 2.2.1 of RFC8693}}); the `DPoP` value that {{Section 5 of RFC9449}} requires applies only to a DPoP-bound access token.
 
@@ -603,10 +606,10 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At either authorization server, the authorization server requires a nonce in the DPoP proof, or the nonce is missing or not current ({{Section 8 of RFC9449}}). The authorization server MUST use this error code, and not `invalid_grant` or `invalid_request`, for these conditions, including when the DPoP proof is needed to verify a bound grant or a bound `subject_token`.
 
 `invalid_request`:
-: At the issuing authorization server, the `subject_token` or `actor_token` is bound, and the request meets neither condition listed in {{bound-subject}}.
+: At the issuing authorization server, a bound `subject_token` or `actor_token` is not proven and the requesting client is not exempt (item 2 of {{issuer-processing}}).
 
 `invalid_target`:
-: At the issuing authorization server, the profile of the grant requires binding and the issuing authorization server does not bind the grant ({{bind}}).
+: At the issuing authorization server, the profile of the grant requires binding and the issuing authorization server does not bind the grant (item 3 of {{issuer-processing}}).
 
 `invalid_grant`:
 : At the resource authorization server, a check in {{processing}}, {{jwt-pop}}, {{legacy-jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails, or the grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
@@ -757,7 +760,7 @@ Proof of possession shows that the presenter holds the key or certificate, not w
 
 Binding the issued grant does not protect a bearer `subject_token` that is stolen before the exchange. An attacker that holds such a subject token, and can satisfy any client authentication that the issuing authorization server requires, can request a grant bound to the attacker's own key. Protection of bearer subject tokens is outside the scope of this specification; see {{RFC9700}}.
 
-A bound `subject_token` is protected by the check in {{bound-subject}}, except from an authenticated intended audience that the check exempts. The exemption extends to every authenticated client, other than the one to which the token was issued, that the issuing authorization server associates with the token's `aud` claim or its records of the token: when that claim identifies a resource that several resource servers serve, any of them that obtains the token, for example from another of them, can exchange it without the key. An issuing authorization server that associates several clients with one audience value weakens the binding of tokens for that audience.
+A bound `subject_token` is protected by item 2 of {{issuer-processing}}, except from an authenticated intended audience that {{bound-subject}} exempts. The exemption extends to every authenticated client, other than the one to which the token was issued, that the issuing authorization server associates with the token's `aud` claim or its records of the token: when that claim identifies a resource that several resource servers serve, any of them that obtains the token, for example from another of them, can exchange it without the key. An issuing authorization server that associates several clients with one audience value weakens the binding of tokens for that audience.
 
 When the issuing authorization server cannot bind the grant for the resource authorization server, a client that proves possession of a DPoP-bound `subject_token` receives an unbound grant ({{binding-request}}), which is a bearer token, as it would be without this specification.
 
