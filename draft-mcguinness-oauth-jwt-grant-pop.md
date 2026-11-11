@@ -207,7 +207,6 @@ A certificate-bound authorization grant instead contains a `cnf` claim such as t
 
 Two confirmation values, or a confirmation value and the client's own key or certificate, are compared by confirmation method and value, not by byte representation:
 
-* JSON member order and insignificant whitespace are ignored.
 * A thumbprint member, such as `jkt` or `x5t#S256`, is compared as the base64url-encoded string it contains, character by character.
 * A public key in a `jwk` member is compared with a `jkt` member, or with the client's own public key, by computing JWK SHA-256 Thumbprints {{RFC7638}}.
 * Members of different confirmation methods, other than a `jwk` and `jkt` pair, do not match.
