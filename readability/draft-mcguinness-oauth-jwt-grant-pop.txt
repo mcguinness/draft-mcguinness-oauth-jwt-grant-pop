@@ -143,10 +143,11 @@ Table of Contents
    Exchange [RFC8693] to obtain such a grant in one trust domain and
    present it in another, and the Identity Assertion JWT Authorization
    Grant [ID-JAG] profiles that pattern for deployments that share a
-   single sign-on identity provider.  These grants are bearer tokens
-   (Section 5.5 of [ID-CHAINING]): any party that obtains one can redeem
-   it until it expires.  The mitigations listed there do not include
-   binding the grant to a key.
+   single sign-on identity provider.  Without a proof-of-possession
+   binding, these grants are bearer tokens (Section 5.5 of
+   [ID-CHAINING]): any party that obtains one can redeem it until it
+   expires.  The mitigations listed there do not include binding the
+   grant to a key.
 
    OAuth 2.0 Demonstrating Proof of Possession (DPoP) [RFC9449] and
    OAuth 2.0 Mutual-TLS [RFC8705] bind access tokens, and sometimes
