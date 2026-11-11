@@ -431,7 +431,7 @@ When the `token_type` response parameter is `N_A`, as it is for a JWT authorizat
    * the `cnf` claim, if readable, contains exactly one confirmation member; and
    * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
-For an access token, a `token_type` of `DPoP` indicates a DPoP binding ({{Section 5 of RFC9449}}). {{RFC8705}} defines no `token_type` value for a certificate binding; the `cnf` parameter, if present, identifies the key or certificate of either kind of binding.
+For an access token, the `token_type` shows a DPoP binding ({{Section 5 of RFC9449}}) but not a certificate binding, for which {{RFC8705}} defines no value; the `cnf` parameter, if present, identifies the key or certificate of either.
 
 A client that did not send a binding request but receives a `cnf` parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it SHOULD treat the response as an error.
 
