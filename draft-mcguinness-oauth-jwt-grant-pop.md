@@ -555,6 +555,8 @@ A TLS client certificate presented with a DPoP-bound grant therefore does not de
 | `x5t#S256` | TLS client certificate and DPoP proof | Grant's certificate or key of the DPoP proof |
 {: #binding-outcomes title="Binding of Tokens Issued for a Bound Grant"}
 
+Where {{Section 5 of RFC9449}} requires a narrower binding than {{binding-outcomes}} permits, it applies: a refresh token issued to a public client that presents a valid DPoP proof is bound to the key of that proof, even for a certificate-bound grant.
+
 The following is an example of the access token response to the request in {{ex-redeem}}:
 
 ~~~ http-message
