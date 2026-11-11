@@ -460,7 +460,9 @@ Table of Contents
    issuing authorization server requires binding, the issuing
    authorization server binds the grant or rejects the request
    (Section 4.2), so a client that always needs a bound grant can
-   establish that requirement through the profile or its registration.
+   request a grant whose profile requires binding, or arrange with the
+   issuing authorization server that its registration requires binding;
+   this specification defines no client metadata for that arrangement.
    A client that requires a bound grant also checks the response
    (Section 4.4).
 
@@ -522,18 +524,17 @@ Table of Contents
    its policy, for example for the grant's audience, or by the client's
    registration at the issuing authorization server.  An issuing
    authorization server MAY require binding when the profile of the
-   grant does not.  A requirement for binding requires the issuing
-   authorization server to bind the grant; it does not establish that
-   each authorization server in the grant's audience verifies the
-   binding, which the profile, configuration, or the issuing
-   authorization server's policy establishes where that is needed
-   (Section 9.1).  In this section, the issuing authorization server
-   "can bind" a grant with a confirmation method if, and only if, it
-   supports that method, the profile of the grant (Section 8) and the
-   issuing authorization server's policy permit that method for the
-   grant.  This does not depend on the proof of possession in the
-   request, and does not by itself permit binding (Section 4.2.1,
-   Section 4.2.2).
+   grant does not.  A requirement for binding ensures that an issued
+   grant is bound (item 3 below); it does not establish that each
+   authorization server in the grant's audience verifies the binding,
+   which the profile, configuration, or the issuing authorization
+   server's policy establishes where that is needed (Section 9.1).  In
+   this section, the issuing authorization server "can bind" a grant
+   with a confirmation method if, and only if, it supports that method,
+   the profile of the grant (Section 8) and the issuing authorization
+   server's policy permit that method for the grant.  This does not
+   depend on the proof of possession in the request, and does not by
+   itself permit binding (Section 4.2.1, Section 4.2.2).
 
    The issuing authorization server's policy can decline a confirmation
    method for a grant whose aud claim identifies an authorization server
@@ -1091,10 +1092,13 @@ Table of Contents
 
             Table 2: Binding of Tokens Issued for a Bound Grant
 
-   Where Section 5 of [RFC9449] requires a narrower binding than Table 2
-   permits, it applies: a refresh token issued to a public client that
-   presents a valid DPoP proof is bound to the key of that proof, even
-   for a certificate-bound grant.
+   For a public client, Section 5 of [RFC9449] narrows Table 2: a
+   resource authorization server that supports DPoP binds a refresh
+   token issued to a public client that presents a valid DPoP proof to
+   the key of that proof, even for a certificate-bound grant.  The
+   statement in that section that a refresh token issued to a
+   confidential client is not bound to the DPoP key does not apply
+   (Section 5.4).
 
    The following is an example of the access token response to the
    request in Figure 12:
@@ -1153,12 +1157,13 @@ Table of Contents
    resource authorization server can bind to the certificate although
    the request contained a DPoP proof, and return a token_type of Bearer
    (Table 2).  A client that knows the binding of the refresh token,
-   because the profile of the grant or the client's configuration at the
-   resource authorization server establishes it, presents only the proof
-   of possession that the binding requires, and none for a refresh token
-   bound only to the client.  It need not retain another key or
-   certificate for that refresh token, although a certificate that it
-   uses for client authentication remains needed for that purpose.
+   because the profile of the grant or an arrangement with the resource
+   authorization server establishes it, need not present a proof of
+   possession that the binding does not require, and needs none for a
+   refresh token bound only to the client.  It still presents a DPoP
+   proof where its registration requires one (Section 5.2 of [RFC9449])
+   or where it needs DPoP-bound tokens, and a certificate that it uses
+   for client authentication remains needed for that purpose.
 
    The following is an example of a refresh request for a refresh token
    that is bound to the certificate in Figure 9 and that the client
@@ -1433,8 +1438,8 @@ Table of Contents
    [ID-JAG], uses this specification by stating:
 
    1.  The validation rules that distinguish the grant from other kinds
-       of JWTs that its issuer issues or that a resource authorization
-       server accepts (Section 3.12 of [RFC8725]), including the value
+       of JWTs that its issuer issues (Section 3.12 of [RFC8725]) or
+       that a resource authorization server accepts, including the value
        of the grant's typ JOSE Header Parameter (Section 3.11 of
        [RFC8725]) and whether those rules rely on it, and, if the grant
        is issued through Token Exchange, its requested_token_type value.
@@ -1526,10 +1531,10 @@ Table of Contents
    an audience that accepts it as a bearer grant.  A profile or an
    issuing authorization server that needs a required binding to be
    enforced establishes that each authorization server in the grant's
-   audience verifies it, for example through the profile (item 2 of
-   Section 8), through configuration that restricts the grant's audience
-   to such servers, or through the issuing authorization server's policy
-   (Section 4.2).
+   audience verifies it, for example through the profile (items 2 and 3
+   of Section 8), through configuration that restricts the grant's
+   audience to such servers, or through the issuing authorization
+   server's policy (Section 4.2).
 
    A bound grant is protected only as far as the least protective server
    in its audience: a party that obtains a grant whose aud claim
@@ -1587,9 +1592,9 @@ Table of Contents
    the wrong kind (Section 3.12 of [RFC8725]).  When the profile of a
    grant defines a typ value, a resource authorization server SHOULD
    reject a grant that does not carry it with the invalid_grant error
-   code, and MUST do so when the profile relies on that value to
-   distinguish its grants from other kinds of JWTs (item 1 of
-   Section 8).
+   code, and MUST do so when the profile states that its validation
+   rules rely on that value to distinguish its grants from other kinds
+   of JWTs (item 1 of Section 8).
 
 9.4.  DPoP Proof Replay
 
@@ -1954,8 +1959,9 @@ A.1.  Identity Assertion JWT Authorization Grant
 
    [ID-JAG] would answer the items as follows:
 
-   1.  The typ value is oauth-id-jag+jwt, and the requested_token_type
-       value is urn:ietf:params:oauth:token-type:id-jag.
+   1.  The typ value is oauth-id-jag+jwt, and the validation rules rely
+       on it (Section 4.4.1 of [ID-JAG]); the requested_token_type value
+       is urn:ietf:params:oauth:token-type:id-jag.
 
    2.  Both confirmation methods, jkt and x5t#S256, may be used.
        Neither method, nor the jwt-pop grant type, is mandatory to
@@ -2117,8 +2123,9 @@ Appendix B.  Open Issues
         already have consumed a single-use subject_token, for example
         under an issuer's refresh-token rotation policy.  The protection
         in Section 4.2 applies only when the issuer rejects the request.
-        A client can already make binding required through the profile
-        or its registration at the issuing authorization server
+        A client can already obtain a required binding through a profile
+        that requires it, or through an arrangement that its
+        registration at the issuing authorization server records
         (Section 4.1).  Is a per-request "bind or fail" option needed
         for a requirement that neither expresses, and how would it
         preserve compatibility with clients that send DPoP proofs for
