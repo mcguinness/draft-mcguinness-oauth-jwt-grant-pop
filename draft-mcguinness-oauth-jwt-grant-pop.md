@@ -451,7 +451,7 @@ The client presents a key-bound authorization grant in an access token request (
 The client proves possession of the key or certificate identified by the authorization grant's `cnf` claim:
 
 * For a `jkt` or `jwk` member, the client MUST include a DPoP proof ({{Section 4 of RFC9449}}) signed with that key in the DPoP header field of the request.
-* For an `x5t#S256` member, the client MUST send the request over a mutual-TLS connection that uses that certificate ({{Section 3 of RFC8705}}), to the token endpoint or to its mutual-TLS endpoint alias ({{Section 5 of RFC8705}}).
+* For an `x5t#S256` member, the client MUST send the request over a mutual-TLS connection that uses that certificate, to the token endpoint or to its mutual-TLS endpoint alias ({{Section 5 of RFC8705}}).
 
 ### Proof-of-Possession Grant Type {#jwt-pop}
 
