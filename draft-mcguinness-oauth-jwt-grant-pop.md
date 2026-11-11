@@ -506,7 +506,7 @@ Item 1 overrides the rule in {{Section 3.1 of RFC7800}} that implementations ign
 
 A request that presents a DPoP-bound grant without a DPoP proof is rejected with the `invalid_grant` error code (item 2), not `use_dpop_nonce`.
 
-For an `x5t#S256` member, the resource authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}). How the certificate reaches a resource authorization server behind a TLS-terminating proxy is outside the scope of this specification, as it is in {{Section 6.5 of RFC8705}}.
+For an `x5t#S256` member, the resource authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}).
 
 If the profile of the authorization grant requires binding ({{profiles}}) and the grant has no `cnf` claim, the resource authorization server MUST reject the request with the `invalid_grant` error code.
 
