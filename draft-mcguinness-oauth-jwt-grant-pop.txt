@@ -608,7 +608,16 @@ Table of Contents
    without the cnf response parameter, unless binding is required
    (Section 4.2).  It MUST NOT bind the grant to any other key or
    certificate, including when the client also presents a TLS client
-   certificate.
+   certificate.  The DPoP proof thus selects the grant's key, and a TLS
+   client certificate in the same request only authenticates the client
+   or proves possession of a certificate-bound subject_token or
+   actor_token (Section 4.1): a client can authenticate to the issuing
+   authorization server with a certificate that it does not use
+   elsewhere, and a grant bound to that certificate could be one that
+   the client cannot redeem.  Binding to the certificate would also let
+   an attacker that replays a captured DPoP-bound subject_token or
+   actor_token with its DPoP proof obtain a grant bound to the
+   attacker's own certificate (Section 9.4).
 
    A client that requires a bound grant discards an unbound one
    (Section 4.4).  When the issuing authorization server cannot bind the
@@ -1598,6 +1607,32 @@ Table of Contents
    measure denies an unbound access token to an attacker whose request
    arrives before the client's; only binding the access token does.
 
+   A captured request can also be replayed at the issuing authorization
+   server.  An attacker that captures a Token Exchange request that
+   proves possession of a DPoP-bound subject_token or actor_token can
+   replay the token and the DPoP proof over its own mutual-TLS
+   connection, within the window in which the issuing authorization
+   server accepts the proof and, if that server rejects a reused jti
+   value, before the client's request.  The attacker also has to satisfy
+   any client authentication that the issuing authorization server
+   requires: it can replay a client secret, or a client assertion that
+   the server accepts more than once, or authenticate as its own client
+   if the server lets that client exchange the token (Section 9.7).  A
+   grant bound to the key of the DPoP proof is of no use to the attacker
+   at a resource authorization server that verifies the binding,
+   although it is at one that does not (Section 9.1); a grant bound to
+   the attacker's TLS client certificate would be usable at every
+   resource authorization server in its audience, which is one reason
+   Section 4.2.1 binds the grant only to the key of the DPoP proof.  An
+   unbound grant, which Section 4.2.1 issues when the issuing
+   authorization server cannot bind the grant with the jkt confirmation
+   method and binding is not required, is also usable (Section 9.8).
+   When neither the subject_token nor the actor_token requires proof of
+   possession of a DPoP key, this choice adds no protection against an
+   attacker that can meet the other requirements of the exchange,
+   because that attacker can request a grant bound to its own key
+   (Section 9.8).
+
 9.5.  Replay by the Key Holder
 
    Binding limits who can redeem a grant, not how often.  A client, or
@@ -1933,9 +1968,16 @@ A.1.  Identity Assertion JWT Authorization Grant
       carries both a DPoP proof and a TLS client certificate.  This
       specification binds a grant issued in response to a binding
       request only to the key of the DPoP proof, if it binds it at all
-      (Section 4.2.1).  The change is for the IdP Authorization Server
-      never to choose a certificate binding when the request contains a
-      DPoP proof.
+      (Section 4.2.1), for two reasons.  The client can authenticate to
+      the IdP Authorization Server with a certificate that it does not
+      use downstream and still obtain a grant that it can redeem with
+      its DPoP key.  And an attacker that replays a captured DPoP-bound
+      subject_token or actor_token and its DPoP proof over its own
+      mutual-TLS connection cannot obtain a grant bound to the
+      attacker's certificate (Section 9.4).  The change is for the IdP
+      Authorization Server never to choose a certificate binding when
+      the request contains a DPoP proof.  A narrower change is listed
+      among the open issues (Appendix B).
 
    *  Section 8 of [ID-JAG] requires a client that supports that profile
       to include urn:ietf:params:oauth:grant-type:jwt-bearer in its
@@ -2012,7 +2054,19 @@ Appendix B.  Open Issues
         parameter express it?  The
         authorization_grant_profiles_supported parameter of [ID-JAG]
         could carry such a signal, at the cost of mixing grant profiles
-        with proof capabilities in one list.
+        with proof capabilities in one list.  If a client can opt in,
+        should the opt-in also let the issuing authorization server bind
+        the grant to the certificate when the request also contains a
+        DPoP proof, as Section 9.11 of [ID-JAG] permits, except when the
+        request proves possession of a DPoP-bound subject_token or
+        actor_token (Section 9.4)?  That would narrow the certificate
+        conflict with [ID-JAG] in Appendix A.  It would need exceptions
+        to Section 4.2.1 and Section 4.1, which bind the grant only to
+        the key of the DPoP proof, to Section 4.2.2, which applies only
+        to a request without a DPoP proof, and to the invalid_target
+        case of item 3 of Section 4.2, and the client's check in
+        Section 4.4 would have to accept the certificate of a client
+        that opted in.
 
    5.   Alignment with [ID-JAG], [ID-CHAINING], and [JWT-DPOP-GRANT].
         The conflicts listed in Appendix A, two with [ID-JAG] and one
