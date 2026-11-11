@@ -113,11 +113,10 @@ Table of Contents
      9.2.  Grant Type Substitution
      9.3.  Cross-JWT Confusion
      9.4.  DPoP Proof Replay
-     9.5.  Replay by the Key Holder
-     9.6.  Exhaustion of Single-Use Authorization Grants
-     9.7.  Proof of Possession and Client Identity
-     9.8.  Theft of the Subject Token
-     9.9.  Informational Nature of the Response Parameter
+     9.5.  Exhaustion of Single-Use Authorization Grants
+     9.6.  Proof of Possession and Client Identity
+     9.7.  Theft of the Subject Token
+     9.8.  Informational Nature of the Response Parameter
    10. Privacy Considerations
    11. IANA Considerations
      11.1.  OAuth Parameters Registration
@@ -394,8 +393,6 @@ Table of Contents
    key or certificate, are compared by confirmation method and value,
    not by byte representation:
 
-   *  JSON member order and insignificant whitespace are ignored.
-
    *  A thumbprint member, such as jkt or x5t#S256, is compared as the
       base64url-encoded string it contains, character by character.
 
@@ -533,7 +530,7 @@ Table of Contents
    authorization grant other than as described in this section.  When it
    rejects a request for a JWT authorization grant, the issuing
    authorization server MUST NOT treat the subject_token or actor_token
-   as used, for example by rotating a refresh token (Section 9.6).
+   as used, for example by rotating a refresh token (Section 9.5).
 
    Binding is required for an authorization grant if the profile of the
    grant requires it (Section 8), or if the issuing authorization server
@@ -844,10 +841,10 @@ Table of Contents
           certificate.  A confirmation member that the client does not
           recognize does not match.
 
-   For an access token, a token_type of DPoP indicates a DPoP binding
-   (Section 5 of [RFC9449]).  [RFC8705] defines no token_type value for
-   a certificate binding; the cnf parameter, if present, identifies the
-   key or certificate of either kind of binding.
+   For an access token, a token_type of DPoP shows a DPoP binding
+   (Section 5 of [RFC9449]), but [RFC8705] defines no token_type value
+   for a certificate binding; the cnf parameter, if present, identifies
+   the key or certificate of either binding.
 
    A client that did not send a binding request but receives a cnf
    parameter presents the token with the corresponding proof if it holds
@@ -1000,19 +997,15 @@ Table of Contents
    implementations ignore confirmation members they do not understand.
    Client authentication does not take the place of any of these checks.
 
-   A resource authorization server that supports DPoP validates a DPoP
-   proof in the request, including its nonce, before it validates the
-   authorization grant, and rejects an invalid proof as Section 5 of
-   [RFC9449] requires, whatever the binding of the grant.  A request
-   that presents a DPoP-bound grant without a DPoP proof is rejected
-   with the invalid_grant error code (item 2), not use_dpop_nonce.
+   A resource authorization server that supports DPoP rejects an invalid
+   DPoP proof (Section 5 of [RFC9449]) whatever the binding of the
+   grant.  A request that presents a DPoP-bound grant without a DPoP
+   proof is rejected with the invalid_grant error code (item 2), not
+   use_dpop_nonce.
 
    For an x5t#S256 member, the resource authorization server need not
    authenticate the client with the certificate or trust the
-   certificate's issuer (Section 4 of [RFC8705]).  How the certificate
-   reaches a resource authorization server behind a TLS-terminating
-   proxy is outside the scope of this specification, as it is in
-   Section 6.5 of [RFC8705].
+   certificate's issuer (Section 4 of [RFC8705]).
 
    If the profile of the authorization grant requires binding
    (Section 8) and the grant has no cnf claim, the resource
@@ -1022,7 +1015,7 @@ Table of Contents
    A resource authorization server that detects reuse of a JWT
    authorization grant, bound or not, for example by its jti claim
    (Section 4.1.7 of [RFC7519]), MUST NOT record the grant as used when
-   it rejects the request (Section 9.6).
+   it rejects the request (Section 9.5).
 
    The following cnf claim is rejected with the invalid_grant error code
    because it contains two confirmation members:
@@ -1246,7 +1239,7 @@ Table of Contents
 
    Such a profile answers item 4 of Section 8.  The resource
    authorization server then relies on the issuing authorization
-   server's authentication of the client (Section 9.7).
+   server's authentication of the client (Section 9.6).
 
    Where a profile allows a key-bound authorization grant in place of
    client authentication, a resource authorization server MUST reject,
@@ -1270,13 +1263,12 @@ Table of Contents
       authorization server, binding is required, the request contains no
       DPoP proof, and item 3 of Section 4.2 names this error code.
 
-   use_dpop_nonce:  At either authorization server, the authorization
-      server requires a nonce in the DPoP proof, or the nonce is missing
-      or not current (Section 8 of [RFC9449]).  The authorization server
-      MUST use this error code, and not invalid_grant or
-      invalid_request, for these conditions, including when the DPoP
-      proof is needed to verify a key-bound authorization grant or a
-      bound subject_token.
+   use_dpop_nonce:  At either authorization server, the request contains
+      a DPoP proof that Section 8 of [RFC9449] rejects with this error
+      code.  The authorization server MUST use this error code, and not
+      invalid_grant or invalid_request, for such a proof, including when
+      the DPoP proof is needed to verify a key-bound authorization grant
+      or a bound subject_token.
 
    invalid_request:  At the issuing authorization server, a bound
       subject_token or actor_token is not proven and the requesting
@@ -1706,7 +1698,7 @@ Table of Contents
    server requires: it can replay a client secret, or a client assertion
    that the server accepts more than once, or authenticate as its own
    client if the server lets that client exchange the token
-   (Section 9.7).  What the attacker obtains depends on the binding of
+   (Section 9.6).  What the attacker obtains depends on the binding of
    the issued authorization grant:
 
    *  A grant bound to the key of the DPoP proof is of no use to the
@@ -1720,7 +1712,7 @@ Table of Contents
 
    *  An unbound grant, which Section 4.2.1 issues when the issuing
       authorization server cannot bind with jkt and binding is not
-      required, is usable (Section 9.8).
+      required, is usable (Section 9.7).
 
    When neither the subject_token nor the actor_token requires proof of
    possession of a DPoP key, binding the grant only to the key of the
@@ -1728,41 +1720,33 @@ Table of Contents
    other requirements of the exchange, because that attacker can request
    a grant bound to its own key.
 
-9.5.  Replay by the Key Holder
+9.5.  Exhaustion of Single-Use Authorization Grants
 
-   Binding limits who can redeem an authorization grant, not how often.
-   A client, or an attacker that has obtained the client's key, can
-   redeem a key-bound grant until it expires unless the resource
-   authorization server limits it to a single use.  Short grant
-   lifetimes and single-use enforcement (Section 5.5 of [ID-CHAINING])
-   remain applicable to key-bound grants.
+   Binding limits who can redeem an authorization grant, not how often,
+   so short grant lifetimes and single-use enforcement (Section 5.5 of
+   [ID-CHAINING]) remain useful for key-bound grants.  A resource
+   authorization server that limits a grant to a single use could,
+   however, mark a key-bound grant as used when a party without the key
+   presents it, denying the legitimate client its redemption.  It could
+   also mark the grant as used when it rejects a request with the
+   use_dpop_nonce error code, so that the client's retry with the nonce
+   fails.  Section 5.2 prevents both by recording a grant as used only
+   when the request succeeds.  Section 4.2 applies the same rule to a
+   single-use subject_token at the issuing authorization server.
 
-9.6.  Exhaustion of Single-Use Authorization Grants
-
-   A resource authorization server that limits an authorization grant to
-   a single use, as Section 5.5 of [ID-CHAINING] suggests, could mark a
-   key-bound grant as used when a party without the key presents it,
-   denying the legitimate client its redemption.  It could also mark the
-   grant as used when it rejects a request with the use_dpop_nonce error
-   code, so that the client's retry with the nonce fails.  Section 5.2
-   prevents both by recording a grant as used only when the request
-   succeeds.  Section 4.2 applies the same rule to a single-use
-   subject_token at the issuing authorization server.
-
-9.7.  Proof of Possession and Client Identity
+9.6.  Proof of Possession and Client Identity
 
    Proof of possession shows that the presenter holds the key or
-   certificate, not which client the presenter is.  Even at the issuing
+   certificate, not which client it is: even at the issuing
    authorization server, a DPoP proof is not cryptographically bound to
-   the client authentication that accompanies it (Section 11.11 of
-   [RFC9449]).  A resource authorization server that accepts a key-bound
+   the accompanying client authentication (Section 11.11 of [RFC9449]).
+   A resource authorization server that accepts a key-bound
    authorization grant in place of client authentication (Section 5.5)
    therefore depends on the issuing authorization server's
    authentication of the client and on the client's protection of its
-   private key: any party that obtains the key can use a grant bound to
-   it.
+   private key.
 
-9.8.  Theft of the Subject Token
+9.7.  Theft of the Subject Token
 
    Binding the issued authorization grant does not protect a bearer
    subject_token that is stolen before the exchange.  An attacker that
@@ -1788,7 +1772,7 @@ Table of Contents
    an unbound grant (Section 4.2.1), which is a bearer token, as it
    would be without this specification.
 
-9.9.  Informational Nature of the Response Parameter
+9.8.  Informational Nature of the Response Parameter
 
    The cnf response parameter is informational.  The binding is enforced
    when the issued token is presented to its consumer, which verifies
@@ -2112,14 +2096,11 @@ Appendix B.  Open Issues
         dpop_bound_access_tokens does (Section 5.2 of [RFC9449]).  That
         would remove the jwt-pop grant type and the conflict with
         Section 8 of [ID-JAG].  It would also lose the per-request
-        requirement (Section 5.1.1), and a client would need to confirm
-        that the registration policy took effect: a resource
-        authorization server ignores client metadata that it does not
-        understand (Section 2 of [RFC7591]), but returns all registered
-        metadata, which the client can check (Section 3.2.1 of
-        [RFC7591]), whereas it rejects an unsupported grant type
-        outright (Section 5.2 of [RFC6749]).  Which should the working
-        group prefer?
+        requirement and the rejection of an unsupported grant type that
+        Section 9.2 describes; a client would instead confirm that the
+        registration policy took effect from the registered metadata
+        that the resource authorization server returns (Section 3.2.1 of
+        [RFC7591]).  Which should the working group prefer?
 
    2.   Error for a required binding.  When binding is required and the
         issuing authorization server does not bind the authorization
