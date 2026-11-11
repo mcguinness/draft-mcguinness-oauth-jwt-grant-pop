@@ -229,7 +229,7 @@ A client requests a DPoP-bound grant by including a DPoP proof ({{Section 4 of R
 
 A request that carries a TLS client certificate but no DPoP proof is not a binding request: a client presents a certificate for mutual-TLS client authentication ({{Section 2 of RFC8705}}) without necessarily intending to bind the grant. An issuing authorization server binds a grant to that certificate only as {{cert-binding}} describes.
 
-If the `subject_token` or `actor_token` is bound to a key or certificate, the client proves possession of that key or certificate in the request, with a DPoP proof or over a mutual-TLS connection that uses the certificate, unless {{bound-subject}} exempts it.
+If the `subject_token` or `actor_token` is bound to a key or certificate, the client MUST prove possession of that same key or certificate in the request, with a DPoP proof signed with the key or over a mutual-TLS connection that uses the certificate, unless the client is exempt ({{bound-subject}}). A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}), so a request whose `subject_token` and `actor_token` are bound to different DPoP keys proves possession of at most one of them, and is rejected unless the client is exempt for each token whose key the DPoP proof does not match. A grant issued in response to a binding request is bound to the key of that request's DPoP proof, or unbound ({{binding-request}}), so a bound grant has the same key as each DPoP-bound `subject_token` or `actor_token` whose possession the request proves.
 
 No request parameter lets a client require a bound grant; a client that requires one checks the response ({{client-processing}}). The issuing authorization server can itself require binding, and then rejects a request that carries no proof of possession to which it can bind the grant ({{issuer-processing}}).
 
@@ -343,9 +343,9 @@ Cache-Control: no-store
 
 Item 2 of {{issuer-processing}} applies to a `subject_token` or `actor_token` that is bound to a key or certificate, such as a refresh token issued to a public client ({{Section 5 of RFC9449}}). A request proves possession of that key or certificate with a DPoP proof signed with the key, or with a mutual-TLS handshake that uses the certificate. The requesting client is exempt if it authenticates and is an intended audience of the token, other than the client to which the token was issued, such as a resource server that exchanges an access token it received ({{Section 2.3 of RFC8693}}).
 
-The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. A binding request that proves possession of a DPoP-bound `subject_token` carries a DPoP proof signed with that token's key, so a grant issued in response to it is bound to the same key, or unbound ({{binding-request}}).
+The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains.
 
-The issuing authorization server applies item 2 to each bound token separately. A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}), so a request whose `subject_token` and `actor_token` are bound to different DPoP keys proves possession of at most one of them, and is rejected unless the requesting client is exempt for each token whose key the DPoP proof does not match.
+The issuing authorization server applies item 2 to each bound token separately. {{te-request}} describes what this means for a request with two bound tokens, and for the key of the issued grant.
 
 ### Binding the Grant {#bind}
 
@@ -796,7 +796,7 @@ The token endpoint requires TLS ({{Section 3.2 of RFC6749}}), which prevents an 
 
 The privacy considerations of {{RFC9449}} and {{RFC8705}} apply to this specification.
 
-A confirmation member is a stable identifier for the bound key or certificate. A client that uses the same key or certificate with several resource authorization servers lets them correlate its requests. A client that needs to avoid such correlation uses a separate key or certificate for each resource authorization server. This is not possible when the client exchanges a DPoP-bound `subject_token`, because a bound grant is then bound to that token's key ({{bound-subject}}).
+A confirmation member is a stable identifier for the bound key or certificate. A client that uses the same key or certificate with several resource authorization servers lets them correlate its requests. A client that needs to avoid such correlation uses a separate key or certificate for each resource authorization server. This is not possible when the client exchanges a DPoP-bound `subject_token`, because a bound grant is then bound to that token's key ({{te-request}}).
 
 The `cnf` response parameter discloses the binding only to the client that made the request, which already holds the key or certificate. A thumbprint member discloses less than a `jwk` member and is sufficient for the client to verify the binding, which is why {{cnf-param}} recommends it.
 
