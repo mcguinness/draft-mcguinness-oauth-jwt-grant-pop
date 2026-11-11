@@ -1601,9 +1601,12 @@ Table of Contents
    The DPoP proof replay protections of Section 11.1 of [RFC9449] and
    the authorization server-provided nonce of Section 8 of [RFC9449]
    apply at the token endpoints of both the issuing and the resource
-   authorization server.  When their token endpoints differ, a DPoP
-   proof sent to one cannot be replayed at the other, because the htu
-   claim identifies the token endpoint (Section 4.3 of [RFC9449]).
+   authorization server.  When their token endpoint URIs do not match
+   under the comparison rules of Section 4.3 of [RFC9449], which ignore
+   any query and fragment parts, a DPoP proof sent to one cannot be
+   replayed at the other, because the htu claim identifies the token
+   endpoint.  Token endpoint URIs that differ only in their query
+   components (Section 3.2 of [RFC6749]) do not provide this separation.
 
    A DPoP proof does not cover the grant it accompanies or the TLS
    connection that carries it.  An attacker that captures a grant
