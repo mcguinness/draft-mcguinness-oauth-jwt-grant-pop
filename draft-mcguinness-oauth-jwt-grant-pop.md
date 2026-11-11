@@ -690,12 +690,21 @@ This specification defines the following authorization server metadata parameter
 
 A resource authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. The `jwt-pop` value alone indicates no confirmation method.
 
-A client or an issuing authorization server can use `jwt_grant_cnf_methods_supported` to learn which confirmation methods the resource authorization server verifies, for example to choose a confirmation method, to confirm that a binding will be enforced ({{non-enforcing-consumers}}), or to decline a confirmation method that the resource authorization server does not verify ({{issuer-processing}}). It retrieves and validates the metadata as described in {{Section 3 of RFC8414}}: a client that chooses a confirmation method, for the authorization server to which it presents the authorization grant; a client that confirms that a binding will be enforced, or an issuing authorization server, for each `aud` value of the grant ({{non-enforcing-consumers}}), using one of the following issuer identifiers:
+A client or an issuing authorization server can use `jwt_grant_cnf_methods_supported` to learn which confirmation methods a resource authorization server verifies, for example to choose a confirmation method, to confirm that a binding will be enforced ({{non-enforcing-consumers}}), or to decline a method that the server does not verify ({{issuer-processing}}). It retrieves and validates the metadata as described in {{Section 3 of RFC8414}}:
 
-* that `aud` value; or
-* an issuer identifier that its configuration associates with that `aud` value, for example when it is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
+* A client that chooses a confirmation method retrieves the metadata of the authorization server to which it presents the authorization grant.
+* A client that confirms that a binding will be enforced, and an issuing authorization server, retrieve the metadata for each `aud` value of the grant ({{non-enforcing-consumers}}), using as the issuer identifier either:
+   * that `aud` value; or
+   * an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
-Metadata that does not list a confirmation method is no evidence that the resource authorization server verifies it, and metadata that cannot be retrieved or validated is no evidence of any confirmation method; configuration or an established trust relationship can still provide that evidence. In metadata retrieved and validated as described above, the `jwt-dpop` value of `grant_types_supported` is also evidence that the resource authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}). A `jwt_grant_cnf_methods_supported` parameter in such metadata is evidence that the resource authorization server does not verify a confirmation method that the parameter omits, unless the `jwt-dpop` value is evidence that it verifies that method; metadata without that parameter is no such evidence.
+Metadata is evidence of a confirmation method as follows:
+
+* Metadata that does not list a confirmation method is no evidence that the resource authorization server verifies it.
+* Metadata that cannot be retrieved or validated is no evidence of any confirmation method.
+* In metadata retrieved and validated as described above, the `jwt-dpop` value of `grant_types_supported` is also evidence that the resource authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}).
+* A `jwt_grant_cnf_methods_supported` parameter in such metadata is evidence that the resource authorization server does not verify a confirmation method that the parameter omits, unless the `jwt-dpop` value is evidence that it verifies that method. Metadata without that parameter is no such evidence.
+
+In the first two cases, configuration or an established trust relationship can still provide that evidence.
 
 The `dpop_signing_alg_values_supported` ({{Section 5.1 of RFC9449}}) and `tls_client_certificate_bound_access_tokens` ({{Section 3.3 of RFC8705}}) metadata parameters do not indicate that an authorization server verifies key-bound authorization grants.
 
@@ -719,7 +728,9 @@ The following is an example of the metadata of a resource authorization server a
 
 ## Client Registration Metadata {#client-metadata}
 
-The `jwt-pop` grant type requires a key-bound authorization grant in each request, whether or not the resource authorization server identifies the client ({{jwt-pop}}). A resource authorization server can also require an identified client to present key-bound grants by registering the client with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes the `jwt-pop` grant type and not the `jwt-bearer` grant type. The resource authorization server then rejects a request from that client that uses the `jwt-bearer` grant type with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-pop}} and {{legacy-jwt-dpop}} reject an unbound grant. This applies only to a request in which the resource authorization server identifies the client: by client authentication or, when a key-bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration.
+The `jwt-pop` grant type requires a key-bound authorization grant in each request, whether or not the resource authorization server identifies the client ({{jwt-pop}}). A resource authorization server can also limit an identified client to key-bound grants by registering it with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes `jwt-pop` and not `jwt-bearer`. The server then rejects a `jwt-bearer` request from that client with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-pop}} and {{legacy-jwt-dpop}} reject an unbound grant.
+
+This limit applies only when the resource authorization server identifies the client: by client authentication or, when a key-bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration.
 
 A resource authorization server can instead reject unbound authorization grants by policy while accepting the `jwt-bearer` grant type, but `grant_types` then does not express that the client is limited to key-bound grants.
 
