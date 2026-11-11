@@ -826,13 +826,9 @@ A captured request can also be replayed at the issuing authorization server. An 
 
 When neither the `subject_token` nor the `actor_token` requires proof of possession of a DPoP key, binding the grant only to the key of the DPoP proof adds no protection against an attacker that can meet the other requirements of the exchange, because that attacker can request a grant bound to its own key.
 
-## Replay by the Key Holder
-
-Binding limits who can redeem an authorization grant, not how often. A client, or an attacker that has obtained the client's key, can redeem a key-bound grant until it expires unless the resource authorization server limits it to a single use. Short grant lifetimes and single-use enforcement ({{Section 5.5 of ID-CHAINING}}) remain applicable to key-bound grants.
-
 ## Exhaustion of Single-Use Authorization Grants {#single-use}
 
-A resource authorization server that limits an authorization grant to a single use, as {{Section 5.5 of ID-CHAINING}} suggests, could mark a key-bound grant as used when a party without the key presents it, denying the legitimate client its redemption. It could also mark the grant as used when it rejects a request with the `use_dpop_nonce` error code, so that the client's retry with the nonce fails. {{processing}} prevents both by recording a grant as used only when the request succeeds. {{issuer-processing}} applies the same rule to a single-use `subject_token` at the issuing authorization server.
+Binding limits who can redeem an authorization grant, not how often, so short grant lifetimes and single-use enforcement ({{Section 5.5 of ID-CHAINING}}) remain useful for key-bound grants. A resource authorization server that limits a grant to a single use could, however, mark a key-bound grant as used when a party without the key presents it, denying the legitimate client its redemption. It could also mark the grant as used when it rejects a request with the `use_dpop_nonce` error code, so that the client's retry with the nonce fails. {{processing}} prevents both by recording a grant as used only when the request succeeds. {{issuer-processing}} applies the same rule to a single-use `subject_token` at the issuing authorization server.
 
 ## Proof of Possession and Client Identity {#pop-identity}
 
