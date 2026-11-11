@@ -724,7 +724,7 @@ The following is an example of client metadata for a client that the resource au
 
 A specification that defines a JWT authorization grant, such as {{ID-JAG}}, uses this specification by stating:
 
-1. The value of the grant's `typ` JOSE Header Parameter ({{Section 3.11 of RFC8725}}) and, if the grant is issued through Token Exchange, its `requested_token_type` value.
+1. The validation rules that distinguish the grant from other kinds of JWTs that its issuer issues or that a resource authorization server accepts ({{Section 3.12 of RFC8725}}), including the value of the grant's `typ` JOSE Header Parameter ({{Section 3.11 of RFC8725}}) and whether those rules rely on it, and, if the grant is issued through Token Exchange, its `requested_token_type` value.
 2. Which confirmation methods an issuing authorization server may apply, which a resource authorization server must verify, which are mandatory to implement, and whether the `jwt-pop` grant type is mandatory to implement.
 3. Whether binding is optional, recommended, or required, and whether that varies by resource authorization server. If the profile requires the binding to be enforced, and not only applied, who establishes that each resource authorization server in the grant's audience verifies it, and from what evidence ({{non-enforcing-consumers}}).
 4. The claim, if any, in which the issuing authorization server identifies the client ({{refresh}}), and whether a resource authorization server may accept a bound grant in place of client authentication ({{client-auth}}). If it may: how the identity of the client is tied to the key or certificate; what the issuing authorization server verifies before it binds the grant; and how the resource authorization server maps that identity to its own client registration and policy.
@@ -764,7 +764,7 @@ A resource authorization server that adopts this specification rejects a grant t
 
 ## Cross-JWT Confusion {#cross-jwt}
 
-A bound grant and a DPoP-bound JWT access token for the same client can carry the same `jkt` value. A party that receives one could present it where the other is expected. The `aud` claim of a grant identifies an authorization server ({{RFC10070}}), and an explicit `typ` value ({{Section 3.11 of RFC8725}}) lets a recipient reject a JWT of the wrong kind ({{Section 3.12 of RFC8725}}). When the profile of a grant defines a `typ` value, a resource authorization server SHOULD reject a grant that does not carry it with the `invalid_grant` error code.
+A bound grant and a DPoP-bound JWT access token for the same client can carry the same `jkt` value. A party that receives one could present it where the other is expected. The `aud` claim of a grant identifies an authorization server ({{RFC10070}}), and an explicit `typ` value ({{Section 3.11 of RFC8725}}) lets a recipient reject a JWT of the wrong kind ({{Section 3.12 of RFC8725}}). When the profile of a grant defines a `typ` value, a resource authorization server SHOULD reject a grant that does not carry it with the `invalid_grant` error code, and MUST do so when the profile relies on that value to distinguish its grants from other kinds of JWTs (item 1 of {{profiles}}).
 
 ## DPoP Proof Replay {#proof-replay}
 
