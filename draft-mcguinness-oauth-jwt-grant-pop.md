@@ -832,7 +832,7 @@ Binding limits who can redeem an authorization grant, not how often, so short gr
 
 ## Proof of Possession and Client Identity {#pop-identity}
 
-Proof of possession shows that the presenter holds the key or certificate, not which client the presenter is. Even at the issuing authorization server, a DPoP proof is not cryptographically bound to the client authentication that accompanies it ({{Section 11.11 of RFC9449}}). A resource authorization server that accepts a key-bound authorization grant in place of client authentication ({{client-auth}}) therefore depends on the issuing authorization server's authentication of the client and on the client's protection of its private key: any party that obtains the key can use a grant bound to it.
+Proof of possession shows that the presenter holds the key or certificate, not which client it is: even at the issuing authorization server, a DPoP proof is not cryptographically bound to the accompanying client authentication ({{Section 11.11 of RFC9449}}). A resource authorization server that accepts a key-bound authorization grant in place of client authentication ({{client-auth}}) therefore depends on the issuing authorization server's authentication of the client and on the client's protection of its private key.
 
 ## Theft of the Subject Token {#subject-token-theft}
 
