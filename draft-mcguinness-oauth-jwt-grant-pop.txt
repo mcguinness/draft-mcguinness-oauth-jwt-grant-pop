@@ -596,8 +596,8 @@ Table of Contents
    can repeat it over a mutual-TLS connection with its TLS client
    certificate.  With invalid_dpop_proof, the issuing authorization
    server MAY include a DPoP-Nonce HTTP header field (Section 8.2 of
-   [RFC9449]) so that the repeated request can include the nonce without
-   an extra round trip.
+   [RFC9449]) so that the repeated request can include the nonce and
+   need not first be rejected with use_dpop_nonce.
 
    The following is an example of the error response to a Token Exchange
    request that contains no DPoP proof, when binding is required and the
@@ -891,9 +891,9 @@ Table of Contents
       field of the request.
 
    *  For an x5t#S256 member, the client MUST send the request over a
-      mutual-TLS connection that uses that certificate (Section 3 of
-      [RFC8705]), to the token endpoint or to its mutual-TLS endpoint
-      alias (Section 5 of [RFC8705]).
+      mutual-TLS connection that uses that certificate, to the token
+      endpoint or to its mutual-TLS endpoint alias (Section 5 of
+      [RFC8705]).
 
 5.1.1.  Proof-of-Possession Grant Type
 
@@ -2012,9 +2012,11 @@ A.1.  Identity Assertion JWT Authorization Grant
        this specification keeps for existing clients (Section 5.1.2).
 
    3.  Binding is optional.  When the DPoP proof is valid, the IdP
-       Authorization Server binds the authorization grant
-       (Section 9.11.1.1 of [ID-JAG]), so its policy does not decline
-       the jkt confirmation method (Section 4.2).
+       Authorization Server binds the authorization grant: to the DPoP
+       key, unless its local policy selects a certificate binding
+       instead (Section 9.11.1.1 of [ID-JAG]).  Its policy does not
+       otherwise decline the jkt confirmation method (Section 4.2).  The
+       first conflict below concerns that certificate choice.
 
    4.  A Resource Authorization Server may accept a key-bound
        authorization grant in place of client authentication.  The IdP
@@ -2038,21 +2040,22 @@ A.1.  Identity Assertion JWT Authorization Grant
    Version -06 of that document conflicts with this specification in two
    places.  Each would be resolved by a change to that document:
 
-   *  Section 9.11 of [ID-JAG] lets the IdP Authorization Server choose
-      a certificate binding, according to local policy, when a request
-      carries both a DPoP proof and a TLS client certificate.  This
-      specification binds an authorization grant issued in response to a
-      binding request only to the key of the DPoP proof, if it binds it
-      at all (Section 4.2.1), for two reasons.  The client can
-      authenticate to the IdP Authorization Server with a certificate
-      that it does not use downstream and still obtain a grant that it
-      can redeem with its DPoP key.  And an attacker that replays a
-      captured DPoP-bound subject_token or actor_token and its DPoP
-      proof over its own mutual-TLS connection cannot obtain a grant
-      bound to the attacker's certificate (Section 9.4).  The change is
-      for the IdP Authorization Server never to choose a certificate
-      binding when the request contains a DPoP proof.  A narrower change
-      is listed among the open issues (Appendix B).
+   *  Section 9.11 of [ID-JAG] lets the IdP Authorization Server select
+      either a DPoP or a certificate binding, according to local policy,
+      when a request carries both a DPoP proof and a TLS client
+      certificate.  This specification binds an authorization grant
+      issued in response to a binding request only to the key of the
+      DPoP proof, if it binds it at all (Section 4.2.1), for two
+      reasons.  The client can authenticate to the IdP Authorization
+      Server with a certificate that it does not use downstream and
+      still obtain a grant that it can redeem with its DPoP key.  And an
+      attacker that replays a captured DPoP-bound subject_token or
+      actor_token and its DPoP proof over its own mutual-TLS connection
+      cannot obtain a grant bound to the attacker's certificate
+      (Section 9.4).  The change is for the IdP Authorization Server
+      never to choose a certificate binding when the request contains a
+      DPoP proof.  A narrower change is listed among the open issues
+      (Appendix B).
 
    *  Section 8 of [ID-JAG] requires a client that supports that profile
       to include urn:ietf:params:oauth:grant-type:jwt-bearer in its
