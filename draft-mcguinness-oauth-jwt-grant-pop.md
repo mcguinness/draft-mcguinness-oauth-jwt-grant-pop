@@ -168,7 +168,7 @@ The `cnf` claim of a grant that an issuing authorization server binds MUST conta
 
 A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}).
 
-The following are the claims of a DPoP-bound grant:
+The following is an example of the claims of a DPoP-bound grant:
 
 ~~~ json
 {
@@ -233,7 +233,7 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, the cl
 
 No request parameter lets a client require a bound grant; a client that requires one checks the response ({{client-processing}}).
 
-The following is an example of a binding request from a client that authenticates with a client secret, for a grant for the resource authorization server `https://as.example/`:
+The following is an example of a binding request for a grant whose audience is the resource authorization server `https://as.example/`, from a client that authenticates with a client secret:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -490,7 +490,7 @@ Cache-Control: no-store
 ~~~
 {: title="Error Response for a Missing DPoP Proof"}
 
-A resource authorization server that requires a DPoP nonce ({{Section 8 of RFC9449}}) responds to the request in {{ex-redeem}} as follows, without recording the grant as used. The client then repeats the request with the same grant and a DPoP proof that contains the nonce.
+The following is an example of the response to the request in {{ex-redeem}} from a resource authorization server that requires a DPoP nonce ({{Section 8 of RFC9449}}):
 
 ~~~ http-message
 HTTP/1.1 400 Bad Request
@@ -504,6 +504,8 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 }
 ~~~
 {: title="Nonce Challenge for a DPoP-Bound Grant"}
+
+The resource authorization server does not record the grant as used. The client then repeats the request with the same grant and a DPoP proof that contains the nonce.
 
 ## Access Token Response {#token-response}
 
@@ -548,7 +550,7 @@ When a client presents a refresh token that the resource authorization server bo
 
 The client presents a refresh token issued for a bound grant with each proof of possession that it presented in the request in which it obtained that refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. The response does not always show which binding was applied; for example, a resource authorization server can bind to the certificate although the request contained a DPoP proof, and return a `token_type` of `Bearer` ({{binding-outcomes}}).
 
-The following is an example of a refresh request for a refresh token bound to the certificate in {{cert-example}}. The client sends it over a mutual-TLS connection that uses that certificate, with which it also authenticates ({{Section 2 of RFC8705}}), and adds a DPoP proof:
+The following is an example of a refresh request for a refresh token that is bound to the certificate in {{cert-example}} and that the client obtained in a request that carried both that certificate and a DPoP proof. The client therefore sends the request over a mutual-TLS connection that uses the certificate, with which it also authenticates ({{Section 2 of RFC8705}}), and adds a DPoP proof signed with the key that it used in that request:
 
 ~~~ http-message
 POST /token HTTP/1.1
@@ -578,7 +580,7 @@ Cache-Control: no-store
 ~~~
 {: title="Refresh Response with DPoP-Bound Tokens"}
 
-The client presents the replacement refresh token with both proofs, because it obtained it with both; the resource authorization server verifies the DPoP proof.
+The client presents the replacement refresh token with both proofs, because it obtained it with both; the resource authorization server verifies the DPoP proof against the replacement's binding, which is the key of the DPoP proof in the refresh request above.
 
 ## Bound Grant in Place of Client Authentication {#client-auth}
 
