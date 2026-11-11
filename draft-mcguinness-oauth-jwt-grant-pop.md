@@ -652,7 +652,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At either authorization server, the DPoP proof is invalid ({{Section 5 of RFC9449}}); or, at the issuing authorization server, binding is required, the request contains no DPoP proof, and item 3 of {{issuer-processing}} names this error code.
 
 `use_dpop_nonce`:
-: At either authorization server, the authorization server requires a nonce in the DPoP proof, or the nonce is missing or not current ({{Section 8 of RFC9449}}). The authorization server MUST use this error code, and not `invalid_grant` or `invalid_request`, for these conditions, including when the DPoP proof is needed to verify a key-bound authorization grant or a bound `subject_token`.
+: At either authorization server, the conditions for which {{Section 8 of RFC9449}} defines this error code. The authorization server MUST use this error code, and not `invalid_grant` or `invalid_request`, for those conditions, including when the DPoP proof is needed to verify a key-bound authorization grant or a bound `subject_token`.
 
 `invalid_request`:
 : At the issuing authorization server, a bound `subject_token` or `actor_token` is not proven and the requesting client is not exempt (item 2 of {{issuer-processing}}); or binding is required, the request contains neither a DPoP proof nor a TLS client certificate, and item 3 of {{issuer-processing}} names this error code.
