@@ -438,7 +438,7 @@ When the `token_type` response parameter is `N_A`, as it is for a JWT authorizat
 
 For an access token, a `token_type` of `DPoP` shows a DPoP binding ({{Section 5 of RFC9449}}), but {{RFC8705}} defines no `token_type` value for a certificate binding; the `cnf` parameter, if present, identifies the key or certificate of either binding.
 
-A client that did not send a DPoP binding request but receives a `cnf` parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it SHOULD treat the response as an error.
+A client that did not send a DPoP binding request but receives a `cnf` parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it MUST discard the issued token.
 
 For the response in {{ex-te-response}}, the client verifies that the `jkt` value in the `cnf` response parameter equals the JWK SHA-256 Thumbprint of its DPoP public key.
 
