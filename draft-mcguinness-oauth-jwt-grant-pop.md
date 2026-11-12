@@ -91,7 +91,7 @@ This specification defines no new confirmation method. It uses the `jkt` ({{Sect
 
 This specification relates to other documents as follows:
 
-* It replaces {{JWT-DPOP-GRANT}} and extends it from DPoP to mutual TLS. It generalizes the `jwt-dpop` grant type of that document into the method-neutral `jwt-pop` grant type ({{jwt-pop}}) and keeps `jwt-dpop` for existing clients; {{legacy-jwt-dpop}} lists the other differences.
+* It proposes to replace {{JWT-DPOP-GRANT}}, subject to the agreement of that document's authors ({{open-issues}}), and extends it from DPoP to mutual TLS. It generalizes the `jwt-dpop` grant type of that document into the method-neutral `jwt-pop` grant type ({{jwt-pop}}) and keeps `jwt-dpop` for existing clients; {{legacy-jwt-dpop}} lists the other differences.
 * It replaces {{TE-CNF}}, whose Token Exchange response parameter it incorporates ({{cnf-param}}). That parameter is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
 * It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant, and {{profile-examples}} shows that grant as a profile of this specification and lists the conflicts between the two documents.
 
@@ -128,7 +128,7 @@ This specification refers to grant types by the short names in {{grant-type-name
 |---|---|---|
 | `jwt-bearer` | `urn:ietf:params:oauth:grant-type:jwt-bearer` | {{Section 2.1 of RFC7523}} |
 | `jwt-pop` | `urn:ietf:params:oauth:grant-type:jwt-pop` | {{jwt-pop}} |
-| `jwt-dpop` | `urn:ietf:params:oauth:grant-type:jwt-dpop` | {{legacy-jwt-dpop}} |
+| `jwt-dpop` | `urn:ietf:params:oauth:grant-type:jwt-dpop` | {{JWT-DPOP-GRANT}}, {{legacy-jwt-dpop}} |
 {: #grant-type-names title="Grant Type Short Names"}
 
 The examples in this specification are non-normative. They use the public key from the examples in {{RFC9449}}, whose JWK SHA-256 Thumbprint is `0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I`, an issuing authorization server at `https://issuer.example/`, and a resource authorization server at `https://as.example/`. Request bodies are shown with extra line breaks and without URL encoding, and tokens are truncated, for display purposes only.
@@ -979,7 +979,7 @@ Version -06 of that document conflicts with this specification in two places. Ea
 # Acknowledgments
 {:numbered="false"}
 
-This document combines and replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}, and generalizes the sender-constraining rules of {{ID-JAG}}. The author thanks the authors and reviewers of those documents.
+This document replaces {{TE-CNF}}, proposes to replace {{JWT-DPOP-GRANT}}, and generalizes the sender-constraining rules of {{ID-JAG}}. The author thanks the authors and reviewers of those documents.
 
 # Document History
 {:numbered="false"}
@@ -987,4 +987,4 @@ This document combines and replaces {{JWT-DPOP-GRANT}} and {{TE-CNF}}, and gener
 -00
 
 * Initial version, combining {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
-* Replaces the `jwt-dpop` grant type with the method-neutral `jwt-pop` grant type and the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies key-bound authorization grants whatever their grant type.
+* Generalizes the `jwt-dpop` grant type into the method-neutral `jwt-pop` grant type, adds the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies key-bound authorization grants whatever their grant type.
