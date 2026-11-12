@@ -160,6 +160,8 @@ The examples in this specification are non-normative. They use the public key fr
 
 The client sends a separate DPoP proof to each authorization server, signed with the same key, because the `htu` claim of a DPoP proof identifies the endpoint that receives it ({{Section 4.2 of RFC9449}}). With mutual TLS, the client's TLS client certificate takes the place of K: the client proves possession in the TLS handshake instead of with a DPoP proof.
 
+This specification involves three separate bindings: that of a `subject_token` or `actor_token` presented to the issuing authorization server ({{bound-subject}}); that of the authorization grant ({{processing}}); and that of the access and refresh tokens that the resource authorization server issues ({{token-response}}, {{refresh}}). Proof of possession shows that the presenter holds a key or certificate, not which client it is ({{pop-identity}}).
+
 # Key-Bound JWT Authorization Grants {#format}
 
 This section defines the `cnf` claim of a key-bound authorization grant and how confirmation values are compared.
