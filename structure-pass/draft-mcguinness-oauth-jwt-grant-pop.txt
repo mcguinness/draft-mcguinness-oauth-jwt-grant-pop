@@ -674,25 +674,28 @@ Table of Contents
    not bind the authorization grant, it rejects a Token Exchange request
    with the error code in Table 2 (item 3 of Section 4.2):
 
-   +=============+===============================+====================+
-   | Request     | Permitted confirmation        | Error code         |
-   | contains    | methods for the grant         |                    |
-   +=============+===============================+====================+
-   | No DPoP     | Include jkt                   | invalid_dpop_proof |
-   | proof       |                               |                    |
-   +-------------+-------------------------------+--------------------+
-   | Neither a   | Include x5t#S256 but not jkt, | invalid_request    |
-   | DPoP proof  | and the issuing authorization |                    |
-   | nor a TLS   | server would bind the grant   |                    |
-   | client      | to the client's TLS client    |                    |
-   | certificate | certificate, if the request   |                    |
-   |             | had one, as Section 4.2.3     |                    |
-   |             | describes                     |                    |
-   +-------------+-------------------------------+--------------------+
-   | Any other   | Any                           | invalid_target     |
-   | case        |                               | (Section 2.2.2 of  |
-   |             |                               | [RFC8693])         |
-   +-------------+-------------------------------+--------------------+
+    +=============+=============================+====================+
+    | Request     | Conditions                  | Error code         |
+    | contains    |                             |                    |
+    +=============+=============================+====================+
+    | No DPoP     | jkt is a permitted          | invalid_dpop_proof |
+    | proof       | confirmation method for the |                    |
+    |             | grant                       |                    |
+    +-------------+-----------------------------+--------------------+
+    | Neither a   | x5t#S256 is a permitted     | invalid_request    |
+    | DPoP proof  | confirmation method for the |                    |
+    | nor a TLS   | grant and jkt is not, and   |                    |
+    | client      | the issuing authorization   |                    |
+    | certificate | server would bind the grant |                    |
+    |             | to the client's TLS client  |                    |
+    |             | certificate, if the request |                    |
+    |             | had one, as Section 4.2.3   |                    |
+    |             | describes                   |                    |
+    +-------------+-----------------------------+--------------------+
+    | Any other   | Any                         | invalid_target     |
+    | case        |                             | (Section 2.2.2 of  |
+    |             |                             | [RFC8693])         |
+    +-------------+-----------------------------+--------------------+
 
        Table 2: Error Codes When a Required Binding Is Not Applied
 

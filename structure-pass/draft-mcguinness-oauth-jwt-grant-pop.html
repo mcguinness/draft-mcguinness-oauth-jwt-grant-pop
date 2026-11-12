@@ -1809,22 +1809,23 @@ Cache-Control: no-store
 <thead>
               <tr>
                 <th class="text-left" rowspan="1" colspan="1">Request contains</th>
-                <th class="text-left" rowspan="1" colspan="1">Permitted confirmation methods for the grant</th>
+                <th class="text-left" rowspan="1" colspan="1">Conditions</th>
                 <th class="text-left" rowspan="1" colspan="1">Error code</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">No DPoP proof</td>
-                <td class="text-left" rowspan="1" colspan="1">Include <code>jkt</code>
-</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>jkt</code> is a permitted confirmation method for the grant</td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <code>invalid_dpop_proof</code>
 </td>
               </tr>
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">Neither a DPoP proof nor a TLS client certificate</td>
-                <td class="text-left" rowspan="1" colspan="1">Include <code>x5t#S256</code> but not <code>jkt</code>, and the issuing authorization server would bind the grant to the client's TLS client certificate, if the request had one, as <a href="#cert-binding" class="auto internal xref">Section 4.2.3</a> describes</td>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>x5t#S256</code> is a permitted confirmation method for the grant and <code>jkt</code> is not, and the issuing authorization server would bind the grant to the client's TLS client certificate, if the request had one, as <a href="#cert-binding" class="auto internal xref">Section 4.2.3</a> describes</td>
                 <td class="text-left" rowspan="1" colspan="1">
                   <code>invalid_request</code>
 </td>
