@@ -717,14 +717,17 @@ A client or an issuing authorization server can use `jwt_grant_cnf_methods_suppo
    * that `aud` value; or
    * an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}), provided that the `token_endpoint` value of the metadata equals the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
-Metadata is evidence of a confirmation method as follows:
+{{metadata-evidence}} shows what metadata is evidence of for one confirmation method. Validated metadata is metadata retrieved and validated as described above.
 
-* Metadata that does not list a confirmation method is no evidence that the resource authorization server verifies it.
-* Metadata that cannot be retrieved or validated is no evidence of any confirmation method.
-* In metadata retrieved and validated as described above, the `jwt-dpop` value of `grant_types_supported` is also evidence that the resource authorization server verifies the `jkt` confirmation method ({{legacy-jwt-dpop}}).
-* A `jwt_grant_cnf_methods_supported` parameter in such metadata is evidence that the resource authorization server does not verify a confirmation method that the parameter omits, unless the `jwt-dpop` value is evidence that it verifies that method. Metadata without that parameter is no such evidence.
+| Metadata | Evidence |
+|---|---|
+| Validated metadata whose `jwt_grant_cnf_methods_supported` parameter lists the method | That the resource authorization server verifies the method |
+| Validated metadata whose `grant_types_supported` parameter contains `jwt-dpop`, when the method is `jkt` ({{legacy-jwt-dpop}}) | That the resource authorization server verifies the method, even if `jwt_grant_cnf_methods_supported` omits it |
+| Validated metadata whose `jwt_grant_cnf_methods_supported` parameter omits the method, except as in the preceding row | That the resource authorization server does not verify the method |
+| Validated metadata without `jwt_grant_cnf_methods_supported`, except as in the second row, or metadata that cannot be retrieved or validated | None |
+{: #metadata-evidence title="Metadata as Evidence of a Confirmation Method"}
 
-In the first two cases, configuration or an established trust relationship can still provide that evidence.
+Where metadata is not evidence that the resource authorization server verifies a confirmation method (the last two rows), configuration or an established trust relationship can still provide that evidence.
 
 The `dpop_signing_alg_values_supported` ({{Section 5.1 of RFC9449}}) and `tls_client_certificate_bound_access_tokens` ({{Section 3.3 of RFC8705}}) metadata parameters do not indicate that an authorization server verifies key-bound authorization grants.
 
