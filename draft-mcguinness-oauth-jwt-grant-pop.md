@@ -580,16 +580,16 @@ When the authorization grant is bound, the resource authorization server SHOULD 
 * for a DPoP-bound authorization grant, the grant's key, which is the key of the DPoP proof; or
 * for a certificate-bound authorization grant, the grant's certificate or, if the resource authorization server supports DPoP and the request contains a valid DPoP proof, the public key of that proof.
 
-A TLS client certificate presented with a DPoP-bound authorization grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules; the access token can instead be unbound.
+A TLS client certificate presented with a DPoP-bound authorization grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules. It lists the key or certificate to which an issued token may be bound, not whether the token is bound: the access token can be unbound, and {{refresh}} determines whether a refresh token is bound.
 
-| Authorization grant's confirmation member | Proof in the request | Binding of issued tokens |
+| Authorization grant's confirmation member | Proof in the request | Permitted key or certificate when the token is bound |
 |---|---|---|
 | `jkt` or `jwk` | DPoP proof, with or without a TLS client certificate | Authorization grant's key |
 | `x5t#S256` | TLS client certificate only | Authorization grant's certificate |
-| `x5t#S256` | TLS client certificate and DPoP proof | Authorization grant's certificate or key of the DPoP proof |
-{: #binding-outcomes title="Binding of Tokens Issued for a Key-Bound Authorization Grant"}
+| `x5t#S256` | TLS client certificate and DPoP proof | Authorization grant's certificate or key of the DPoP proof; for a refresh token issued to a public client by a resource authorization server that supports DPoP, key of the DPoP proof |
+{: #binding-outcomes title="Permitted Binding of Tokens Issued for a Key-Bound Authorization Grant"}
 
-For a public client, {{Section 5 of RFC9449}} narrows {{binding-outcomes}}: a resource authorization server that supports DPoP binds a refresh token issued to a public client that presents a valid DPoP proof to the key of that proof, even for a certificate-bound authorization grant. The statement in that section that a refresh token issued to a confidential client is not bound to the DPoP key does not apply ({{refresh}}).
+For a public client, {{Section 5 of RFC9449}} narrows the last row of {{binding-outcomes}}: a resource authorization server that supports DPoP binds a refresh token issued to a public client that presents a valid DPoP proof to the key of that proof, even for a certificate-bound authorization grant. The statement in that section that a refresh token issued to a confidential client is not bound to the DPoP key does not apply ({{refresh}}).
 
 The following is an example of the access token response to the request in {{ex-redeem}}:
 
