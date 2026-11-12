@@ -341,10 +341,10 @@ Binding is required for an authorization grant if the profile of the grant requi
 
 When binding is required and the issuing authorization server does not bind the authorization grant, it rejects a Token Exchange request with the error code in {{required-binding-errors}} (item 3 of {{issuer-processing}}):
 
-| Request contains | Permitted confirmation methods for the grant | Error code |
+| Request contains | Conditions | Error code |
 |---|---|---|
-| No DPoP proof | Include `jkt` | `invalid_dpop_proof` |
-| Neither a DPoP proof nor a TLS client certificate | Include `x5t#S256` but not `jkt`, and the issuing authorization server would bind the grant to the client's TLS client certificate, if the request had one, as {{cert-binding}} describes | `invalid_request` |
+| No DPoP proof | `jkt` is a permitted confirmation method for the grant | `invalid_dpop_proof` |
+| Neither a DPoP proof nor a TLS client certificate | `x5t#S256` is a permitted confirmation method for the grant and `jkt` is not, and the issuing authorization server would bind the grant to the client's TLS client certificate, if the request had one, as {{cert-binding}} describes | `invalid_request` |
 | Any other case | Any | `invalid_target` ({{Section 2.2.2 of RFC8693}}) |
 {: #required-binding-errors title="Error Codes When a Required Binding Is Not Applied"}
 
