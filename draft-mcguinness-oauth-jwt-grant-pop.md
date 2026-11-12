@@ -263,21 +263,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 ~~~
 {: #ex-binding-request title="Token Exchange Request with a DPoP Proof"}
 
-The decoded JOSE header and claims of the DPoP proof in that request are:
-
-~~~ json
-{
-  "typ": "dpop+jwt",
-  "alg": "ES256",
-  "jwk": {
-    "kty": "EC",
-    "x": "l8tFrhx-34tV3hRICRDY9zCkDlpBhF42UQUfWVAWBFs",
-    "y": "9VE4jf_Ok_o64zbTTlcuNJajHmt6v9TDVrU0CdvGRDA",
-    "crv": "P-256"
-  }
-}
-~~~
-{: title="DPoP Proof JOSE Header"}
+The DPoP proof in that request carries the example public key ({{cnf-comparison}}) in its `jwk` JOSE Header Parameter. Its decoded claims are:
 
 ~~~ json
 {
