@@ -698,13 +698,13 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 `unauthorized_client`:
 : At the resource authorization server, the client is not registered for the grant type of the request ({{client-metadata}}).
 
-When more than one of these error codes, or the `invalid_client` error code for client authentication that the request includes and that fails ({{Section 5.2 of RFC6749}}), applies to a request, the authorization server MUST return the first in the following order:
+When more than one of these error codes, or the `invalid_client` error code for client authentication that the request includes and that fails ({{Section 5.2 of RFC6749}}), applies to a request, the authorization server MUST return the first in the following order. Both authorization servers start with:
 
 1. `invalid_client`, if the request includes client authentication and that authentication fails;
-2. `unauthorized_client`, if the client authenticated;
-3. `invalid_dpop_proof` or `use_dpop_nonce`;
-4. at the issuing authorization server, `invalid_request`, then `invalid_target`; and
-5. at the resource authorization server, `invalid_grant`, then `unauthorized_client` for a client identified from the authorization grant ({{client-auth}}), then `invalid_client` for a request without client authentication.
+2. `unauthorized_client`, if the client authenticated and is not permitted to use the grant type of the request ({{Section 5.2 of RFC6749}}); and
+3. `invalid_dpop_proof` or `use_dpop_nonce`.
+
+The issuing authorization server continues with `invalid_request`, then `invalid_target`. The resource authorization server continues with `invalid_grant`, then `unauthorized_client` for a client identified from the authorization grant ({{client-auth}}), then `invalid_client` for a request without client authentication.
 
 # Metadata {#metadata}
 
