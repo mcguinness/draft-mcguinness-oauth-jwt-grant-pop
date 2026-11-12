@@ -610,11 +610,15 @@ Cache-Control: no-store
 
 If the resource authorization server issues a refresh token for a key-bound authorization grant, it MUST bind the refresh token as described in {{token-response}}, whether or not the client authenticates, with one exception: if the client authenticates and the resource authorization server verifies that the grant identifies the authenticated client, in a claim that the profile of the grant defines, it MAY instead bind the refresh token only to that client.
 
-The resource authorization server decides on this exception when it redeems the grant, never at a later refresh. The replacement for a refresh token bound only to the client is bound only to that client; the replacement for a refresh token bound to a key or certificate is bound as described below. A refresh token's association with the authenticated client ({{Section 6 of RFC6749}}) never qualifies it for the exception.
+The resource authorization server decides on this exception when it redeems the grant, never at a later refresh. The replacement for a refresh token bound only to the client is bound only to that client; the replacement for a refresh token bound to a key or certificate is bound as {{refresh-processing}} describes. A refresh token's association with the authenticated client ({{Section 6 of RFC6749}}) never qualifies it for the exception.
 
 A binding to a key or certificate is in addition to the binding to the client that {{Section 10.4 of RFC6749}} requires. It is stricter than {{Section 5 of RFC9449}}, under which a refresh token issued to a confidential client is not bound to the DPoP key, and than the recommendation in {{Section 4 of RFC8705}}; {{proof-replay}} gives the reason.
 
-When a client presents a refresh token that the resource authorization server bound to a key or certificate under this section, the resource authorization server treats that key or certificate as the authorization grant's. It MUST verify the binding as items 2 and 3 of {{processing}} do, with the same error codes, and MUST bind the tokens that it issues in response as {{token-response}} and this section require. The binding of the presented refresh token does not change, even when the issued tokens are bound to the key of a DPoP proof ({{binding-outcomes}}).
+### Processing a Refresh Request {#refresh-processing}
+
+When a client presents a refresh token that the resource authorization server bound to a key or certificate under {{refresh}}, the resource authorization server treats that key or certificate as the authorization grant's. It MUST verify the binding as items 2 and 3 of {{processing}} do, with the same error codes, and MUST bind the tokens that it issues in response as {{token-response}} and {{refresh}} require. The binding of the presented refresh token does not change, even when the issued tokens are bound to the key of a DPoP proof ({{binding-outcomes}}).
+
+### Proofs in a Refresh Request {#refresh-proofs}
 
 The client presents a refresh token issued for a key-bound authorization grant with each proof of possession that it presented when it obtained the refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. It does so because the response does not always show which binding was applied; for example, a resource authorization server can bind to the certificate although the request contained a DPoP proof, and return a `token_type` of `Bearer`.
 
