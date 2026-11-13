@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        12 November 2026
-Expires: 16 May 2027
+Intended status: Standards Track                        13 November 2026
+Expires: 17 May 2027
 
 
               OAuth 2.0 Key-Bound JWT Authorization Grants
@@ -57,7 +57,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 May 2027.
+   This Internet-Draft will expire on 17 May 2027.
 
 Copyright Notice
 
@@ -314,15 +314,14 @@ Table of Contents
    The client sends a separate DPoP proof to each authorization server,
    signed with the same key, because the htu claim of a DPoP proof
    identifies the endpoint that receives it (Section 4.2 of [RFC9449]).
-   K therefore needs to use an algorithm that each authorization server
-   accepts and, because the access token is normally bound to K, that
-   the resource server also accepts; otherwise, the client cannot use
-   the authorization grant or the access token.  Each server can list
-   the algorithms that it accepts in its
-   dpop_signing_alg_values_supported metadata parameter (Section 5.1 of
-   [RFC9449], Section 2 of [RFC9728]).  With mutual TLS, the client's
-   TLS client certificate takes the place of K: the client proves
-   possession in the TLS handshake instead of with a DPoP proof.
+   K's algorithm therefore needs to be one that each authorization
+   server accepts and, if the access token is bound to K, one that the
+   resource server also accepts.  Each server can list the algorithms
+   that it accepts in its dpop_signing_alg_values_supported metadata
+   parameter (Section 5.1 of [RFC9449], Section 2 of [RFC9728]).  With
+   mutual TLS, the client's TLS client certificate takes the place of K:
+   the client proves possession in the TLS handshake instead of with a
+   DPoP proof.
 
    This specification involves three separate bindings: that of a
    subject_token or actor_token presented to the issuing authorization
@@ -2183,10 +2182,13 @@ Appendix B.  Open Issues
         the jwt-pop grant type and the conflict with Section 8 of
         [ID-JAG].  It would also lose the per-request requirement and
         the rejection of an unsupported grant type that Section 9.2
-        describes; a client would instead confirm that the registration
-        policy took effect from the registered metadata that the
-        resource authorization server returns (Section 3.2.1 of
-        [RFC7591]).  Which should the working group prefer?
+        describes.  With client metadata, a client would instead confirm
+        that the registration policy took effect from the registered
+        metadata that the resource authorization server returns
+        (Section 3.2.1 of [RFC7591]); with server-wide metadata, it
+        would learn the policy from the resource authorization server's
+        validated metadata (Section 7.1).  Which should the working
+        group prefer?
 
    2.   Error for a required binding.  When binding is required and the
         issuing authorization server does not bind the authorization
