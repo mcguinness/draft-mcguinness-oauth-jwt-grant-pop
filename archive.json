@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-12T06:52:42.336462+00:00",
+  "timestamp": "2026-11-15T05:58:35.261995+00:00",
   "repo": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
   "labels": [
     {
@@ -444,6 +444,90 @@
       "mergedBy": "mcguinness",
       "mergeCommit": {
         "oid": "498d07f5773467fbb2fbe661fb77c20559ff504c"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 15,
+      "id": "PR_kwDOVowi2s8AAAABOwo4cg",
+      "title": "Structure pass: decision-order processing, tables, and clearer terms",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/15",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Editorial restructuring from the review of 498d07f. The aim is that an implementer can work out a single request's outcome from one place. No requirement changes: the 52 BCP 14 sentences are the same set before and after, and every condition-to-error mapping either survives or moves into a table with the same conditions. One commit per change, so any of them can be dropped on its own.\n\n**Issuer processing in decision order (\u00a74.2)**\n- The check list now comes first. Item 3 points to the binding rules and to a new subsection, 4.2.4 Required Binding.\n- 4.2.4 holds the definition of required binding, the three error cases as a table, the retry guidance, the `DPoP-Nonce` MAY, and both error examples.\n- Subsections follow the order of the checks: subject and actor tokens \u2192 DPoP binding \u2192 certificate binding \u2192 required binding \u2192 building the grant.\n- New: a sentence saying that \u00a76 decides the error code when a request fails more than one check. It includes the one case where the list order and \u00a76 differ: no DPoP proof, an unproven bound `subject_token`, and a required binding that `jkt` could satisfy. The result is `invalid_dpop_proof`, not `invalid_request`.\n\n**Terms**\n- \"Binding request\" becomes **\"DPoP binding request\"**.\n- \"Can bind\" becomes the defined term **\"permitted confirmation method\"**: one the issuer supports and that both the profile and the issuer's policy permit. \u00a74.2 keeps both clarifications: whether a method is permitted doesn't depend on the proof in the request, and a permitted method doesn't by itself allow binding.\n\n**Tokens issued at redemption (\u00a75.3\u20135.4)**\n- The table column becomes \"Permitted key or certificate when the token is bound\". A new sentence says the table doesn't say *whether* a token is bound.\n- The public-client refresh-token rule now appears in the one row it changes.\n- \u00a75.4 keeps the binding rule and its exception at the top, then has two subsections: Processing a Refresh Request (the presented token's binding doesn't change; the replacement's can) and Proofs in a Refresh Request.\n\n**Metadata evidence (\u00a77.1)**\n- The four bullets become a table. The note on configuration and trust relationships keeps its original scope: it applies wherever metadata is not evidence that the server verifies the method.\n\n**Protocol before history**\n- The three differences from JWT-DPOP-GRANT move from \u00a71.1 to the legacy `jwt-dpop` section.\n- The abstract drops its list of profiling choices.\n- The Overview gains a paragraph saying the three bindings (input token, grant, issued tokens) are separate, and that proof of possession doesn't identify the client.\n\n**Presentation**\n- The `cnf` response parameter gives its shape and meaning first, then the REQUIRED / OPTIONAL / MUST NOT conditions as a list.\n- Error order lists the steps common to both servers, then each server's continuation.\n- Profiling items have labels, and each default sits next to its item. Item numbers are unchanged.\n- The decoded DPoP JOSE header example is dropped (\u00a73.2 already shows the key). The decoded claims stay.\n- The certificate-bound refresh example now says it comes from a confidential client. A public client's refresh token would be bound to the DPoP key, so the example can't apply to one.\n\n**Verification**\n- Every commit builds. idnits shows only the 2 known TOC warnings. The draft is 48 pages (was 47) and about 10,900 words (was about 10,600); most of the increase is table cells and the new Overview paragraph.\n- Two reviewers who hadn't seen my reasoning checked the branch:\n  - **Requirement check.** Both new tables give the same outcome as the bullets they replaced, for every combination of inputs. Four defects in my new text were fixed in the commits they came from:\n    - the public-client table cell had dropped \"if the server supports DPoP\";\n    - a new Overview sentence overclaimed that every binding is verified;\n    - \"does not by itself ask for\" implied another way to request a certificate binding;\n    - open issue 6 still pointed to \u00a74.2 for the definition of required binding instead of 4.2.4.\n  - **Implementer read.** Every test request could be settled. Three passages were unclear; each was fixed:\n    - row 2 of the required-binding table describes a certificate the request lacks;\n    - step 2 of the error order applies at both servers, but `unauthorized_client` is defined only for the resource server;\n    - the refresh example only works for a confidential client.\n\n**Not changed**\n- The DPoP-over-certificate rationale in Appendix A stays as it is; it was added in #8 for readers of that appendix.\n- The examples of the issuance/redemption flow, the nonce retry, and certificate-bound refresh with a DPoP proof all stay.\n",
+      "createdAt": "2026-11-12T21:27:13Z",
+      "updatedAt": "2026-11-12T22:47:32Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "498d07f5773467fbb2fbe661fb77c20559ff504c",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "structure-pass",
+      "headRefOid": "3c133d1217574cb7d98ed04ca0894588b6b5fb23",
+      "closedAt": "2026-11-12T22:47:32Z",
+      "mergedAt": "2026-11-12T22:47:32Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "b01331570b147869c1dbe6b8949087379e540e27"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 16,
+      "id": "PR_kwDOVowi2s8AAAABOyIGdQ",
+      "title": "Open items: unknown cnf members, MUST discard, and replacement wording",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/16",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Resolves the open items left from earlier review rounds. Each commit is one finding and can be dropped on its own.\n\n## Requirement changes\n\n- **\u00a74.4, client processing** (`90ec873`): a client that did not send a DPoP binding request, and receives a `cnf` parameter for a key or certificate it does not hold, now \"MUST discard the issued token\". It previously \"SHOULD treat the response as an error\", which is undefined for a successful response. This matches items 1\u20133 of the same section. Like the old SHOULD, it applies to every token type.\n- **\u00a74.2.1, bound subject and actor tokens** (`f188cf5`): a `subject_token` or `actor_token` is bound if it has a `cnf` claim, or if the issuer's validation of it (for example by introspection) yields a `cnf` value, whatever that contains.\n  - Possession is proven only if that value has exactly one confirmation member and the request proves the key or certificate it identifies. Otherwise item 2 fails with `invalid_request`, unless the requesting client is exempt.\n  - Before this change, RFC 7800 \u00a73.1's default (ignore members that are not understood) let a token whose `cnf` had only unrecognized members count as unbound. It was then exchanged without any proof. The issuer now rejects such a token, as \u00a75.2 already does for the grant itself.\n  - \u00a79.2 and open issue 8 now say that the issuing authorization server also rejects some requests it previously accepted.\n\n## Wording only\n\n- **\"Proposes to replace JWT-DPOP-GRANT\"** (`4edb98a`):\n  - \u00a71.1 and the Acknowledgments say the draft proposes to replace JWT-DPOP-GRANT, subject to its authors' agreement (open issue 5). \"Replaces TE-CNF\" stays.\n  - The grant-type table credits `jwt-dpop` to JWT-DPOP-GRANT as well as \u00a75.1.2.\n  - The Document History says \"generalizes\" instead of \"replaces\".\n  - The \"legacy\" wording and the `jwt-dpop` IANA entry are unchanged until that agreement.\n  - **Drop this commit** if the JWT-DPOP-GRANT authors agree before submission.\n- **\u00a75.2** (`1de25a9`): item 1 is now described as an application-specific requirement that replaces RFC 7800 \u00a73.1's default, which applies only \"in the absence of\" such requirements. Before, it \"overrides the rule\".\n\n## Considered and kept\n\n- `jwk` acceptance (open issue 9): a MAY, kept so that existing `jwk`-bound grants still work.\n- The `cnf` response parameter for all token types (open issue 3): `cnf` is the only way a client learns that an access token from Token Exchange is certificate-bound, and this draft replaces TE-CNF.\n- The issuer's decline paragraph in \u00a74.2: it has no BCP 14 keyword, the definition of \"permitted confirmation method\" already covers it, and it balances PR #7.\n\n## Verification\n\n- BCP 14 sentences go from 52 to 53:\n  - one SHOULD becomes a MUST in \u00a74.4;\n  - one new MUST in \u00a74.2.1;\n  - no other keyword sentence changed.\n- One new keyword-free error sentence: the \u00a79.2 compatibility note, which describes the new rule.\n- Builds; 50 pages (was 48); idnits shows only the two existing indentation warnings; no uncited references or duplicate anchors.\n- A reviewer without session context checked the branch twice. It found:\n  - ambiguous cases in the first version of the \u00a74.2.1 rule: mixed members, two members, introspection, an empty `cnf`;\n  - compatibility notes that covered only the resource authorization server;\n  - two leftover statements that the replacement was settled.\n\n  All are fixed in their commits.\n",
+      "createdAt": "2026-11-12T23:30:59Z",
+      "updatedAt": "2026-11-12T23:46:41Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "b01331570b147869c1dbe6b8949087379e540e27",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "open-items",
+      "headRefOid": "10b83dba910965dc5f8ea02c20929fc673651b7f",
+      "closedAt": "2026-11-12T23:46:41Z",
+      "mergedAt": "2026-11-12T23:46:41Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "8b0b842428f432ba266ebd00ac66e5a7fbf21d3f"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 17,
+      "id": "PR_kwDOVowi2s8AAAABOyZOAw",
+      "title": "DPoP key algorithm across servers; RFC 9728 precedent in open issue 1",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/17",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Two changes prompted by the MCP DPoP profile in modelcontextprotocol/ext-auth#38. That PR profiles DPoP for access tokens at MCP servers, which this draft leaves to RFC 9449; these are the two points that apply to key-bound grants. Neither adds or changes a requirement.\n\n## Changes\n\n- **Overview: the DPoP key's algorithm** (`74410c6`)\n  - The key K of a DPoP binding request becomes the grant's key and, normally, the access token's key (\u00a75.3). Proofs signed with K therefore go to the issuing authorization server, the resource authorization server, and the resource server.\n  - The draft did not say that K's algorithm has to be one that each of them accepts. If the resource authorization server does not accept it, the grant cannot be redeemed.\n  - One sentence now says so, and a second points to `dpop_signing_alg_values_supported` (RFC 9449 \u00a75.1 for authorization servers, RFC 9728 \u00a72 for resources).\n  - Adds RFC 9728 as an informative reference.\n- **Open issue 1: a server-wide flag as precedent** (`549cba4`)\n  - The client-metadata alternative to the `jwt-pop` grant type now has a server-wide variant: a boolean authorization server metadata parameter.\n  - The precedent is RFC 9728's `dpop_bound_access_tokens_required`, which the MCP profile relies on.\n  - The question itself is unchanged.\n\n## Not adopted from the MCP profile\n\n- The \u00b15-minute `iat` window, stateless replay protection, and the AEAD-timestamp nonce: these are RFC 9449 guidance, removed as restatement in PR #12. A profile can set a window under \u00a78's validation-rules item.\n- The MUST to retry after `use_dpop_nonce`: this is retry behavior at the resource server's layer.\n- Rejecting a DPoP-bound token presented with the `Bearer` scheme: the grant-level equivalent is already covered (\u00a79.2).\n- The `WWW-Authenticate` challenge rules, algorithm strength, key storage, and authorization-code binding: these belong to the resource server or the base OAuth flow, not to grants.\n\n## No conflicts\n\nAn MCP server that requires DPoP cannot accept a certificate-bound access token. Under \u00a75.3, a client with a certificate-bound grant can still get a DPoP-bound access token by including a DPoP proof when it redeems the grant.\n\n## Verification\n\n- BCP 14 sentences: 53 before and after; no error-code sentence changed.\n- Builds; 51 pages (was 50); idnits shows only the two existing indentation warnings; no uncited references or duplicate anchors.\n",
+      "createdAt": "2026-11-12T23:54:28Z",
+      "updatedAt": "2026-11-13T00:05:55Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "8b0b842428f432ba266ebd00ac66e5a7fbf21d3f",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "mcp-dpop-alignment",
+      "headRefOid": "483efe9097625dcb3c3b19e3d7e10aa0576598cb",
+      "closedAt": "2026-11-13T00:05:55Z",
+      "mergedAt": "2026-11-13T00:05:55Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "d397b7cd022f03b46450378e41592177956f3b59"
       },
       "comments": [],
       "reviews": []
