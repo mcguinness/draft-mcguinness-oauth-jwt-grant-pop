@@ -666,7 +666,7 @@ Where a profile allows a key-bound authorization grant in place of client authen
 
 # Error Responses {#errors}
 
-An authorization server returns errors as defined in {{Section 5.2 of RFC6749}}, with the HTTP status code 400 (Bad Request) except where that section permits 401 (Unauthorized) for `invalid_client`. This specification defines no new error codes. It uses the following error codes, each at the check that names it:
+An authorization server returns errors as defined in {{Section 5.2 of RFC6749}}, with the HTTP status code 400 (Bad Request) except where that section permits or requires 401 (Unauthorized) for `invalid_client`. This specification defines no new error codes. It uses the following error codes, each at the check that names it:
 
 `invalid_dpop_proof`:
 : At either authorization server, the DPoP proof is invalid ({{Section 5 of RFC9449}}); or, at the issuing authorization server, binding is required, the request contains no DPoP proof, and {{required-binding}} gives this error code.
