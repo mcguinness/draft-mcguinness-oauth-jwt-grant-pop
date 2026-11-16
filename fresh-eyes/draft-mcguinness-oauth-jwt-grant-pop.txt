@@ -252,9 +252,8 @@ Table of Contents
       proof (Section 4.1).
 
    Profile:  A specification that defines a particular kind of JWT
-      authorization grant, such as [ID-JAG].  Section 8 lists the items
-      that a profile addresses and the default for each item that it
-      does not address.
+      authorization grant, such as [ID-JAG].  Section 8 lists the
+      choices that a profile can make, with defaults for some of them.
 
    Permitted confirmation method:  A confirmation method that the
       issuing authorization server supports and that both the profile of
