@@ -121,7 +121,7 @@ DPoP binding request:
 : A Token Exchange request that contains a DPoP proof ({{te-request}}).
 
 Profile:
-: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}}, and makes the choices listed in {{profiles}}.
+: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}}. {{profiles}} lists the items that a profile addresses and the default for each item that it does not address.
 
 Permitted confirmation method:
 : A confirmation method that the issuing authorization server supports and that both the profile of an authorization grant and the issuing authorization server's policy permit for that grant ({{issuer-processing}}).
