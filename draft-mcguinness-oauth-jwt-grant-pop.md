@@ -911,13 +911,13 @@ URN:
 : `urn:ietf:params:oauth:grant-type:jwt-dpop`
 
 Common Name:
-: DPoP-Bound JWT Authorization Grant (legacy)
+: DPoP-Bound JWT Authorization Grant
 
 Change Controller:
 : IETF
 
 Specification Document(s):
-: {{legacy-jwt-dpop}} of this document
+: {{JWT-DPOP-GRANT}} and {{legacy-jwt-dpop}} of this document
 
 ## OAuth Authorization Server Metadata Registration
 
