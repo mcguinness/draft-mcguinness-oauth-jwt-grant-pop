@@ -64,7 +64,7 @@ informative:
 
 --- abstract
 
-This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies the binding. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied. It also defines a grant type that requires a key-bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies in JWT authorization grants.
+This specification defines how an authorization server binds a JSON Web Token (JWT) authorization grant (RFC 7523) to a key or certificate held by the client, using OAuth 2.0 Demonstrating Proof of Possession (DPoP) or OAuth 2.0 Mutual-TLS, and how the authorization server that receives the grant verifies the binding and binds the access and refresh tokens that it issues. It profiles OAuth 2.0 Token Exchange so that a client can request a DPoP-bound grant and learn which binding was applied. It also defines a grant type that requires a key-bound grant and an authorization server metadata parameter that lists the confirmation methods that a server verifies in JWT authorization grants.
 
 --- middle
 
@@ -81,8 +81,8 @@ OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mut
 This specification defines how a binding is applied and how it is verified:
 
 * {{format}}: what a key-bound authorization grant contains;
-* {{issuance}}: how a grant is bound when it is issued, and how the client learns the binding;
-* {{redemption}}: how the resource authorization server verifies the binding, however the grant was issued;
+* {{issuance}}: how a grant is bound when it is issued, how the issuing authorization server treats a `subject_token` or `actor_token` that is itself bound, and how the client learns the binding;
+* {{redemption}}: how the resource authorization server verifies the binding, however the grant was issued, and binds the access and refresh tokens that it issues;
 * {{metadata}}: discovery and per-client enforcement; and
 * {{profiles}}: the choices that a specification defining a particular JWT authorization grant makes.
 
