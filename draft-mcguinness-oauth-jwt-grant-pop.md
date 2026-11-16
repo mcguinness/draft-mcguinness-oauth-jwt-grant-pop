@@ -841,6 +841,8 @@ A captured request can also be replayed at the issuing authorization server. An 
 * A grant bound to the attacker's TLS client certificate would be usable at every resource authorization server in its audience. This is one reason {{binding-request}} binds the grant only to the key of the DPoP proof.
 * An unbound grant, which {{binding-request}} issues when `jkt` is not a permitted confirmation method and binding is not required, is usable ({{subject-token-theft}}).
 
+An issuing authorization server that issues unbound authorization grants in response to requests that prove possession of a DPoP-bound `subject_token` or `actor_token` SHOULD likewise reject a DPoP proof whose `jti` value it has already accepted at its token endpoint within the window in which it accepts the proof ({{Section 11.1 of RFC9449}}).
+
 When neither the `subject_token` nor the `actor_token` requires proof of possession of a DPoP key, binding the grant only to the key of the DPoP proof adds no protection against an attacker that can meet the other requirements of the exchange, because that attacker can request a grant bound to its own key.
 
 ## Exhaustion of Single-Use Authorization Grants {#single-use}
