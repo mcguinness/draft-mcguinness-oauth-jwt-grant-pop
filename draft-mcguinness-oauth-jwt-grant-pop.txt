@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        13 November 2026
-Expires: 17 May 2027
+Intended status: Standards Track                        16 November 2026
+Expires: 20 May 2027
 
 
               OAuth 2.0 Key-Bound JWT Authorization Grants
@@ -57,7 +57,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 May 2027.
+   This Internet-Draft will expire on 20 May 2027.
 
 Copyright Notice
 
@@ -1917,11 +1917,12 @@ Table of Contents
 
    URN:  urn:ietf:params:oauth:grant-type:jwt-dpop
 
-   Common Name:  DPoP-Bound JWT Authorization Grant (legacy)
+   Common Name:  DPoP-Bound JWT Authorization Grant
 
    Change Controller:  IETF
 
-   Specification Document(s):  Section 5.1.2 of this document
+   Specification Document(s):  [JWT-DPOP-GRANT] and Section 5.1.2 of
+      this document
 
 11.3.  OAuth Authorization Server Metadata Registration
 
@@ -2328,7 +2329,7 @@ Document History
 
    -00
 
-   *  Initial version, combining [JWT-DPOP-GRANT] and [TE-CNF].
+   *  Initial version, building on [JWT-DPOP-GRANT] and [TE-CNF].
 
    *  Generalizes the jwt-dpop grant type into the method-neutral jwt-
       pop grant type, adds the jwt_grant_cnf_methods_supported metadata
