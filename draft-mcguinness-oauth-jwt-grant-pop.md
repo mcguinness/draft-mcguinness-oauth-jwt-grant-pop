@@ -685,7 +685,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At the resource authorization server, where a profile allows a key-bound authorization grant in place of client authentication, the request has no client authentication and its authorization grant has no `cnf` claim but passes every check of {{processing}} and of the request's grant type ({{client-auth}}).
 
 `unauthorized_client`:
-: At the resource authorization server, the client is not registered for the grant type of the request ({{client-metadata}}).
+: At either authorization server, the client is not permitted to use the grant type of the request ({{Section 5.2 of RFC6749}}); at the resource authorization server, this includes a client that is not registered for that grant type ({{client-metadata}}).
 
 When more than one of these error codes, or the `invalid_client` error code for client authentication that the request includes and that fails ({{Section 5.2 of RFC6749}}), applies to a request, the authorization server MUST return the first in the following order. Both authorization servers start with:
 
