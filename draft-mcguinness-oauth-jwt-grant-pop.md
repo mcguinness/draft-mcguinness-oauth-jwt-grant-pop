@@ -306,7 +306,7 @@ The issuing authorization server applies item 2 to each bound token separately. 
 
 ### DPoP Binding {#binding-request}
 
-In response to a DPoP binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued authorization grant to the public key of the DPoP proof if `jkt` is a permitted confirmation method for the grant. Otherwise, it MUST issue an unbound grant, without the `cnf` response parameter, unless binding is required. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
+In response to a DPoP binding request with a valid DPoP proof, the issuing authorization server MUST bind the issued authorization grant to the public key of the DPoP proof if `jkt` is a permitted confirmation method for the grant. Otherwise, unless binding is required, it MUST NOT reject the request because it cannot bind the grant; any grant that it issues is unbound, and the response omits the `cnf` response parameter. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
 
 The DPoP proof thus selects the grant's key. A TLS client certificate in the same request only authenticates the client or proves possession of a certificate-bound `subject_token` or `actor_token`. This has two benefits:
 
