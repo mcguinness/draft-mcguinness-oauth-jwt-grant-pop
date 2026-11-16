@@ -987,5 +987,5 @@ This document replaces {{TE-CNF}}, proposes to replace {{JWT-DPOP-GRANT}}, and g
 
 -00
 
-* Initial version, combining {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
+* Initial version, building on {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
 * Generalizes the `jwt-dpop` grant type into the method-neutral `jwt-pop` grant type, adds the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies key-bound authorization grants whatever their grant type.
