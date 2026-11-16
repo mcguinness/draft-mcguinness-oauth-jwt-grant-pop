@@ -718,7 +718,7 @@ A client or an issuing authorization server can use `jwt_grant_cnf_methods_suppo
 * A client that chooses a confirmation method retrieves the metadata of the authorization server to which it presents the authorization grant.
 * A client that confirms that a binding will be enforced, and an issuing authorization server, retrieve the metadata for each `aud` value of the grant, using as the issuer identifier either:
    * that `aud` value; or
-   * an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}). In that case, the `token_endpoint` value of the metadata also has to equal the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
+   * an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}). When the `aud` value is a token endpoint URL, the `token_endpoint` value of the metadata also has to equal the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
 {{metadata-evidence}} shows what metadata is evidence of for one confirmation method. Validated metadata is metadata retrieved and validated as described above.
 
