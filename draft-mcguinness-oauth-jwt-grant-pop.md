@@ -502,7 +502,9 @@ Unlike {{JWT-DPOP-GRANT}}, this specification:
 
 ## Resource Authorization Server Processing {#processing}
 
-A resource authorization server validates a JWT authorization grant as defined in {{Section 3 of RFC7523}}, as updated by {{Section 4 of RFC10070}}, and by the profile of the grant. If the grant contains a `cnf` claim, a resource authorization server that supports this specification MUST also ensure the following, whichever grant type the request uses, and MUST otherwise reject the request with the indicated error code ({{errors}}):
+A resource authorization server validates a JWT authorization grant as defined in {{Section 3 of RFC7523}}, as updated by {{Section 4 of RFC10070}}, and by the profile of the grant. When the profile of a grant defines a `typ` value, a resource authorization server SHOULD reject a grant that does not carry it with the `invalid_grant` error code, and MUST do so when the profile states that its validation rules rely on that value to distinguish its grants from other kinds of JWTs (item 1 of {{profiles}}, {{cross-jwt}}).
+
+If the grant contains a `cnf` claim, a resource authorization server that supports this specification MUST also ensure the following, whichever grant type the request uses, and MUST otherwise reject the request with the indicated error code ({{errors}}):
 
 1. For the `cnf` claim:
    * it is a JSON object that contains exactly one confirmation member; otherwise, `invalid_grant`;
@@ -679,7 +681,7 @@ An authorization server returns errors as defined in {{Section 5.2 of RFC6749}},
 : At the issuing authorization server, binding is required and the issuing authorization server does not bind the authorization grant, in a case for which neither `invalid_dpop_proof` nor `invalid_request` applies ({{required-binding}}).
 
 `invalid_grant`:
-: At the resource authorization server, a check in {{processing}}, {{jwt-pop}}, {{legacy-jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails, or the authorization grant lacks the `typ` value that its profile defines ({{cross-jwt}}).
+: At the resource authorization server, a check in {{processing}}, {{jwt-pop}}, {{legacy-jwt-dpop}}, or {{refresh}} that names `invalid_grant` fails.
 
 `invalid_client`:
 : At the resource authorization server, where a profile allows a key-bound authorization grant in place of client authentication, the request has no client authentication and its authorization grant has no `cnf` claim but passes every check of {{processing}} and of the request's grant type ({{client-auth}}).
@@ -820,7 +822,7 @@ A resource authorization server that adopts this specification rejects an author
 
 ## Cross-JWT Confusion {#cross-jwt}
 
-A key-bound authorization grant and a DPoP-bound JWT access token for the same client can carry the same `jkt` value. A party that receives one could present it where the other is expected. The `aud` claim of a grant identifies an authorization server ({{RFC10070}}), and an explicit `typ` value ({{Section 3.11 of RFC8725}}) lets a recipient reject a JWT of the wrong kind ({{Section 3.12 of RFC8725}}). When the profile of a grant defines a `typ` value, a resource authorization server SHOULD reject a grant that does not carry it with the `invalid_grant` error code, and MUST do so when the profile states that its validation rules rely on that value to distinguish its grants from other kinds of JWTs (item 1 of {{profiles}}).
+A key-bound authorization grant and a DPoP-bound JWT access token for the same client can carry the same `jkt` value. A party that receives one could present it where the other is expected. The `aud` claim of a grant identifies an authorization server ({{RFC10070}}), and an explicit `typ` value ({{Section 3.11 of RFC8725}}) lets a recipient reject a JWT of the wrong kind ({{Section 3.12 of RFC8725}}). {{processing}} says when a resource authorization server rejects a grant that lacks the `typ` value that its profile defines.
 
 ## DPoP Proof Replay {#proof-replay}
 
