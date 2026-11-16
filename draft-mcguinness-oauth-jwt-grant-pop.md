@@ -911,13 +911,13 @@ URN:
 : `urn:ietf:params:oauth:grant-type:jwt-dpop`
 
 Common Name:
-: DPoP-Bound JWT Authorization Grant (legacy)
+: DPoP-Bound JWT Authorization Grant
 
 Change Controller:
 : IETF
 
 Specification Document(s):
-: {{legacy-jwt-dpop}} of this document
+: {{JWT-DPOP-GRANT}} and {{legacy-jwt-dpop}} of this document
 
 ## OAuth Authorization Server Metadata Registration
 
@@ -987,5 +987,5 @@ This document replaces {{TE-CNF}}, proposes to replace {{JWT-DPOP-GRANT}}, and g
 
 -00
 
-* Initial version, combining {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
+* Initial version, building on {{JWT-DPOP-GRANT}} and {{TE-CNF}}.
 * Generalizes the `jwt-dpop` grant type into the method-neutral `jwt-pop` grant type, adds the `jwt_grant_cnf_methods_supported` metadata parameter, keeps `jwt-dpop` for existing clients, and verifies key-bound authorization grants whatever their grant type.
