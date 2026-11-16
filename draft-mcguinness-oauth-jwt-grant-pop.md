@@ -430,7 +430,7 @@ Cache-Control: no-store
 
 ## Client Processing of the Response {#client-processing}
 
-When the `token_type` response parameter is `N_A`, as it is for a JWT authorization grant, a client that sent a DPoP binding request, or that presented a TLS client certificate and requires a key-bound grant, processes the Token Exchange response as follows:
+A client that will present the issued token as a JWT authorization grant processes the Token Exchange response as follows, whatever the value of the `token_type` response parameter, if it sent a DPoP binding request, or if it presented a TLS client certificate and requires a key-bound grant:
 
 1. If the `cnf` parameter is present and is not a JSON object that contains exactly one confirmation member, the client MUST discard the issued token.
 2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the authorization grant is not bound, and a client that requires a key-bound grant MUST discard it.
