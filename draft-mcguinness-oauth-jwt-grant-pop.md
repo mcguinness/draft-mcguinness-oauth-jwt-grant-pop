@@ -107,7 +107,7 @@ JWT authorization grant:
 : A JWT used as an authorization grant as defined in {{Section 2.1 of RFC7523}}.
 
 Issuing authorization server:
-: The authorization server that issues a JWT authorization grant, such as the IdP Authorization Server of {{ID-JAG}}.
+: The party that issues a JWT authorization grant, such as the IdP Authorization Server of {{ID-JAG}} or the Workload Identity Provider of {{WAG}}. It acts as an authorization server when it issues the grant through Token Exchange ({{issuance}}), and can also issue it through another interface ({{other-issuance}}).
 
 Resource authorization server:
 : The authorization server to which a client presents a JWT authorization grant in an access token request ({{Section 4.1 of RFC7521}}), typically the authorization server for the resources that the client wants to access, such as the Resource Authorization Server of {{ID-JAG}}.
