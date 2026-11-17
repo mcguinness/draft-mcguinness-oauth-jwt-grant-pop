@@ -754,17 +754,13 @@ The following is an example of the metadata of a resource authorization server a
 
 ## Client Registration Metadata {#client-metadata}
 
-The `jwt-pop` grant type requires a key-bound authorization grant in each request, whether or not the resource authorization server identifies the client ({{jwt-pop}}). A resource authorization server can also limit an identified client to key-bound grants by registering it with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes `jwt-pop` and not `jwt-bearer`. The server then rejects a `jwt-bearer` request from that client with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-pop}} and {{legacy-jwt-dpop}} reject an unbound grant.
+A resource authorization server can limit an identified client to key-bound authorization grants by registering it with a `grant_types` client metadata value ({{Section 2 of RFC7591}}) that includes `jwt-pop` and not `jwt-bearer`. The server then rejects a `jwt-bearer` request from that client with the `unauthorized_client` error code ({{Section 5.2 of RFC6749}}), and {{jwt-pop}} and {{legacy-jwt-dpop}} reject an unbound grant. In addition:
 
-This limit applies only when the resource authorization server identifies the client: by client authentication or, when a key-bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration.
-
-A resource authorization server can instead reject unbound authorization grants by policy while accepting the `jwt-bearer` grant type, but `grant_types` then does not express that the client is limited to key-bound grants.
-
-Support for both the `jwt-pop` and `jwt-dpop` grant types does not permit every client to use both: the resource authorization server rejects a request whose grant type the client's registration does not permit with the `unauthorized_client` error code. A new client is registered for the `jwt-pop` grant type; an existing client keeps the `jwt-dpop` grant type only where its registration permits it.
-
-The `jwt-pop` grant type has no corresponding `response_types` value ({{Section 2.1 of RFC7591}}).
-
-The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but does not require the authorization grant to be bound.
+* The limit applies only when the server identifies the client: by client authentication or, where a key-bound grant takes the place of client authentication ({{client-auth}}), from the grant as the profile defines. A request that does not identify a client is not limited by any client's registration, but the `jwt-pop` grant type still requires a key-bound grant in each request ({{jwt-pop}}).
+* A server can instead reject unbound grants by policy while accepting the `jwt-bearer` grant type, but `grant_types` then does not express that the client is limited to key-bound grants.
+* Support for both the `jwt-pop` and `jwt-dpop` grant types does not let every client use both: the server rejects a request whose grant type the client's registration does not permit with the `unauthorized_client` error code. A new client is registered for `jwt-pop`; an existing client keeps `jwt-dpop` only where its registration permits it.
+* The `jwt-pop` grant type has no corresponding `response_types` value ({{Section 2.1 of RFC7591}}).
+* The `dpop_bound_access_tokens` client metadata parameter ({{Section 5.2 of RFC9449}}) requires a DPoP proof in each token request, but not a key-bound grant.
 
 The following is an example of client metadata for a client that the resource authorization server limits to key-bound authorization grants:
 
