@@ -61,6 +61,7 @@ informative:
   ID-JAG: I-D.ietf-oauth-identity-assertion-authz-grant
   JWT-DPOP-GRANT: I-D.parecki-oauth-jwt-dpop-grant
   TE-CNF: I-D.mcguinness-oauth-token-exchange-cnf
+  WAG: I-D.carleton-workload-authz-grant
 
 --- abstract
 
@@ -70,7 +71,7 @@ This specification defines how an authorization server binds a JSON Web Token (J
 
 # Introduction
 
-A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. Without a proof-of-possession binding, these grants are bearer tokens ({{Section 5.5 of ID-CHAINING}}): any party that obtains one can redeem it until it expires. The mitigations listed there do not include binding the grant to a key, and {{Section 5.2 of ID-CHAINING}} refers to {{RFC9700}} for sender-constraining tokens in general without defining how to bind the grant.
+A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. The Workload Authorization Grant {{WAG}} is a JWT authorization grant that a platform issues for a workload acting on its own behalf, which the workload can present without client authentication. Without a proof-of-possession binding, these grants are bearer tokens ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}): any party that obtains one can redeem it until it expires. The mitigations listed there do not include binding the grant to a key, and {{Section 5.2 of ID-CHAINING}} refers to {{RFC9700}} for sender-constraining tokens in general without defining how to bind the grant.
 
 OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mutual-TLS {{RFC8705}} bind access tokens, and sometimes refresh tokens, to a key or certificate held by the client. They do not define:
 
@@ -121,7 +122,7 @@ DPoP binding request:
 : A Token Exchange request that contains a DPoP proof ({{te-request}}).
 
 Profile:
-: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}}. {{profiles}} lists the choices that a profile can make, with defaults for some of them.
+: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}} or {{WAG}}. {{profiles}} lists the choices that a profile can make, with defaults for some of them.
 
 Permitted confirmation method:
 : A confirmation method that the issuing authorization server supports and that both the profile of an authorization grant and the issuing authorization server's policy permit for that grant ({{issuer-processing}}).
