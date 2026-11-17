@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-15T05:58:35.261995+00:00",
+  "timestamp": "2026-11-17T07:36:12.571855+00:00",
   "repo": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
   "labels": [
     {
@@ -528,6 +528,62 @@
       "mergedBy": "mcguinness",
       "mergeCommit": {
         "oid": "d397b7cd022f03b46450378e41592177956f3b59"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 18,
+      "id": "PR_kwDOVowi2s8AAAABPp-fEQ",
+      "title": "Credit draft-parecki-oauth-jwt-dpop-grant in the jwt-dpop registration and history",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/18",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Two wording changes so that the -00 does not present the replacement of draft-parecki-oauth-jwt-dpop-grant as settled. Section 1.1 already says the replacement is proposed \"subject to the agreement of that document's authors\"; these two places did not.\n\n## Changes\n\n- **IANA `jwt-dpop` entry** (`d848513`)\n  - Specification Document(s) now lists both documents: \"[JWT-DPOP-GRANT] and Section 5.1.2 of this document\". The grant-type table in Section 1 already does this.\n  - The Common Name drops \"(legacy)\" and now reads \"DPoP-Bound JWT Authorization Grant\".\n- **Document History** (`6d1c5ce`)\n  - \"Initial version, combining [JWT-DPOP-GRANT] and [TE-CNF]\" becomes \"Initial version, building on [JWT-DPOP-GRANT] and [TE-CNF]\".\n\n## Left as is\n\n- Section 5.1.2 keeps its \"legacy\" wording until the authors of draft-parecki-oauth-jwt-dpop-grant have been consulted.\n- That draft registers the same URN with IESG as Change Controller and the Common Name \"DPoP-bound JWT Authorization Grant\". This entry keeps IETF, which is the current convention, and title case. Both differences can be settled when the authors agree.\n\n## Verification\n\n- BCP 14 sentences, error-code sentences, and list-item sentences are unchanged: nothing was added or removed.\n- Builds; 51 pages. idnits shows only the two existing indentation warnings. No uncited references or duplicate anchors.\n",
+      "createdAt": "2026-11-16T21:37:36Z",
+      "updatedAt": "2026-11-16T21:39:42Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "d397b7cd022f03b46450378e41592177956f3b59",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "jwt-dpop-credit",
+      "headRefOid": "6d1c5cea3dc201a3c815b1e6d275804530fe0c77",
+      "closedAt": "2026-11-16T21:39:42Z",
+      "mergedAt": "2026-11-16T21:39:42Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "cb6cd1d933cb8c675cb635e88355e481368c9815"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 19,
+      "id": "PR_kwDOVowi2s8AAAABPqsPXg",
+      "title": "Pre-submission review fixes",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/19",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes from a three-persona pre-submission review: a security reviewer, an implementer of both authorization server roles, and a WG document reviewer, each reading the draft cold. None found a P1. The 14 accepted findings are below, one commit each; the rest were declined, deferred to -01, or are already open issues.\n\n## Behavior changes\n\n- **\u00a74.4: the client's check runs whatever `token_type` says** (`61cebc8`). It ran only when `token_type` was `N_A`, so an issuer that failed to bind a grant and labelled it `Bearer` bypassed the check that \u00a79.8 calls the defense against misconfiguration. The trigger is now the client's intent to present the token as a JWT authorization grant.\n- **\u00a74.2.1: the exemption fails closed** (`6fe446b`). A client is exempt from proving possession of a bound `subject_token` only if it is an audience other than the client the token was issued to. If the issuer cannot establish that from the token's claims (such as `client_id`, RFC 8693 \u00a74.3) or its records, the client is not exempt. This matters for ID Tokens, whose `aud` names the client they were issued to.\n- **\u00a79.4: the issuer SHOULD reject reused DPoP proofs** (`e5d64a0`), mirroring the resource authorization server's SHOULD, when it issues unbound grants for requests that prove possession of a DPoP-bound `subject_token` or `actor_token`. A replayed request otherwise yields a usable unbound grant.\n- **\u00a74.2.1: a binding held in the server's records counts** (`0d2f1cf`). The paragraph's own example, a public client's refresh token, is often bound only in the server's records.\n- **\u00a76: `unauthorized_client` at both servers** (`0767434`), as the precedence list and RFC 6749 \u00a75.2 already have it.\n\n## Placement and clarity (no change in meaning)\n\n- **The `typ` check moves from \u00a79.3 into \u00a75.2** (`a991ba8`), unchanged. The \u00a75.2 checklist omitted it, although \u00a76 listed it as an `invalid_grant` condition. \u00a79.3 keeps the rationale; \u00a76 drops its separate clause.\n- **\u00a74.2.2** (`6d31642`): \"MUST issue an unbound grant\" becomes \"MUST NOT reject the request because it cannot bind the grant; any grant that it issues is unbound\". The old wording could be read as overriding other reasons to reject.\n- **\u00a77.1** (`c33398d`): the `token_endpoint` equality applies only when the `aud` value is a token endpoint URL.\n- **\u00a75.1** (`28d4a5f`): a client rejected with `unauthorized_client` or `unsupported_grant_type` can retry with another grant type; \u00a75.2 does not record a rejected grant as used.\n- **\u00a76** (`9f7add4`): RFC 6749 \u00a75.2 \"permits or requires\" 401 for `invalid_client`.\n\n## Framing\n\n- **Abstract and roadmap** (`6b3277f`): the Abstract now mentions how the resource authorization server binds the tokens it issues (\u00a75.3\u20135.4). The roadmap mentions that and how the issuer treats a bound `subject_token` or `actor_token` (\u00a74.2.1), which the Abstract leaves out. The commit message says both were added to the Abstract; that is wrong, but the branch is already pushed, so the message stays as it is.\n- **\"Profile\" defined** in \u00a71.2 (`50ed4c6`). It was used throughout but explained only in \u00a78.\n- **Related drafts** (`b22f86b`):\n  - \"that document's author\": JWT-DPOP-GRANT has one author;\n  - Appendix A.1: the ID-JAG conflicts \"could be resolved by a change to either document\", as open issue 5 says;\n  - the use of `jwt-dpop` in ID-JAG \u00a74.4 moves from the conflict into the proposed change, since \u00a75.1.2 supports it;\n  - \u00a71 notes that ID-CHAINING \u00a75.2 refers to RFC 9700 for sender-constrained tokens in general.\n- **Open issue 11** (`7f90ef2`): should `jkt` be mandatory to implement by default? The implementer review proposed making it mandatory. \u00a78 deliberately leaves this to profiles, so the WG is asked instead.\n\n## Follow-up fixes\n\nA cold read of the 14 commits, and the review of `7f90ef2`, found places where the new text and the rest of the draft disagreed. One commit each:\n\n- **\u00a79.7** (`e616621`): it restated the exemption without the new \u00a74.2.1 rule that the issuer must be able to tell that the token went to another client. Read alone, it described the fail-open behavior that `6fe446b` removed.\n- **\u00a77.1** (`f019d15`): \"In that case\" could still refer to the whole bullet. It now says \"When the `aud` value is a token endpoint URL\".\n- **\u00a75.1 retry** (`079658f`):\n  - the retry needs a new DPoP proof where one applies (RFC 9449 \u00a74.2, unique `jti`), as the PR reviewer suggested;\n  - the not-used rule is scoped to servers that support this specification, since a server that returns `unsupported_grant_type` for `jwt-pop` may implement only RFC 7523.\n- **\u00a76 `unauthorized_client`** (`c5b79f5`): restores RFC 6749's \"authenticated client\", which `0767434` dropped. The definition now names the two cases that the precedence list orders: an authenticated client at either server, and a client identified from the grant at the resource authorization server (\u00a75.5).\n- **Open issue 5** (`a078ac4`): \"author\" of JWT-DPOP-GRANT, matching \u00a71.1.\n- **Open issue 6** (`0cdb4a5`): matches the reworded \u00a74.2.2, which now forbids rejecting the request because the grant cannot be bound.\n- **Appendix A.1** (`07c79e2`): ID-JAG \u00a74.4 uses `jwt-dpop` only for a DPoP-bound grant and `jwt-bearer` otherwise.\n- **\"Profile\"** (`6c599c2`): the definition now says \u00a78 lists the items that a profile addresses and the default for each item it does not address. It no longer says a profile \"makes the choices\".\n- **\"Profile\", again** (`8fa7bfa`): \u00a78 gives defaults only for items 2 to 4, so the definition now says \u00a78 \"lists the choices that a profile can make, with defaults for some of them\", as the review of `6c599c2` suggested.\n\n## Declined or deferred\n\n- **Making the \u00a76 error order a SHOULD:** the fixed order is what lets a client act on `use_dpop_nonce` and `invalid_dpop_proof`.\n- **Adding `typ` to the example grant:** this specification defines no `typ` value, and the example is not tied to a profile that does.\n- **\"The \u00a74.2.5 `N_A` MUST restates RFC 8693\":** it also overrides the `DPoP` value that RFC 9449 \u00a75 would require, so it stays.\n- **Shared `jti` state across instances, TLS termination, RFC 9700 refresh-token reuse detection:** these restate RFC 9449 \u00a711.1 or are not conflicts.\n- **Length and the format of the open issues:** deferred to -01.\n- **\"Legacy\" in \u00a75.1.2, the Acknowledgments, the history:** pending the conversation with the author of JWT-DPOP-GRANT.\n- **Already open issues:** 1, 2, 3, 4, 7, 8.\n\n## Verification\n\n- BCP 14 sentences: 53 \u2192 54. The changes are:\n  - added: the issuer `jti` SHOULD;\n  - moved unchanged: the `typ` SHOULD/MUST;\n  - reworded: \u00a74.2.2's MUST \u2192 MUST NOT;\n  - extended: the \u00a74.2.1 bound-token MUST.\n- Error-code sentences without a keyword: 13 \u2192 14. The two changes are the 401 wording and the retry sentence.\n- No keyword sentence lost a condition. Two newly lead a paragraph; both carry their own condition.\n- The follow-up commits change no BCP 14 sentence. The only keyword-free error-code sentence they change is the \u00a75.1 retry sentence.\n- Builds; 52 pages (was 51). `make lint` is clean. idnits shows only its two comments from the build tooling (the `<?line?>` markers and the non-breaking space in the BCP 14 boilerplate), and the text build shows only the two existing indentation warnings. No uncited references, duplicate anchors, non-ASCII characters, lines over 72 columns, or whitespace errors.\n",
+      "createdAt": "2026-11-16T22:29:28Z",
+      "updatedAt": "2026-11-16T22:52:53Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "cb6cd1d933cb8c675cb635e88355e481368c9815",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "fresh-eyes",
+      "headRefOid": "8fa7bfa2d83d1922797feb0910b1b65ab6254a63",
+      "closedAt": "2026-11-16T22:52:52Z",
+      "mergedAt": "2026-11-16T22:52:52Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "65feacc7e0f4b07aae2ffff0965f1a69b92814fd"
       },
       "comments": [],
       "reviews": []
