@@ -485,7 +485,8 @@ Table of Contents
    request a grant whose profile requires binding, or arrange for its
    registration at the issuing authorization server to require binding
    (Section 4.2.4); this specification defines no client metadata for
-   that arrangement.  It also checks the response (Section 4.4).
+   that arrangement.  A client that requires a key-bound grant also
+   checks the response (Section 4.4).
 
    The following is an example of a DPoP binding request for an
    authorization grant whose audience is the resource authorization
@@ -1270,7 +1271,7 @@ Table of Contents
    carried both that certificate and a DPoP proof.  It therefore
    refreshes over a mutual-TLS connection that uses the certificate,
    with which it also authenticates, and with a DPoP proof signed with
-   the same key:
+   the key of that earlier DPoP proof:
 
    POST /token HTTP/1.1
    Host: as.example
@@ -2110,17 +2111,18 @@ A.1.  Identity Assertion JWT Authorization Grant
        requested_token_type value is urn:ietf:params:oauth:token-
        type:id-jag.
 
-   2.  Confirmation methods: jkt and x5t#S256, neither of them, nor the
-       jwt-pop grant type, mandatory to implement.  A Resource
-       Authorization Server verifies each method that it lists in
-       jwt_grant_cnf_methods_supported (Section 7.1).  A DPoP-bound
-       grant is presented with the jwt-dpop grant type (Section 4.4 of
-       [ID-JAG], Section 5.1.2).
+   2.  Confirmation methods: both jkt and x5t#S256 may be used, and
+       neither method, nor the jwt-pop grant type, is mandatory to
+       implement.  A Resource Authorization Server verifies each method
+       that it lists in jwt_grant_cnf_methods_supported (Section 7.1).
+       A DPoP-bound grant is presented with the jwt-dpop grant type
+       (Section 4.4 of [ID-JAG], Section 5.1.2).
 
    3.  Binding policy: optional.  With a valid DPoP proof, the IdP
        Authorization Server binds the grant to the DPoP key, unless its
        local policy selects a certificate binding (Section 9.11.1.1 of
-       [ID-JAG]).
+       [ID-JAG]).  Its policy does not otherwise decline the jkt
+       confirmation method (Section 4.2).
 
    4.  Client identity: a Resource Authorization Server may accept a
        key-bound grant in place of client authentication.  The IdP
@@ -2156,12 +2158,13 @@ A.2.  Conflicts
       describes a narrower alternative.
 
    *  Required jwt-bearer registration.  Section 8 of [ID-JAG] requires
-      a client to include jwt-bearer in its grant_types, which prevents
-      a Resource Authorization Server from limiting the client to key-
-      bound grants (Section 7.2).  The change proposed for [ID-JAG] is
-      to require jwt-bearer or jwt-pop, and to present a key-bound grant
-      of either method with jwt-pop instead of jwt-dpop, which
-      Section 4.4 of [ID-JAG] uses for a DPoP-bound grant.
+      a client that supports that profile to include jwt-bearer in its
+      grant_types, which prevents a Resource Authorization Server from
+      limiting the client to key-bound grants (Section 7.2).  The change
+      proposed for [ID-JAG] is to require jwt-bearer or jwt-pop, and to
+      present a key-bound grant of either method with jwt-pop, where
+      Section 4.4 of [ID-JAG] uses jwt-dpop for a DPoP-bound grant and
+      jwt-bearer otherwise.
 
    *  Key in a requested_cnf claim.  [ID-CHAINING] defines no profile of
       this specification, so the defaults in Section 8 apply.  The
@@ -2179,14 +2182,15 @@ Appendix B.  Open Issues
    of this document.]
 
    1.   Grant type or client metadata.  Should key-bound authorization
-        grants keep the jwt-pop grant type, or use jwt-bearer with a
-        boolean client metadata parameter, as dpop_bound_access_tokens
-        does (Section 5.2 of [RFC9449]), or a boolean authorization
-        server metadata parameter, as dpop_bound_access_tokens_required
-        does for a protected resource (Section 2 of [RFC9728])?  The
-        grant type gives a per-request requirement and the rejection of
-        an unsupported grant type (Section 9.2).  Metadata would remove
-        the conflict with Section 8 of [ID-JAG] and fit Section 4.1 of
+        grants keep the jwt-pop grant type, or use jwt-bearer and
+        express "key-bound grants only" with a boolean client metadata
+        parameter, as dpop_bound_access_tokens does (Section 5.2 of
+        [RFC9449]), or a boolean authorization server metadata
+        parameter, as dpop_bound_access_tokens_required does for a
+        protected resource (Section 2 of [RFC9728])?  The grant type
+        gives a per-request requirement and the rejection of an
+        unsupported grant type (Section 9.2).  Metadata would remove the
+        conflict with Section 8 of [ID-JAG] and fit Section 4.1 of
         [RFC7521], which defines grant_type as "the format of the
         assertion".  A client would confirm the policy from the
         registered client metadata that the resource authorization
@@ -2194,14 +2198,18 @@ Appendix B.  Open Issues
         server's validated metadata (Section 7.1).
 
    2.   Error for a required binding.  When binding is required and the
-        request has no DPoP proof, should this draft keep
-        invalid_dpop_proof (Section 4.2.4), which Section 5 of [RFC9449]
-        defines for an invalid DPoP proof, or define an error code that
-        says proof of possession is required, for either confirmation
-        method, distinct from the invalid_request error code for an
-        unproven bound subject_token?  [JWT-DPOP-GRANT] also uses
-        invalid_dpop_proof for a missing proof at redemption, where this
-        draft returns invalid_grant (Section 5.1.2).
+        issuing authorization server does not bind the grant, this draft
+        returns invalid_dpop_proof if a DPoP proof would let it bind the
+        grant, invalid_request if only a TLS client certificate would,
+        and invalid_target otherwise (Section 4.2.4).  Should it keep
+        using invalid_dpop_proof, which Section 5 of [RFC9449] defines
+        for an invalid DPoP proof, for a missing one, or define an error
+        code that says proof of possession is required, for either
+        confirmation method, distinct from the invalid_request error
+        code that an unproven bound subject_token also receives?
+        [JWT-DPOP-GRANT] also uses invalid_dpop_proof for a missing
+        proof at redemption, where this draft returns invalid_grant
+        (Section 5.1.2).
 
    3.   Scope of the response parameter.  [RFC9201] registers the cnf
         token response parameter for ACE.  Should this document define
@@ -2220,8 +2228,8 @@ Appendix B.  Open Issues
         Section 4.2.2, Section 4.2.3, Section 4.2.4, and Section 4.4.
 
    5.   Alignment with other documents.  Should the working group
-        resolve each conflict in Appendix A by the change proposed there
-        for [ID-JAG], or by a change to this document?  For
+        resolve the two conflicts with [ID-JAG] that Appendix A lists by
+        the changes proposed there, or by changes to this document?  For
         [ID-CHAINING], should a profile be able to permit binding the
         access token to a key in a requested_cnf claim?  Replacing the
         jwt-dpop grant type, and the rules in Section 5.1.2, need the
@@ -2231,22 +2239,24 @@ Appendix B.  Open Issues
 
    6.   Bind or fail.  Is a per-request "bind or fail" option needed?
         When the issuing authorization server cannot honor a DPoP
-        binding request and binding is not required, any grant that it
-        issues is unbound (Section 4.2.2).  A client that requires
-        binding discards it (Section 4.4), but the exchange may already
-        have consumed a single-use subject_token.  A client can already
+        binding request and binding is not required, Section 4.2.2
+        forbids it to reject the request for that reason, so any grant
+        that it issues is unbound.  A client that requires binding
+        discards it (Section 4.4), but the exchange may already have
+        consumed a single-use subject_token.  A client can already
         require binding through the profile or its registration
         (Section 4.1), and a new option would have to remain compatible
         with clients that send DPoP proofs for other reasons.
 
-   7.   Refresh-token binding for confidential clients.  Should binding
-        a refresh token to a key or certificate when the client
-        authenticates (Section 5.4) remain the rule, or become a profile
-        choice?  It departs from Section 5 of [RFC9449] and complicates
-        credential rotation, but an alternative has to prevent replay of
-        a captured grant and DPoP proof by an attacker that
-        authenticates as a different client, including at later
-        refreshes (Section 9.4).
+   7.   Refresh-token binding for confidential clients.  Section 5.4
+        binds a refresh token to a key or certificate even when the
+        client authenticates, except when the grant identifies that
+        authenticated client.  Is that exception sufficient, or should
+        the binding be a profile choice?  The binding departs from
+        Section 5 of [RFC9449] and complicates credential rotation, but
+        an alternative has to prevent replay of a captured grant and
+        DPoP proof by an attacker that authenticates as a different
+        client, including at later refreshes (Section 9.4).
 
    8.   Strict confirmation-member rules.  Should this draft keep its
         closed set of confirmation members and its exactly-one-member
