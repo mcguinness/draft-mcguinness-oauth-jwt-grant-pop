@@ -592,7 +592,7 @@ A TLS client certificate presented with a DPoP-bound authorization grant therefo
 | `x5t#S256` | TLS client certificate and DPoP proof | Authorization grant's certificate or key of the DPoP proof; for a refresh token issued to a public client by a resource authorization server that supports DPoP, key of the DPoP proof |
 {: #binding-outcomes title="Permitted Binding of Tokens Issued for a Key-Bound Authorization Grant"}
 
-For a public client, {{Section 5 of RFC9449}} narrows the last row of {{binding-outcomes}}: a resource authorization server that supports DPoP binds a refresh token issued to a public client that presents a valid DPoP proof to the key of that proof, even for a certificate-bound authorization grant. The statement in that section that a refresh token issued to a confidential client is not bound to the DPoP key does not apply ({{refresh}}).
+The last row of {{binding-outcomes}} follows {{Section 5 of RFC9449}} for a refresh token issued to a public client; {{refresh}} departs from that section for a refresh token issued to a confidential client.
 
 The following is an example of the access token response to the request in {{ex-redeem}}:
 
