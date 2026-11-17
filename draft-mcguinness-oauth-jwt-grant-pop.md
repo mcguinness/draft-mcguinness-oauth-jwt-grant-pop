@@ -623,11 +623,11 @@ When a client presents a refresh token that the resource authorization server bo
 
 ### Proofs in a Refresh Request {#refresh-proofs}
 
-The client presents a refresh token issued for a key-bound authorization grant with each proof of possession that it presented when it obtained the refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. It does so because the response does not always show which binding was applied; for example, a resource authorization server can bind to the certificate although the request contained a DPoP proof, and return a `token_type` of `Bearer`.
+The client presents a refresh token issued for a key-bound authorization grant with each proof of possession that it presented when it obtained the refresh token: a DPoP proof for the same key, a mutual-TLS connection that uses the same certificate, or both. It does so because the response does not always show the binding: a resource authorization server can bind to the certificate although the request contained a DPoP proof, and return a `token_type` of `Bearer`.
 
 A client that knows the binding of the refresh token, because the profile of the grant or an arrangement with the resource authorization server establishes it, need not present a proof of possession that the binding does not require, and needs none for a refresh token bound only to the client. It still presents a DPoP proof where its registration requires one ({{Section 5.2 of RFC9449}}) or where it needs DPoP-bound tokens, and it still needs a certificate that it uses for client authentication.
 
-The following is an example of a refresh request from a confidential client. The refresh token is bound to the certificate in {{cert-example}}, and the client obtained it in a request that carried both that certificate and a DPoP proof. The client therefore sends the request over a mutual-TLS connection that uses the certificate, with which it also authenticates, and adds a DPoP proof signed with the key that it used in that earlier request:
+In the following example, a confidential client obtained a refresh token bound to the certificate in {{cert-example}} with a request that carried both that certificate and a DPoP proof. It therefore refreshes over a mutual-TLS connection that uses the certificate, with which it also authenticates, and with a DPoP proof signed with the same key:
 
 ~~~ http-message
 POST /token HTTP/1.1
