@@ -627,7 +627,7 @@ The client presents a refresh token issued for a key-bound authorization grant w
 
 A client that knows the binding of the refresh token, because the profile of the grant or an arrangement with the resource authorization server establishes it, need not present a proof of possession that the binding does not require, and needs none for a refresh token bound only to the client. It still presents a DPoP proof where its registration requires one ({{Section 5.2 of RFC9449}}) or where it needs DPoP-bound tokens, and it still needs a certificate that it uses for client authentication.
 
-In the following example, a confidential client obtained a refresh token bound to the certificate in {{cert-example}} with a request that carried both that certificate and a DPoP proof. It therefore refreshes over a mutual-TLS connection that uses the certificate, with which it also authenticates, and with a DPoP proof signed with the same key:
+In the following example, a confidential client obtained a refresh token bound to the certificate in {{cert-example}} with a request that carried both that certificate and a DPoP proof. It therefore refreshes over a mutual-TLS connection that uses the certificate, with which it also authenticates, and with a DPoP proof signed with the key of that earlier DPoP proof:
 
 ~~~ http-message
 POST /token HTTP/1.1
