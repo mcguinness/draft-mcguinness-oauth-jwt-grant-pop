@@ -2249,14 +2249,15 @@ Appendix B.  Open Issues
         with clients that send DPoP proofs for other reasons.
 
    7.   Refresh-token binding for confidential clients.  Section 5.4
-        binds a refresh token to a key or certificate even when the
-        client authenticates, except when the grant identifies that
-        authenticated client.  Is that exception sufficient, or should
-        the binding be a profile choice?  The binding departs from
-        Section 5 of [RFC9449] and complicates credential rotation, but
-        an alternative has to prevent replay of a captured grant and
-        DPoP proof by an attacker that authenticates as a different
-        client, including at later refreshes (Section 9.4).
+        binds a refresh token issued for a key-bound authorization grant
+        to a key or certificate even when the client authenticates,
+        except when the grant identifies that authenticated client.  Is
+        that exception sufficient, or should the binding be a profile
+        choice?  The binding departs from Section 5 of [RFC9449] and
+        complicates credential rotation, but an alternative has to
+        prevent replay of a captured grant and DPoP proof by an attacker
+        that authenticates as a different client, including at later
+        refreshes (Section 9.4).
 
    8.   Strict confirmation-member rules.  Should this draft keep its
         closed set of confirmation members and its exactly-one-member
