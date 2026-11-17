@@ -248,7 +248,7 @@ If the `subject_token` or `actor_token` is bound to a key or certificate, the cl
 * A request carries at most one DPoP proof ({{Section 4.3 of RFC9449}}). A request whose `subject_token` and `actor_token` are bound to different DPoP keys therefore proves possession of at most one of them, and is rejected unless the client is exempt for each token whose key the DPoP proof does not match.
 * An authorization grant issued in response to a DPoP binding request is bound to the key of that request's DPoP proof, or unbound ({{binding-request}}). A key-bound grant therefore has the same key as each DPoP-bound `subject_token` or `actor_token` whose possession the request proves.
 
-No request parameter lets a client require a key-bound authorization grant for an individual request. A client that always needs one can request a grant whose profile requires binding, or arrange for its registration at the issuing authorization server to require binding ({{required-binding}}); this specification defines no client metadata for that arrangement. It also checks the response ({{client-processing}}).
+No request parameter lets a client require a key-bound authorization grant for an individual request. A client that always needs one can request a grant whose profile requires binding, or arrange for its registration at the issuing authorization server to require binding ({{required-binding}}); this specification defines no client metadata for that arrangement. A client that requires a key-bound grant also checks the response ({{client-processing}}).
 
 The following is an example of a DPoP binding request for an authorization grant whose audience is the resource authorization server `https://as.example/`, from a client that authenticates with a client secret:
 
