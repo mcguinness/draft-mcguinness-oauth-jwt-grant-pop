@@ -61,6 +61,7 @@ informative:
   ID-JAG: I-D.ietf-oauth-identity-assertion-authz-grant
   JWT-DPOP-GRANT: I-D.parecki-oauth-jwt-dpop-grant
   TE-CNF: I-D.mcguinness-oauth-token-exchange-cnf
+  WAG: I-D.carleton-workload-authz-grant
 
 --- abstract
 
@@ -70,7 +71,7 @@ This specification defines how an authorization server binds a JSON Web Token (J
 
 # Introduction
 
-A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. Without a proof-of-possession binding, these grants are bearer tokens ({{Section 5.5 of ID-CHAINING}}): any party that obtains one can redeem it until it expires. The mitigations listed there do not include binding the grant to a key, and {{Section 5.2 of ID-CHAINING}} refers to {{RFC9700}} for sender-constraining tokens in general without defining how to bind the grant.
+A JWT authorization grant ({{Section 2.1 of RFC7523}}) lets a client obtain an access token from an authorization server by presenting a JWT issued by a party that the authorization server trusts. Identity and authorization chaining {{ID-CHAINING}} uses OAuth 2.0 Token Exchange {{RFC8693}} to obtain such a grant in one trust domain and present it in another, and the Identity Assertion JWT Authorization Grant {{ID-JAG}} profiles that pattern for deployments that share a single sign-on identity provider. The Workload Authorization Grant {{WAG}} is a JWT authorization grant that a platform issues for a workload acting on its own behalf, which the workload can present without client authentication. Without a proof-of-possession binding, these grants are bearer tokens ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}): any party that obtains one can redeem it until it expires. The mitigations listed there do not include binding the grant to a key, and {{Section 5.2 of ID-CHAINING}} refers to {{RFC9700}} for sender-constraining tokens in general without defining how to bind the grant.
 
 OAuth 2.0 Demonstrating Proof of Possession (DPoP) {{RFC9449}} and OAuth 2.0 Mutual-TLS {{RFC8705}} bind access tokens, and sometimes refresh tokens, to a key or certificate held by the client. They do not define:
 
@@ -106,7 +107,7 @@ JWT authorization grant:
 : A JWT used as an authorization grant as defined in {{Section 2.1 of RFC7523}}.
 
 Issuing authorization server:
-: The authorization server that issues a JWT authorization grant, such as the IdP Authorization Server of {{ID-JAG}}.
+: The party that issues a JWT authorization grant, such as the IdP Authorization Server of {{ID-JAG}} or the Workload Identity Provider of {{WAG}}. It acts as an authorization server when it issues the grant through Token Exchange ({{issuance}}), and can also issue it through another interface ({{other-issuance}}).
 
 Resource authorization server:
 : The authorization server to which a client presents a JWT authorization grant in an access token request ({{Section 4.1 of RFC7521}}), typically the authorization server for the resources that the client wants to access, such as the Resource Authorization Server of {{ID-JAG}}.
@@ -121,7 +122,7 @@ DPoP binding request:
 : A Token Exchange request that contains a DPoP proof ({{te-request}}).
 
 Profile:
-: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}}. {{profiles}} lists the choices that a profile can make, with defaults for some of them.
+: A specification that defines a particular kind of JWT authorization grant, such as {{ID-JAG}} or {{WAG}}. {{profiles}} lists the choices that a profile can make, with defaults for some of them.
 
 Permitted confirmation method:
 : A confirmation method that the issuing authorization server supports and that both the profile of an authorization grant and the issuing authorization server's policy permit for that grant ({{issuer-processing}}).
@@ -966,9 +967,9 @@ Each conflict could be resolved by a change to either document (item 5 of {{open
 
 # Open Issues {#open-issues}
 
-\[Editor's note: this appendix lists questions for the working group. It will be removed before publication. Background for each question is in the file `notes/appendix-background.md` in the GitHub repository of this document.\]
+\[Editor's note: this appendix lists questions for the working group. It will be removed before publication. Background for questions 1 to 11 is in the file `notes/appendix-background.md` in the GitHub repository of this document.\]
 
-1. Grant type or client metadata. Should key-bound authorization grants keep the `jwt-pop` grant type, or use `jwt-bearer` and express "key-bound grants only" with a boolean client metadata parameter, as `dpop_bound_access_tokens` does ({{Section 5.2 of RFC9449}}), or a boolean authorization server metadata parameter, as `dpop_bound_access_tokens_required` does for a protected resource ({{Section 2 of RFC9728}})? The grant type gives a per-request requirement and the rejection of an unsupported grant type ({{grant-type-substitution}}). Metadata would remove the conflict with {{Section 8 of ID-JAG}} and fit {{Section 4.1 of RFC7521}}, which defines `grant_type` as "the format of the assertion". A client would confirm the policy from the registered client metadata that the resource authorization server returns ({{Section 3.2.1 of RFC7591}}) or from that server's validated metadata ({{as-metadata}}).
+1. Grant type or client metadata. Should key-bound authorization grants keep the `jwt-pop` grant type, or use `jwt-bearer` and express "key-bound grants only" with a boolean client metadata parameter, as `dpop_bound_access_tokens` does ({{Section 5.2 of RFC9449}}), or a boolean authorization server metadata parameter, as `dpop_bound_access_tokens_required` does for a protected resource ({{Section 2 of RFC9728}})? The grant type gives a per-request requirement and the rejection of an unsupported grant type ({{grant-type-substitution}}). Its per-client limit ({{client-metadata}}) applies only when the server identifies a registered client, and a {{WAG}} agent can present a grant with `jwt-bearer` without client authentication or a per-agent registration. Metadata would remove the conflict with {{Section 8 of ID-JAG}} and fit {{Section 4.1 of RFC7521}}, which defines `grant_type` as "the format of the assertion". A client would confirm the policy from the registered client metadata that the resource authorization server returns ({{Section 3.2.1 of RFC7591}}) or from that server's validated metadata ({{as-metadata}}).
 2. Error for a required binding. When binding is required and the issuing authorization server does not bind the grant, this draft returns `invalid_dpop_proof` if a DPoP proof would let it bind the grant, `invalid_request` if only a TLS client certificate would, and `invalid_target` otherwise ({{required-binding}}). Should it keep using `invalid_dpop_proof`, which {{Section 5 of RFC9449}} defines for an invalid DPoP proof, for a missing one, or define an error code that says proof of possession is required, for either confirmation method, distinct from the `invalid_request` error code that an unproven bound `subject_token` also receives? {{JWT-DPOP-GRANT}} also uses `invalid_dpop_proof` for a missing proof at redemption, where this draft returns `invalid_grant` ({{legacy-jwt-dpop}}).
 3. Scope of the response parameter. {{RFC9201}} registers the `cnf` token response parameter for ACE. Should this document define its use for Token Exchange only, for every token response, or move it to a separate specification?
 4. Client opt-in to certificate binding. Should a client metadata parameter let a client opt into a certificate binding ({{cert-binding}}), which this draft leaves to the issuing authorization server's configuration? If so, should the opt-in also permit a certificate binding when the request contains a DPoP proof, as {{Section 9.11 of ID-JAG}} does, except when the request proves possession of a DPoP-bound `subject_token` or `actor_token` ({{proof-replay}})? That would narrow the first conflict in {{profile-examples}}, but would need exceptions to {{te-request}}, {{binding-request}}, {{cert-binding}}, {{required-binding}}, and {{client-processing}}.
@@ -979,6 +980,7 @@ Each conflict could be resolved by a change to either document (item 5 of {{open
 9. Acceptance of the `jwk` confirmation method. Should issuance and redemption support the same confirmation methods? {{cnf-claim}} limits issuance to `jkt` and `x5t#S256`, but {{processing}} can also accept `jwk`, and {{as-metadata}} advertises that, for grants issued outside this specification. Which deployments need it?
 10. Enforcement of a required binding. Should a requirement for binding also require the issuing authorization server to establish that each authorization server in the grant's audience verifies the binding, and if so, from what evidence? This draft does not require it, because such a determination can become stale ({{non-enforcing-consumers}}); the profile, configuration, or the issuing authorization server's policy can establish it instead.
 11. Mandatory-to-implement confirmation method. Should `jkt` be mandatory to implement for both authorization servers by default? Neither method is ({{profiles}}). Because an issuing authorization server binds the grant to the key of a DPoP binding request whenever `jkt` is a permitted confirmation method ({{binding-request}}), a resource authorization server that verifies only `x5t#S256` rejects a grant that it would have accepted unbound, unless the issuing authorization server's policy declines `jkt` for that audience ({{issuer-processing}}).
+12. Holder of the key. {{WAG}} leaves proof of possession open, and item 4 of {{profiles}} asks how a key is tied to the client only for a profile that accepts a key-bound authorization grant in place of client authentication. Should item 4 ask how the issuing authorization server associates the proven key with the client, the subject, or an actor named in an `act` claim ({{Section 4.1 of RFC8693}})? If the key belongs to the subject or an actor, when can proof of possession take the place of client authentication ({{client-auth}}), and whom must the issuing authorization server authenticate at issuance?
 
 # Acknowledgments
 {:numbered="false"}
