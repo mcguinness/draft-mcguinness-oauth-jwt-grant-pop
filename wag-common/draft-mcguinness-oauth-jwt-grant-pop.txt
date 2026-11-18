@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        17 November 2026
-Expires: 21 May 2027
+Intended status: Standards Track                        18 November 2026
+Expires: 22 May 2027
 
 
               OAuth 2.0 Key-Bound JWT Authorization Grants
@@ -58,7 +58,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 May 2027.
+   This Internet-Draft will expire on 22 May 2027.
 
 Copyright Notice
 
@@ -2191,9 +2191,9 @@ A.2.  Conflicts
 Appendix B.  Open Issues
 
    [Editor's note: this appendix lists questions for the working group.
-   It will be removed before publication.  Background for each question
-   is in the file notes/appendix-background.md in the GitHub repository
-   of this document.]
+   It will be removed before publication.  Background for questions 1 to
+   11 is in the file notes/appendix-background.md in the GitHub
+   repository of this document.]
 
    1.   Grant type or client metadata.  Should key-bound authorization
         grants keep the jwt-pop grant type, or use jwt-bearer and
@@ -2203,17 +2203,17 @@ Appendix B.  Open Issues
         parameter, as dpop_bound_access_tokens_required does for a
         protected resource (Section 2 of [RFC9728])?  The grant type
         gives a per-request requirement and the rejection of an
-        unsupported grant type (Section 9.2).  Its other use, limiting
-        an identified client to key-bound grants through the client's
-        registration (Section 7.2), does not apply in a profile whose
-        clients need not register, such as [WAG], under which grants are
-        presented with jwt-bearer.  Metadata would remove the conflict
-        with Section 8 of [ID-JAG] and fit Section 4.1 of [RFC7521],
-        which defines grant_type as "the format of the assertion".  A
-        client would confirm the policy from the registered client
-        metadata that the resource authorization server returns
-        (Section 3.2.1 of [RFC7591]) or from that server's validated
-        metadata (Section 7.1).
+        unsupported grant type (Section 9.2).  Its per-client limit
+        (Section 7.2) applies only when the server identifies a
+        registered client, and a [WAG] agent can present a grant with
+        jwt-bearer without client authentication or a per-agent
+        registration.  Metadata would remove the conflict with Section 8
+        of [ID-JAG] and fit Section 4.1 of [RFC7521], which defines
+        grant_type as "the format of the assertion".  A client would
+        confirm the policy from the registered client metadata that the
+        resource authorization server returns (Section 3.2.1 of
+        [RFC7591]) or from that server's validated metadata
+        (Section 7.1).
 
    2.   Error for a required binding.  When binding is required and the
         issuing authorization server does not bind the grant, this draft
@@ -2311,18 +2311,16 @@ Appendix B.  Open Issues
         unbound, unless the issuing authorization server's policy
         declines jkt for that audience (Section 4.2).
 
-   12.  What the key identifies.  Section 9.6 and item 4 of Section 8
-        assume that the key or certificate of a key-bound authorization
-        grant stands for a client, which a resource authorization server
-        maps to its own client registration.  In [WAG], the key would
-        stand for the grant's subject, a workload that need not
-        authenticate as a client or be registered as one; in a
-        delegation profile, it could stand for the actor that an act
-        claim identifies (Section 4.1 of [RFC8693]).  Should item 4 ask
-        a profile which of these the key identifies, and how do
-        Section 5.5 and the requirement in Section 8 that the issuing
-        authorization server authenticate the client apply when the key
-        stands for the subject or an actor?
+   12.  Holder of the key.  [WAG] leaves proof of possession open, and
+        item 4 of Section 8 asks how a key is tied to the client only
+        for a profile that accepts a key-bound authorization grant in
+        place of client authentication.  Should item 4 ask how the
+        issuing authorization server associates the proven key with the
+        client, the subject, or an actor named in an act claim
+        (Section 4.1 of [RFC8693])?  If the key belongs to the subject
+        or an actor, when can proof of possession take the place of
+        client authentication (Section 5.5), and whom must the issuing
+        authorization server authenticate at issuance?
 
 Acknowledgments
 

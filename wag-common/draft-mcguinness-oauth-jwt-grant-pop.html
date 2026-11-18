@@ -20,13 +20,13 @@
 <!-- Generator version information:
   xml2rfc 3.35.0
     Python 3.14.10
-    ConfigArgParse 1.9.0
+    ConfigArgParse 1.10.1
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.14.3
+    platformdirs 4.14.7
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
@@ -1050,7 +1050,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">McGuinness</td>
-<td class="center">Expires 21 May 2027</td>
+<td class="center">Expires 22 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg {
 <dd class="internet-draft">draft-mcguinness-oauth-jwt-grant-pop-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-17" class="published">17 November 2026</time>
+<time datetime="2026-11-18" class="published">18 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-21">21 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-22">22 May 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1118,7 +1118,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 21 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 22 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3012,10 +3012,10 @@ Cache-Control: no-store
       <h2 id="name-open-issues">
 <a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-open-issues" class="section-name selfRef">Open Issues</a>
       </h2>
-<p id="appendix-B-1">[Editor's note: this appendix lists questions for the working group. It will be removed before publication. Background for each question is in the file <code>notes/appendix-background.md</code> in the GitHub repository of this document.]<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<p id="appendix-B-1">[Editor's note: this appendix lists questions for the working group. It will be removed before publication. Background for questions 1 to 11 is in the file <code>notes/appendix-background.md</code> in the GitHub repository of this document.]<a href="#appendix-B-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="appendix-B-2">
 <li id="appendix-B-2.1">
-          <p id="appendix-B-2.1.1">Grant type or client metadata. Should key-bound authorization grants keep the <code>jwt-pop</code> grant type, or use <code>jwt-bearer</code> and express "key-bound grants only" with a boolean client metadata parameter, as <code>dpop_bound_access_tokens</code> does (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.2" class="relref">Section 5.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>), or a boolean authorization server metadata parameter, as <code>dpop_bound_access_tokens_required</code> does for a protected resource (<span><a href="https://rfc-editor.org/rfc/rfc9728#section-2" class="relref">Section 2</a> of [<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>)? The grant type gives a per-request requirement and the rejection of an unsupported grant type (<a href="#grant-type-substitution" class="auto internal xref">Section 9.2</a>). Its other use, limiting an identified client to key-bound grants through the client's registration (<a href="#client-metadata" class="auto internal xref">Section 7.2</a>), does not apply in a profile whose clients need not register, such as <span>[<a href="#WAG" class="cite xref">WAG</a>]</span>, under which grants are presented with <code>jwt-bearer</code>. Metadata would remove the conflict with <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06#section-8" class="relref">Section 8</a> of [<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> and fit <span><a href="https://rfc-editor.org/rfc/rfc7521#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7521" class="cite xref">RFC7521</a>]</span>, which defines <code>grant_type</code> as "the format of the assertion". A client would confirm the policy from the registered client metadata that the resource authorization server returns (<span><a href="https://rfc-editor.org/rfc/rfc7591#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>) or from that server's validated metadata (<a href="#as-metadata" class="auto internal xref">Section 7.1</a>).<a href="#appendix-B-2.1.1" class="pilcrow">¶</a></p>
+          <p id="appendix-B-2.1.1">Grant type or client metadata. Should key-bound authorization grants keep the <code>jwt-pop</code> grant type, or use <code>jwt-bearer</code> and express "key-bound grants only" with a boolean client metadata parameter, as <code>dpop_bound_access_tokens</code> does (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-5.2" class="relref">Section 5.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>), or a boolean authorization server metadata parameter, as <code>dpop_bound_access_tokens_required</code> does for a protected resource (<span><a href="https://rfc-editor.org/rfc/rfc9728#section-2" class="relref">Section 2</a> of [<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>)? The grant type gives a per-request requirement and the rejection of an unsupported grant type (<a href="#grant-type-substitution" class="auto internal xref">Section 9.2</a>). Its per-client limit (<a href="#client-metadata" class="auto internal xref">Section 7.2</a>) applies only when the server identifies a registered client, and a <span>[<a href="#WAG" class="cite xref">WAG</a>]</span> agent can present a grant with <code>jwt-bearer</code> without client authentication or a per-agent registration. Metadata would remove the conflict with <span><a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-identity-assertion-authz-grant-06#section-8" class="relref">Section 8</a> of [<a href="#ID-JAG" class="cite xref">ID-JAG</a>]</span> and fit <span><a href="https://rfc-editor.org/rfc/rfc7521#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7521" class="cite xref">RFC7521</a>]</span>, which defines <code>grant_type</code> as "the format of the assertion". A client would confirm the policy from the registered client metadata that the resource authorization server returns (<span><a href="https://rfc-editor.org/rfc/rfc7591#section-3.2.1" class="relref">Section 3.2.1</a> of [<a href="#RFC7591" class="cite xref">RFC7591</a>]</span>) or from that server's validated metadata (<a href="#as-metadata" class="auto internal xref">Section 7.1</a>).<a href="#appendix-B-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li id="appendix-B-2.2">
           <p id="appendix-B-2.2.1">Error for a required binding. When binding is required and the issuing authorization server does not bind the grant, this draft returns <code>invalid_dpop_proof</code> if a DPoP proof would let it bind the grant, <code>invalid_request</code> if only a TLS client certificate would, and <code>invalid_target</code> otherwise (<a href="#required-binding" class="auto internal xref">Section 4.2.4</a>). Should it keep using <code>invalid_dpop_proof</code>, which <span><a href="https://rfc-editor.org/rfc/rfc9449#section-5" class="relref">Section 5</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span> defines for an invalid DPoP proof, for a missing one, or define an error code that says proof of possession is required, for either confirmation method, distinct from the <code>invalid_request</code> error code that an unproven bound <code>subject_token</code> also receives? <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> also uses <code>invalid_dpop_proof</code> for a missing proof at redemption, where this draft returns <code>invalid_grant</code> (<a href="#legacy-jwt-dpop" class="auto internal xref">Section 5.1.2</a>).<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
@@ -3048,7 +3048,7 @@ Cache-Control: no-store
           <p id="appendix-B-2.11.1">Mandatory-to-implement confirmation method. Should <code>jkt</code> be mandatory to implement for both authorization servers by default? Neither method is (<a href="#profiles" class="auto internal xref">Section 8</a>). Because an issuing authorization server binds the grant to the key of a DPoP binding request whenever <code>jkt</code> is a permitted confirmation method (<a href="#binding-request" class="auto internal xref">Section 4.2.2</a>), a resource authorization server that verifies only <code>x5t#S256</code> rejects a grant that it would have accepted unbound, unless the issuing authorization server's policy declines <code>jkt</code> for that audience (<a href="#issuer-processing" class="auto internal xref">Section 4.2</a>).<a href="#appendix-B-2.11.1" class="pilcrow">¶</a></p>
 </li>
         <li id="appendix-B-2.12">
-          <p id="appendix-B-2.12.1">What the key identifies. <a href="#pop-identity" class="auto internal xref">Section 9.6</a> and item 4 of <a href="#profiles" class="auto internal xref">Section 8</a> assume that the key or certificate of a key-bound authorization grant stands for a client, which a resource authorization server maps to its own client registration. In <span>[<a href="#WAG" class="cite xref">WAG</a>]</span>, the key would stand for the grant's subject, a workload that need not authenticate as a client or be registered as one; in a delegation profile, it could stand for the actor that an <code>act</code> claim identifies (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>). Should item 4 ask a profile which of these the key identifies, and how do <a href="#client-auth" class="auto internal xref">Section 5.5</a> and the requirement in <a href="#profiles" class="auto internal xref">Section 8</a> that the issuing authorization server authenticate the client apply when the key stands for the subject or an actor?<a href="#appendix-B-2.12.1" class="pilcrow">¶</a></p>
+          <p id="appendix-B-2.12.1">Holder of the key. <span>[<a href="#WAG" class="cite xref">WAG</a>]</span> leaves proof of possession open, and item 4 of <a href="#profiles" class="auto internal xref">Section 8</a> asks how a key is tied to the client only for a profile that accepts a key-bound authorization grant in place of client authentication. Should item 4 ask how the issuing authorization server associates the proven key with the client, the subject, or an actor named in an <code>act</code> claim (<span><a href="https://rfc-editor.org/rfc/rfc8693#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC8693" class="cite xref">RFC8693</a>]</span>)? If the key belongs to the subject or an actor, when can proof of possession take the place of client authentication (<a href="#client-auth" class="auto internal xref">Section 5.5</a>), and whom must the issuing authorization server authenticate at issuance?<a href="#appendix-B-2.12.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
 </section>
