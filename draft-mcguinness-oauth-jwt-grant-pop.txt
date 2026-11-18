@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                 K. McGuinness
 Internet-Draft                                               Independent
-Intended status: Standards Track                        17 November 2026
-Expires: 21 May 2027
+Intended status: Standards Track                        18 November 2026
+Expires: 22 May 2027
 
 
               OAuth 2.0 Key-Bound JWT Authorization Grants
@@ -58,7 +58,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 May 2027.
+   This Internet-Draft will expire on 22 May 2027.
 
 Copyright Notice
 
@@ -144,13 +144,16 @@ Table of Contents
    Exchange [RFC8693] to obtain such a grant in one trust domain and
    present it in another, and the Identity Assertion JWT Authorization
    Grant [ID-JAG] profiles that pattern for deployments that share a
-   single sign-on identity provider.  Without a proof-of-possession
+   single sign-on identity provider.  The Workload Authorization Grant
+   [WAG] is a JWT authorization grant that a platform issues for a
+   workload acting on its own behalf, which the workload can present
+   without client authentication.  Without a proof-of-possession
    binding, these grants are bearer tokens (Section 5.5 of
-   [ID-CHAINING]): any party that obtains one can redeem it until it
-   expires.  The mitigations listed there do not include binding the
-   grant to a key, and Section 5.2 of [ID-CHAINING] refers to [RFC9700]
-   for sender-constraining tokens in general without defining how to
-   bind the grant.
+   [ID-CHAINING], Section 10 of [WAG]): any party that obtains one can
+   redeem it until it expires.  The mitigations listed there do not
+   include binding the grant to a key, and Section 5.2 of [ID-CHAINING]
+   refers to [RFC9700] for sender-constraining tokens in general without
+   defining how to bind the grant.
 
    OAuth 2.0 Demonstrating Proof of Possession (DPoP) [RFC9449] and
    OAuth 2.0 Mutual-TLS [RFC8705] bind access tokens, and sometimes
@@ -230,9 +233,12 @@ Table of Contents
    JWT authorization grant:  A JWT used as an authorization grant as
       defined in Section 2.1 of [RFC7523].
 
-   Issuing authorization server:  The authorization server that issues a
-      JWT authorization grant, such as the IdP Authorization Server of
-      [ID-JAG].
+   Issuing authorization server:  The party that issues a JWT
+      authorization grant, such as the IdP Authorization Server of
+      [ID-JAG] or the Workload Identity Provider of [WAG].  It acts as
+      an authorization server when it issues the grant through Token
+      Exchange (Section 4), and can also issue it through another
+      interface (Section 4.5).
 
    Resource authorization server:  The authorization server to which a
       client presents a JWT authorization grant in an access token
@@ -252,8 +258,9 @@ Table of Contents
       proof (Section 4.1).
 
    Profile:  A specification that defines a particular kind of JWT
-      authorization grant, such as [ID-JAG].  Section 8 lists the
-      choices that a profile can make, with defaults for some of them.
+      authorization grant, such as [ID-JAG] or [WAG].  Section 8 lists
+      the choices that a profile can make, with defaults for some of
+      them.
 
    Permitted confirmation method:  A confirmation method that the
       issuing authorization server supports and that both the profile of
@@ -2096,6 +2103,13 @@ Table of Contents
               2026, <https://datatracker.ietf.org/doc/html/draft-
               mcguinness-oauth-token-exchange-cnf-00>.
 
+   [WAG]      Carleton, P., Steele, N., Parecki, A., Schwenkschuster,
+              A., and B. Campbell, "Workload Authorization Grant", Work
+              in Progress, Internet-Draft, draft-carleton-workload-
+              authz-grant-02, 2 November 2026,
+              <https://datatracker.ietf.org/doc/html/draft-carleton-
+              workload-authz-grant-02>.
+
 Appendix A.  Profiles of This Specification
 
    This appendix is informative.  It shows how [ID-JAG] would answer the
@@ -2177,9 +2191,9 @@ A.2.  Conflicts
 Appendix B.  Open Issues
 
    [Editor's note: this appendix lists questions for the working group.
-   It will be removed before publication.  Background for each question
-   is in the file notes/appendix-background.md in the GitHub repository
-   of this document.]
+   It will be removed before publication.  Background for questions 1 to
+   11 is in the file notes/appendix-background.md in the GitHub
+   repository of this document.]
 
    1.   Grant type or client metadata.  Should key-bound authorization
         grants keep the jwt-pop grant type, or use jwt-bearer and
@@ -2189,13 +2203,17 @@ Appendix B.  Open Issues
         parameter, as dpop_bound_access_tokens_required does for a
         protected resource (Section 2 of [RFC9728])?  The grant type
         gives a per-request requirement and the rejection of an
-        unsupported grant type (Section 9.2).  Metadata would remove the
-        conflict with Section 8 of [ID-JAG] and fit Section 4.1 of
-        [RFC7521], which defines grant_type as "the format of the
-        assertion".  A client would confirm the policy from the
-        registered client metadata that the resource authorization
-        server returns (Section 3.2.1 of [RFC7591]) or from that
-        server's validated metadata (Section 7.1).
+        unsupported grant type (Section 9.2).  Its per-client limit
+        (Section 7.2) applies only when the server identifies a
+        registered client, and a [WAG] agent can present a grant with
+        jwt-bearer without client authentication or a per-agent
+        registration.  Metadata would remove the conflict with Section 8
+        of [ID-JAG] and fit Section 4.1 of [RFC7521], which defines
+        grant_type as "the format of the assertion".  A client would
+        confirm the policy from the registered client metadata that the
+        resource authorization server returns (Section 3.2.1 of
+        [RFC7591]) or from that server's validated metadata
+        (Section 7.1).
 
    2.   Error for a required binding.  When binding is required and the
         issuing authorization server does not bind the grant, this draft
@@ -2292,6 +2310,17 @@ Appendix B.  Open Issues
         only x5t#S256 rejects a grant that it would have accepted
         unbound, unless the issuing authorization server's policy
         declines jkt for that audience (Section 4.2).
+
+   12.  Holder of the key.  [WAG] leaves proof of possession open, and
+        item 4 of Section 8 asks how a key is tied to the client only
+        for a profile that accepts a key-bound authorization grant in
+        place of client authentication.  Should item 4 ask how the
+        issuing authorization server associates the proven key with the
+        client, the subject, or an actor named in an act claim
+        (Section 4.1 of [RFC8693])?  If the key belongs to the subject
+        or an actor, when can proof of possession take the place of
+        client authentication (Section 5.5), and whom must the issuing
+        authorization server authenticate at issuance?
 
 Acknowledgments
 
