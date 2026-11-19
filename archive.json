@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-17T07:36:12.571855+00:00",
+  "timestamp": "2026-11-19T06:59:04.476447+00:00",
   "repo": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
   "labels": [
     {
@@ -584,6 +584,62 @@
       "mergedBy": "mcguinness",
       "mergeCommit": {
         "oid": "65feacc7e0f4b07aae2ffff0965f1a69b92814fd"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 20,
+      "id": "PR_kwDOVowi2s8AAAABP5UnwQ",
+      "title": "Shorten the appendices and remove repetition",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/20",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Shortens the draft without changing any requirement: 658 words (4.7%), 52 \u2192 50 pages.\n\n**Choices made without an answer from the author:** this PR takes parts 1 (appendices) and 3 (body repetitions) of the compression proposal and leaves part 2 (Security Considerations as bullets) for -01. The text removed from the appendices goes into `notes/appendix-background.md` in this repository, not into GitHub issues. Either choice can be changed.\n\n## Changes\n\n- **`notes/appendix-background.md`** (`f729eb9`): the full rendered text of Appendices A and B as of 65feacc, so nothing removed below is lost.\n- **Appendix A** (`bf29737`), 659 \u2192 532 words:\n  - the five ID-JAG profile answers stay;\n  - the conflicts get their own subsection: two with ID-JAG and one with ID-CHAINING;\n  - the reasons for the first proposed change point to \u00a74.1 and \u00a79.4, which already give them;\n  - grant types use their short names from Table 1.\n- **Appendix B, Open Issues** (`5bf85d0`), 1,315 \u2192 903 words:\n  - each item now opens with its question, followed only by the context needed to answer it;\n  - the editor's note points to the notes file;\n  - open issue 1 keeps how a client would learn each metadata alternative (added in 483efe9).\n- **Body.** These three commits come last, so they can be dropped without touching the rest; together they remove 122 words:\n  - \u00a74.1 (`e3dece0`) leaves the definition of required binding to \u00a74.2.4 and keeps what a client can do, which open issue 6 cites;\n  - \u00a75.3 (`25d06a8`): one sentence replaces a paragraph that restated Table 3's last row and the confidential-client point already in \u00a75.4;\n  - \u00a77.2 (`4b2097a`): the qualifications become five bullets. Each keeps its identified-client condition and its error code;\n  - \u00a75.4.2 (`7580189`) shortens the reason and the example's introduction.\n\n## Not changed\n\n- **Security Considerations:** part 2 of the proposal, left for -01. Its sentences are cited from the body, and some are the only statement of a threat.\n- **\u00a76 Error Responses:** the `use_dpop_nonce` entry holds a MUST, `unauthorized_client` was just fixed in #19, and the saving would be small.\n- **\u00a74.2.4:** keeps the definition of required binding and its MAY.\n\n## Verification\n\n- `noop_check.py` against 65feacc:\n  - the BCP 14 keyword sequence is identical (62 occurrences);\n  - fenced blocks are unchanged (19 of 19);\n  - no anchor is lost or added.\n- `normative_diff.py`:\n  - BCP 14 sentences 54 \u2192 54;\n  - error-code sentences without a keyword 14 \u2192 14;\n  - list items under a keyword lead 24 \u2192 24;\n  - the only reworded error-code sentences are in \u00a77.2 and \u00a75.4.2, with their conditions and codes kept;\n  - no keyword sentence newly opens a paragraph.\n- Builds; 50 pages.\n  - idnits shows only the two existing indentation warnings. Two new ones, where line wrapping put \"Appendix A\" or \"Appendix B.3\" at the start of a line, were fixed by rewording.\n  - `make lint` is clean; no whitespace errors, uncited references, or duplicate anchors.\n\n## Follow-up fixes from the consistency read\n\nA cold read of `7580189` against the full appendix text and the ID-JAG and ID-CHAINING drafts found places where the shortened text was wrong or dropped something the working group needs. One commit each:\n\n- **Open issue 2** (`803837b`): it said `invalid_dpop_proof` is returned whenever binding is required and the request has no DPoP proof. Table 2 returns it only when `jkt` is permitted, so the full premise from Table 2 is back, including the certificate case behind the question about `invalid_request`.\n- **Open issue 5** (`1bed988`): the first question now covers only the two ID-JAG conflicts. Appendix A proposes no change for the ID-CHAINING one.\n- **Appendix A, second conflict** (`38461e0`):\n  - restores the condition from ID-JAG \u00a78, that the rule applies only to a client that supports the ID-JAG profile;\n  - restores the grant types from ID-JAG \u00a74.4: `jwt-dpop` for a DPoP-bound grant and `jwt-bearer` otherwise.\n- **Open issue 7** (`e534c3c`, `c5ef4dd`): restores the \u00a75.4 exception and the question whether it is sufficient. `c5ef4dd`, from the PR review, also restores \"issued for a key-bound authorization grant\", so the item does not imply that \u00a75.4 binds every refresh token.\n- **Open issue 6** (`65a9ada`): restores the premise that \u00a74.2.2 forbids rejecting the request.\n- **\u00a74.1** (`40abcce`): \"It also checks the response\" now names the client.\n- **\u00a75.4.2** (`32750fc`): names the key that signs the example's DPoP proof.\n- **Appendix A items 2 and 3** (`c0389cf`): item 2 is a full sentence again, and item 3 again says the IdP's policy does not otherwise decline `jkt`, which open issue 11 relies on.\n- **Open issue 1** (`ec029eb`): again says the boolean parameter would express \"key-bound grants only\".\n\nAfter these fixes, the keyword sequence is still identical to 65feacc, the counts are unchanged, the build is 50 pages, and idnits shows only the two existing indentation warnings. `make idnits` (idnits3) reports only its two usual comments from the build tooling: the `<?line?>` markers and the non-breaking space in the BCP 14 boilerplate.\n",
+      "createdAt": "2026-11-17T17:25:39Z",
+      "updatedAt": "2026-11-17T22:12:09Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "65feacc7e0f4b07aae2ffff0965f1a69b92814fd",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "compress",
+      "headRefOid": "c5ef4dd6bd2f264515a8e6fa64dd257b7c33f958",
+      "closedAt": "2026-11-17T22:12:08Z",
+      "mergedAt": "2026-11-17T22:12:08Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "987229bc6e95278a0c1a00f71a2e6b11687742e9"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 21,
+      "id": "PR_kwDOVowi2s8AAAABP-arjQ",
+      "title": "Name WAG as a second profile and ask what the key identifies",
+      "url": "https://github.com/mcguinness/draft-mcguinness-oauth-jwt-grant-pop/pull/21",
+      "state": "MERGED",
+      "author": "mcguinness",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "This PR positions the draft as a proof-of-possession specification common to JWT authorization grant profiles, not only a companion to ID-JAG. It names the Workload Authorization Grant ([draft-carleton-workload-authz-grant-02](https://datatracker.ietf.org/doc/draft-carleton-workload-authz-grant/)) as a second profile. WAG leaves proof of possession open (Section 9) and calls its assertion a bearer credential (Section 10).\n\nNo requirement changes: the BCP 14 keyword sequence and the sets of error-code and list-item sentences are identical to `main`.\n\n## Changes\n\n1. **Name the Workload Authorization Grant as a second profile.** Adds an informative `[WAG]` reference, one sentence in the Introduction, and WAG next to ID-JAG in the Profile definition.\n2. **Let the issuing authorization server issue through another interface.** The definition said \"the authorization server that issues\", but Section 4.5 lets a workload platform's token service issue the grant. The definition is widened instead of renaming the term (86 uses).\n3. **Open issue 1: the per-client limit needs an identified client.** The `jwt-pop` limit in Section 7.2 applies only when the server identifies a registered client. A WAG agent can present a grant with `jwt-bearer` without client authentication or a per-agent registration (WAG Section 5).\n4. **Open issue 12: holder of the key.** Item 4 of Section 8 asks how a key is tied to the client only for a profile that accepts a key-bound grant in place of client authentication, and WAG leaves proof of possession open. The issue asks whether item 4 should ask how the issuing authorization server associates the proven key with the client, the subject, or an actor in `act`. It also asks when proof of possession can then replace client authentication, and whom the issuer must authenticate. The text change is deferred to -01 because it touches the Section 8 requirement that the issuer authenticate the client.\n5. **Editor's note.** `notes/appendix-background.md` covers questions 1 to 11 only, so the note now says so.\n\n## Review follow-ups\n\nThree follow-up commits address the review of `985c1da`. The messages of the earlier commits for items 3 and 4 still carry the overstatements that these commits correct:\n\n- `e6386d3` rewrites open issue 12. The first version attributed to Section 9.6 an assumption that the key stands for a client, when Section 9.6 says the opposite. It also stated that a WAG key would stand for the subject, which WAG leaves open.\n- `c7b51bd` ties the per-client limit in open issue 1 to identification of a registered client, not to whether a profile requires registration.\n- `d4b6cd5` limits the editor's note to questions 1 to 11.\n\n## Not in this PR (planned for -01)\n\n- An Appendix A.3 giving WAG's answers to the five items of Section 8.\n- Rewording item 4 and Section 5.5 if the working group answers open issue 12.\n\n## Checks\n\n- `make lint` passes.\n- idnits: only the known items (2 SECTION_TITLE indentation warnings; the NBSP in the boilerplate and LINE_PI comments).\n- No lines over 72 columns, no non-ASCII characters added, `git diff --check` clean, no uncited references or duplicate anchors.\n- 51 pages (was 50), +202 words.\n",
+      "createdAt": "2026-11-17T23:44:21Z",
+      "updatedAt": "2026-11-18T17:59:52Z",
+      "baseRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "baseRefName": "main",
+      "baseRefOid": "987229bc6e95278a0c1a00f71a2e6b11687742e9",
+      "headRepository": "mcguinness/draft-mcguinness-oauth-jwt-grant-pop",
+      "headRefName": "wag-common",
+      "headRefOid": "d4b6cd5e2429359837eeff75aaf3650f73230622",
+      "closedAt": "2026-11-18T17:59:52Z",
+      "mergedAt": "2026-11-18T17:59:52Z",
+      "mergedBy": "mcguinness",
+      "mergeCommit": {
+        "oid": "ad85697f5b3ac9f567437ae3ca3bb6230e6a2582"
       },
       "comments": [],
       "reviews": []
