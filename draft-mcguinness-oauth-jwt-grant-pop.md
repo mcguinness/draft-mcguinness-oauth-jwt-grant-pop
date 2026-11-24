@@ -411,7 +411,13 @@ This section defines how a client presents a key-bound authorization grant, how 
 
 ## Access Token Request {#token-request}
 
-The client presents a key-bound authorization grant in an access token request ({{Section 4.1 of RFC7521}}) with the `jwt-pop`, the `jwt-bearer`, or, where {{legacy-jwt-dpop}} applies, the `jwt-dpop` grant type. It SHOULD use `jwt-pop` if the resource authorization server advertises it ({{as-metadata}}) and the client's registration permits it ({{client-metadata}}). Otherwise, a client that presents a grant with a `jkt` member SHOULD use `jwt-dpop` if the resource authorization server advertises it and the client's registration permits it. The `jwt-bearer` grant type is not a reliable fallback: the client's registration might not permit it, and a server that implements only {{JWT-DPOP-GRANT}} rejects such a grant presented with it. A client whose request is rejected with the `unauthorized_client` or `unsupported_grant_type` error code can send a new request with the same grant and another grant type, with a new DPoP proof where one is needed ({{Section 4.2 of RFC9449}}). A resource authorization server that supports this specification does not record a grant as used when it rejects the request ({{processing}}).
+The client presents a key-bound authorization grant in an access token request ({{Section 4.1 of RFC7521}}) and chooses the grant type in this order:
+
+1. `jwt-pop` ({{jwt-pop}}): the client SHOULD use it if the resource authorization server advertises it ({{as-metadata}}) and the client's registration permits it ({{client-metadata}}).
+2. `jwt-dpop` ({{legacy-jwt-dpop}}): otherwise, for a grant with a `jkt` member, the client SHOULD use it under the same two conditions.
+3. `jwt-bearer`: otherwise. It is not a reliable fallback: the client's registration might not permit it, and a server that implements only {{JWT-DPOP-GRANT}} rejects a key-bound grant presented with it.
+
+If the request is rejected with the `unauthorized_client` or `unsupported_grant_type` error code, the client can retry with the same grant and another grant type, with a new DPoP proof where one is needed ({{Section 4.2 of RFC9449}}). A resource authorization server that supports this specification does not record a grant as used when it rejects a request ({{processing}}).
 
 The client proves possession of the key or certificate identified by the authorization grant's `cnf` claim:
 
