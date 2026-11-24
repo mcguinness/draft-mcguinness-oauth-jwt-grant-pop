@@ -2234,12 +2234,15 @@ Appendix B.  Open Issues
        actor_token (Section 9.4)?  That would narrow the first of those
        conflicts, but would need exceptions to Section 4.1,
        Section 4.2.2, Section 4.2.3, Section 4.2.4, and Section 4.4.
+
        For [ID-CHAINING], should a profile be able to permit a
        requested_cnf claim to select a key for the access token that
-       Table 3 would otherwise exclude?  Replacing the jwt-dpop grant
-       type, and the rules in Section 5.1.2, need the agreement of the
-       author of [JWT-DPOP-GRANT], which also requests registration of
-       the jwt-dpop grant type (Section 9.1 of [JWT-DPOP-GRANT]).
+       Table 3 would otherwise exclude?
+
+       Replacing the jwt-dpop grant type, and the rules in
+       Section 5.1.2, need the agreement of the author of
+       [JWT-DPOP-GRANT], which also requests registration of the jwt-
+       dpop grant type (Section 9.1 of [JWT-DPOP-GRANT]).
 
    3.  Required binding.  Is a per-request "bind or fail" option needed?
        When the issuing authorization server cannot honor a DPoP binding
