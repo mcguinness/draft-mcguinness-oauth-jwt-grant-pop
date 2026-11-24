@@ -137,84 +137,43 @@ Table of Contents
 
 1.  Introduction
 
-   A JWT authorization grant (Section 2.1 of [RFC7523]) lets a client
-   obtain an access token from an authorization server by presenting a
-   JWT issued by a party that the authorization server trusts.  Identity
-   and authorization chaining [ID-CHAINING] uses OAuth 2.0 Token
-   Exchange [RFC8693] to obtain such a grant in one trust domain and
-   present it in another, and the Identity Assertion JWT Authorization
-   Grant [ID-JAG] profiles that pattern for deployments that share a
-   single sign-on identity provider.  The Workload Authorization Grant
-   [WAG] is a JWT authorization grant that a platform issues for a
-   workload acting on its own behalf, which the workload can present
-   without client authentication.  Without a proof-of-possession
-   binding, these grants are bearer tokens (Section 5.5 of
-   [ID-CHAINING], Section 10 of [WAG]): any party that obtains one can
-   redeem it until it expires.  The mitigations listed there do not
-   include binding the grant to a key, and Section 5.2 of [ID-CHAINING]
-   refers to [RFC9700] for sender-constraining tokens in general without
-   defining how to bind the grant.
+   A client can exchange a JWT authorization grant for an access token
+   at an authorization server that trusts the grant's issuer
+   (Section 2.1 of [RFC7523]).  In [ID-CHAINING] and [ID-JAG], the
+   client uses Token Exchange [RFC8693] to obtain a grant in one trust
+   domain and redeems it in another.  A workload platform can also issue
+   a grant for a workload acting on its own behalf [WAG].  A stolen
+   bearer grant can be redeemed by a party that meets the server's other
+   requirements (Section 5.5 of [ID-CHAINING], Section 10 of [WAG]).
 
-   OAuth 2.0 Demonstrating Proof of Possession (DPoP) [RFC9449] and
-   OAuth 2.0 Mutual-TLS [RFC8705] bind access tokens, and sometimes
-   refresh tokens, to a key or certificate held by the client.  They do
-   not define:
-
-   *  how an authorization server binds a JWT authorization grant that
-      Token Exchange issues, for which the token_type response parameter
-      is N_A (Section 2.2.1 of [RFC8693]);
-
-   *  how the authorization server that receives a grant with a cnf
-      claim [RFC7800] verifies proof of possession; or
-
-   *  how a client learns which binding was applied when it cannot read
-      the issued token, for example because the token is opaque or
-      encrypted for its consumer [RFC7516].
-
-   This specification defines how a binding is applied and how it is
-   verified:
-
-   *  Section 3: what a key-bound authorization grant contains;
-
-   *  Section 4: how a grant is bound when it is issued, how the issuing
-      authorization server treats a subject_token or actor_token that is
-      itself bound, and how the client learns the binding;
-
-   *  Section 5: how the resource authorization server verifies the
-      binding, however the grant was issued, and binds the access and
-      refresh tokens that it issues;
-
-   *  Section 7: discovery and per-client enforcement; and
-
-   *  Section 8: the choices that a specification defining a particular
-      JWT authorization grant makes.
-
-   This specification defines no new confirmation method.  It uses the
-   jkt (Section 6.1 of [RFC9449]) and x5t#S256 (Section 3.1 of
-   [RFC8705]) confirmation methods, and lets a resource authorization
-   server also accept the jwk confirmation method (Section 3.2 of
-   [RFC7800]).
+   This specification defines how an issuing authorization server binds
+   a JWT authorization grant to a DPoP key [RFC9449] or a TLS client
+   certificate [RFC8705] by identifying the key or certificate in the
+   grant's cnf claim [RFC7800].  At redemption, the resource
+   authorization server verifies possession and applies the token
+   binding rules in Section 5.3 and Section 5.4.  In Token Exchange, a
+   client can learn the binding from the response even when the grant is
+   encrypted [RFC7516].
 
 1.1.  Relationship to Other Documents
 
-   This specification relates to other documents as follows:
+   *  [JWT-DPOP-GRANT] defines the jwt-dpop grant type.  This
+      specification proposes to replace that document, subject to its
+      author's agreement (Appendix B).  The jwt-pop grant type
+      (Section 5.1.1) supports both DPoP and mutual TLS.  Existing
+      clients can continue to use jwt-dpop as described in
+      Section 5.1.2, which lists the other differences.
 
-   *  It proposes to replace [JWT-DPOP-GRANT], subject to the agreement
-      of that document's author (Appendix B), and extends it from DPoP
-      to mutual TLS.  It generalizes the jwt-dpop grant type of that
-      document into the method-neutral jwt-pop grant type
-      (Section 5.1.1) and keeps jwt-dpop for existing clients;
-      Section 5.1.2 lists the other differences.
+   *  [TE-CNF] specifies the use of cnf in Token Exchange responses.
+      This specification incorporates that use (Section 4.3) and
+      replaces [TE-CNF].  [RFC9201] registers the parameter for the
+      Authentication and Authorization for Constrained Environments
+      (ACE) framework.
 
-   *  It replaces [TE-CNF], whose Token Exchange response parameter it
-      incorporates (Section 4.3).  That parameter is the cnf token
-      response parameter that [RFC9201] registers for the Authentication
-      and Authorization for Constrained Environments (ACE) framework.
-
-   *  It generalizes the sender-constraining rules that the Identity
-      Assertion JWT Authorization Grant [ID-JAG] defines for its grant,
-      and Appendix A shows that grant as a profile of this specification
-      and lists the conflicts between the two documents.
+   *  [ID-JAG] defines sender-constraining rules for the Identity
+      Assertion JWT Authorization Grant.  This specification generalizes
+      those rules.  Appendix A shows how that grant fits the profile
+      requirements and identifies conflicts between the two documents.
 
 1.2.  Conventions and Terminology
 
@@ -312,20 +271,9 @@ Table of Contents
 
       Figure 1: Issuing and Redeeming a DPoP-Bound Authorization Grant
 
-   1.  The client sends a Token Exchange request with a DPoP proof for
-       its key K (Section 4.1).
-
-   2.  The issuing authorization server issues an authorization grant
-       whose cnf claim identifies K (Section 4.2.5) and returns the
-       binding in the cnf response parameter (Section 4.3), which the
-       client checks (Section 4.4).
-
-   3.  The client presents the authorization grant to the resource
-       authorization server with a DPoP proof for K (Section 5.1).
-
-   4.  The resource authorization server verifies the proof against the
-       authorization grant's cnf claim (Section 5.2) and issues an
-       access token, normally bound to K (Section 5.3).
+   The client checks the binding returned by the issuing authorization
+   server (Section 4.4).  At redemption, the resource authorization
+   server checks the proof against the grant's cnf claim (Section 5.2).
 
    The client sends a separate DPoP proof to each authorization server,
    signed with the same key, because the htu claim of a DPoP proof
@@ -348,9 +296,6 @@ Table of Contents
    certificate, not which client it is (Section 9.6).
 
 3.  Key-Bound JWT Authorization Grants
-
-   This section defines the cnf claim of a key-bound authorization grant
-   and how confirmation values are compared.
 
 3.1.  Confirmation Claim
 
@@ -441,19 +386,13 @@ Table of Contents
 
 4.  Issuing a Key-Bound Authorization Grant
 
-   This section covers a JWT authorization grant that an issuing
-   authorization server issues in response to a Token Exchange request
-   (Section 2.1 of [RFC8693]).  Section 4.3 applies to any token that
-   Token Exchange issues, and Section 4.5 covers other issuance
-   interfaces.
-
-   An issued token is a JWT authorization grant if the issuing
-   authorization server issues it as a JWT for the client to present to
-   an authorization server as an authorization grant.  The issuing
-   authorization server decides this, and whether to issue the grant at
-   all, from its policy, from its configuration for the audience and
-   resource values, and from the requested_token_type value, which a
-   profile can define.
+   This section covers JWT authorization grants issued through Token
+   Exchange (Section 2.1 of [RFC8693]).  The issuing authorization
+   server decides whether to issue a JWT for use as an authorization
+   grant from its policy, its configuration for audience and resource,
+   and the requested token type (requested_token_type), which a profile
+   can define.  Section 4.3 applies to any token issued through Token
+   Exchange.  For other issuance interfaces, see Section 4.5.
 
 4.1.  Token Exchange Request
 
@@ -555,31 +494,14 @@ Table of Contents
        binds the authorization grant (Section 4.2.2, Section 4.2.3);
        otherwise, the error code that Section 4.2.4 gives.
 
-   When a request fails more than one of these checks, Section 6
-   determines which error code the issuing authorization server returns.
-   For example, a request without a DPoP proof that fails item 2, and
-   for which Section 4.2.4 gives invalid_dpop_proof under item 3, is
-   rejected with invalid_dpop_proof.
+   If several checks fail, Section 6 determines which error to return.
 
-   Whether a confirmation method is a permitted confirmation method for
-   an authorization grant does not depend on the proof of possession in
-   the request.  A permitted confirmation method does not by itself
-   permit binding; Section 4.2.2 and Section 4.2.3 define when the
-   issuing authorization server binds the grant.
-
-   The issuing authorization server's policy can decline a confirmation
-   method for an authorization grant whose aud claim identifies an
-   authorization server that does not verify that method, as the issuing
-   authorization server has determined from configuration, an
-   established trust relationship, or metadata (Section 7.1).  That
-   method is then not a permitted confirmation method for the grant, and
-   Section 4.2.2, Section 4.2.3, and Section 4.2.4 apply as they do to a
-   method that the issuing authorization server does not support.
-
-   The subsections below follow these checks in order: proof of
-   possession of bound subject and actor tokens (item 2), selection of
-   the binding, the error code when a required binding is not applied
-   (item 3), and construction of a key-bound authorization grant.
+   The issuing authorization server determines which confirmation
+   methods are permitted independently of the proofs in the request.
+   Its policy can decline a method for an audience that does not verify
+   it, based on configuration, an established trust relationship, or
+   metadata (Section 7.1).  Section 4.2.2 and Section 4.2.3 determine
+   whether the request permits binding with a permitted method.
 
 4.2.1.  Bound Subject and Actor Tokens
 
@@ -616,10 +538,6 @@ Table of Contents
    Otherwise, the token fails item 2 unless the requesting client is
    exempt.
 
-   The issuing authorization server applies item 2 to each bound token
-   separately.  Section 4.1 describes what this means for a request with
-   two bound tokens, and for the key of the issued authorization grant.
-
 4.2.2.  DPoP Binding
 
    In response to a DPoP binding request with a valid DPoP proof, the
@@ -632,25 +550,17 @@ Table of Contents
    key or certificate, including when the client also presents a TLS
    client certificate.
 
-   The DPoP proof thus selects the grant's key.  A TLS client
-   certificate in the same request only authenticates the client or
-   proves possession of a certificate-bound subject_token or
-   actor_token.  This has two benefits:
+   A client can therefore use a TLS certificate solely for client
+   authentication or to prove possession of a certificate-bound
+   subject_token or actor_token, even if it cannot use that certificate
+   at redemption.  Section 9.4 explains the replay risk of selecting the
+   certificate instead.
 
-   *  A client can authenticate to the issuing authorization server with
-      a certificate that it does not use elsewhere without receiving a
-      grant bound to that certificate, which it might not be able to
-      redeem.
-
-   *  An attacker that replays a captured DPoP-bound subject_token or
-      actor_token with its DPoP proof cannot obtain a grant bound to the
-      attacker's own certificate (Section 9.4).
-
-   A client that requires a key-bound authorization grant discards an
-   unbound one.  Issuing an unbound grant when jkt is not a permitted
-   confirmation method keeps the exchange working for a client that
-   sends a DPoP proof in every token request, and for a client that
-   proves possession of a DPoP-bound subject_token.
+   Issuing an unbound grant when jkt is not a permitted confirmation
+   method keeps the exchange working for a client that sends a DPoP
+   proof in every token request, and for a client that proves possession
+   of a DPoP-bound subject_token.  A client that requires binding
+   discards an unbound grant (Section 4.4).
 
 4.2.3.  Certificate Binding
 
@@ -693,20 +603,17 @@ Table of Contents
 
 4.2.4.  Required Binding
 
-   Binding is required for an authorization grant if the profile of the
-   grant requires it, or if the issuing authorization server requires it
-   by its policy (for example, for the grant's audience) or by the
-   client's registration at the issuing authorization server.  An
-   issuing authorization server MAY require binding when the profile of
-   the grant does not.  A requirement for binding ensures that an issued
-   grant is bound (item 3 of Section 4.2), not that each authorization
-   server in the grant's audience verifies the binding; where that is
-   needed, the profile, configuration, or the issuing authorization
-   server's policy establishes it (Section 9.1).
+   Binding is required if the grant's profile requires it.  The issuing
+   authorization server MAY also require binding by policy or by the
+   client's registration.  A requirement for binding ensures that an
+   issued grant is bound, not that each authorization server in the
+   grant's audience verifies the binding; where that is needed, the
+   profile, configuration, or the issuing authorization server's policy
+   establishes it (Section 9.1).
 
-   When binding is required and the issuing authorization server does
-   not bind the authorization grant, it rejects a Token Exchange request
-   with the error code in Table 2 (item 3 of Section 4.2):
+   If the issuing authorization server does not apply a required
+   binding, it rejects the Token Exchange request with the error from
+   Table 2 (item 3 of Section 4.2).
 
     +=============+=============================+====================+
     | Request     | Conditions                  | Error code         |
@@ -762,22 +669,6 @@ Table of Contents
 
     Figure 8: Error Response for a Request without a Required DPoP Proof
 
-   The following is an example of the invalid_target error response to a
-   DPoP binding request when binding is required and jkt is not a
-   permitted confirmation method for the grant:
-
-   HTTP/1.1 400 Bad Request
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "error": "invalid_target",
-     "error_description": "DPoP binding is not permitted for this grant"
-   }
-
-      Figure 9: Error Response for a DPoP Binding Request That Cannot
-                                 Be Honored
-
 4.2.5.  Binding the Authorization Grant
 
    To bind an authorization grant, the issuing authorization server
@@ -789,17 +680,11 @@ Table of Contents
    a key or certificate whose possession the client has not proven in
    the request for the grant.
 
-   The issuing authorization server does not need to determine, before
-   binding, that the resource authorization server verifies the binding.
-   The resource authorization server enforces it (Section 5.2); where a
-   resource authorization server does not, a key-bound grant is no less
-   protected against theft than an unbound one (Section 9.1).  If
-   binding is required and the issuing authorization server does not
-   bind the grant, it MUST NOT issue the grant; in response to a Token
-   Exchange request, it returns the error code that Section 4.2.4 gives.
-   When binding is not required, Section 4.2.2 defines the response to a
-   DPoP binding request when jkt is not a permitted confirmation method
-   for the grant.
+   The issuing authorization server need not establish before issuance
+   that the resource authorization server verifies the binding
+   (Section 9.1).  If binding is required and the issuing authorization
+   server does not bind the grant, it MUST NOT issue the grant.  For
+   Token Exchange, Section 4.2.4 gives the error code.
 
    When the issued token is a key-bound authorization grant, the issuing
    authorization server MUST set the token_type response parameter to
@@ -861,7 +746,7 @@ Table of Contents
      }
    }
 
-         Figure 10: Token Exchange Response with the cnf Parameter
+          Figure 9: Token Exchange Response with the cnf Parameter
 
 4.4.  Client Processing of the Response
 
@@ -907,7 +792,7 @@ Table of Contents
    for mutual-TLS client authentication.  Otherwise, it MUST discard the
    issued token.
 
-   For the response in Figure 10, the client verifies that the jkt value
+   For the response in Figure 9, the client verifies that the jkt value
    in the cnf response parameter equals the JWK SHA-256 Thumbprint of
    its DPoP public key.
 
@@ -990,7 +875,7 @@ Table of Contents
    grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
    &assertion=eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...
 
-   Figure 11: Access Token Request with a DPoP-Bound Authorization Grant
+   Figure 10: Access Token Request with a DPoP-Bound Authorization Grant
 
 5.1.2.  Legacy DPoP-Bound Grant Type
 
@@ -1105,24 +990,10 @@ Table of Contents
      }
    }
 
-        Figure 12: Confirmation Claim with Two Confirmation Members
-
-   The following is an example of the error response when the request in
-   Figure 11 carries no DPoP proof:
-
-   HTTP/1.1 400 Bad Request
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "error": "invalid_grant",
-     "error_description": "Proof of possession required for this grant"
-   }
-
-             Figure 13: Error Response for a Missing DPoP Proof
+        Figure 11: Confirmation Claim with Two Confirmation Members
 
    The following is an example of the response to the request in
-   Figure 11 from a resource authorization server that requires a DPoP
+   Figure 10 from a resource authorization server that requires a DPoP
    nonce:
 
    HTTP/1.1 400 Bad Request
@@ -1135,7 +1006,7 @@ Table of Contents
      "error_description": "Nonce required in DPoP proof"
    }
 
-      Figure 14: Nonce Challenge for a DPoP-Bound Authorization Grant
+      Figure 12: Nonce Challenge for a DPoP-Bound Authorization Grant
 
    The resource authorization server does not record the authorization
    grant as used.  The client then repeats the request with the same
@@ -1203,21 +1074,6 @@ Table of Contents
    The last row of Table 3 follows Section 5 of [RFC9449] for a refresh
    token issued to a public client; Section 5.4 departs from that
    section for a refresh token issued to a confidential client.
-
-   The following is an example of the access token response to the
-   request in Figure 11:
-
-   HTTP/1.1 200 OK
-   Content-Type: application/json
-   Cache-Control: no-store
-
-   {
-     "access_token": "Kz~8mXK1EalYznwH-LC-1fBAo.4Ljp~zsPE_NeO.gxU",
-     "token_type": "DPoP",
-     "expires_in": 300
-   }
-
-                      Figure 15: Access Token Response
 
 5.4.  Refresh Tokens
 
@@ -1292,7 +1148,7 @@ Table of Contents
    &client_id=s6BhdRkqt
    &refresh_token=Q..Zkm29lexi8VnWg2zPW1x-tgGad0Ibc3s3EwM_Ni4-g
 
-     Figure 16: Refresh Request with a Certificate-Bound Refresh Token
+     Figure 13: Refresh Request with a Certificate-Bound Refresh Token
 
    The resource authorization server verifies the certificate against
    the refresh token's binding and, in this example, binds the issued
@@ -1309,7 +1165,7 @@ Table of Contents
      "refresh_token": "4LTC8lb0acc6Oy4esc1Nk9BWC0imAwH-hPRPxchW2gs"
    }
 
-             Figure 17: Refresh Response with DPoP-Bound Tokens
+             Figure 14: Refresh Response with DPoP-Bound Tokens
 
    The client presents the replacement refresh token with both proofs,
    because it obtained it with both; the resource authorization server
@@ -1340,56 +1196,19 @@ Table of Contents
 
 6.  Error Responses
 
-   An authorization server returns errors as defined in Section 5.2 of
-   [RFC6749], with the HTTP status code 400 (Bad Request) except where
-   that section permits or requires 401 (Unauthorized) for
-   invalid_client.  This specification defines no new error codes.  It
-   uses the following error codes, each at the check that names it:
+   An authorization server returns the error specified by the failed
+   check, as defined in Section 5.2 of [RFC6749].  The HTTP status is
+   400 (Bad Request), except where that section permits or requires 401
+   (Unauthorized) for invalid_client.
 
-   invalid_dpop_proof:  At either authorization server, the DPoP proof
-      is invalid (Section 5 of [RFC9449]); or, at the issuing
-      authorization server, binding is required, the request contains no
-      DPoP proof, and Section 4.2.4 gives this error code.
+   At either authorization server, if a DPoP proof in the request
+   requires a nonce challenge under Section 8 of [RFC9449], the server
+   MUST use use_dpop_nonce for that failure.  This also applies when the
+   proof is needed to verify a key-bound grant or a bound subject_token
+   or actor_token.
 
-   use_dpop_nonce:  At either authorization server, the request contains
-      a DPoP proof that Section 8 of [RFC9449] rejects with this error
-      code.  The authorization server MUST use this error code, and not
-      invalid_grant or invalid_request, for such a proof, including when
-      the DPoP proof is needed to verify a key-bound authorization grant
-      or a bound subject_token.
-
-   invalid_request:  At the issuing authorization server, a bound
-      subject_token or actor_token is not proven and the requesting
-      client is not exempt (item 2 of Section 4.2); or binding is
-      required, the request contains neither a DPoP proof nor a TLS
-      client certificate, and Section 4.2.4 gives this error code.
-
-   invalid_target:  At the issuing authorization server, binding is
-      required and the issuing authorization server does not bind the
-      authorization grant, in a case for which neither
-      invalid_dpop_proof nor invalid_request applies (Section 4.2.4).
-
-   invalid_grant:  At the resource authorization server, a check in
-      Section 5.2, Section 5.1.1, Section 5.1.2, or Section 5.4 that
-      names invalid_grant fails.
-
-   invalid_client:  At the resource authorization server, where a
-      profile allows a key-bound authorization grant in place of client
-      authentication, the request has no client authentication and its
-      authorization grant has no cnf claim but passes every check of
-      Section 5.2 and of the request's grant type (Section 5.5).
-
-   unauthorized_client:  At either authorization server, the
-      authenticated client, or at the resource authorization server a
-      client identified from the authorization grant (Section 5.5), is
-      not permitted to use the grant type of the request (Section 5.2 of
-      [RFC6749]), for example because it is not registered for that
-      grant type (Section 7.2).
-
-   When more than one of these error codes, or the invalid_client error
-   code for client authentication that the request includes and that
-   fails (Section 5.2 of [RFC6749]), applies to a request, the
-   authorization server MUST return the first in the following order.
+   When two or more of the errors listed below apply, the authorization
+   server MUST return the first applicable error in the order shown.
    Both authorization servers start with:
 
    1.  invalid_client, if the request includes client authentication and
@@ -1518,7 +1337,7 @@ Table of Contents
      "dpop_signing_alg_values_supported": ["ES256"]
    }
 
-    Figure 18: Authorization Server Metadata with the jwt-pop Grant Type
+    Figure 15: Authorization Server Metadata with the jwt-pop Grant Type
 
 7.2.  Client Registration Metadata
 
@@ -1567,7 +1386,7 @@ Table of Contents
      "token_endpoint_auth_method": "client_secret_basic"
    }
 
-         Figure 19: Client Metadata Limiting a Client to Key-Bound
+         Figure 16: Client Metadata Limiting a Client to Key-Bound
                             Authorization Grants
 
 8.  Profiling This Specification
@@ -1642,16 +1461,13 @@ Table of Contents
    authorization grant as a bearer grant: a party that obtains the grant
    can redeem it without the key.
 
-   Only a resource authorization server that verifies the binding
-   enforces it, and the issuing authorization server binds a grant
-   without checking that the resource authorization server verifies the
-   binding (Section 4.2.5).  When binding is optional, the alternative
-   is an unbound grant, and against a stolen grant, binding is never
-   weaker: a key-bound grant is a bearer grant where its binding is not
-   verified, and is protected wherever it is, including at a server
-   whose support the issuing authorization server did not know of or
-   whose configuration changed after the issuing authorization server
-   last checked.  Binding has two costs:
+   The issuing authorization server can bind a grant without first
+   checking the audience's support (Section 4.2.5).  When binding is
+   optional, the alternative is an unbound grant, and against a stolen
+   grant, binding is never weaker: a key-bound grant is a bearer grant
+   where its binding is not verified, and is protected wherever it is
+   verified, even if the issuing authorization server's information
+   about the audience is incomplete or stale.  Binding has two costs:
 
    *  A key-bound grant can be rejected where an unbound one is
       accepted, by a resource authorization server that does not support
@@ -1667,25 +1483,14 @@ Table of Contents
    *  The confirmation member reaches servers that do not verify it
       (Section 10).
 
-   A requirement for binding ensures that the authorization grant is
-   bound, not that the binding is enforced: the issuing authorization
-   server can still issue a required key-bound grant for an audience
-   that accepts it as a bearer grant.  A profile or an issuing
-   authorization server that needs a required binding to be enforced
-   establishes that each authorization server in the grant's audience
-   verifies it, for example through the profile (items 2 and 3 of
-   Section 8), through configuration that restricts the audience to such
-   servers, or through the issuing authorization server's policy.
-
-   A key-bound authorization grant is only as protected as the least
-   protective server in its audience: a party that obtains a grant whose
-   aud claim identifies several authorization servers can present it to
-   any of them.  A client that needs the binding to be enforced
-   therefore needs evidence that each of those servers verifies it, from
-   that server's metadata (Section 7.1), from configuration, or from the
-   profile.  A client that cannot read the grant's aud claim, for
-   example because the grant is encrypted, relies on configuration or
-   the profile to establish the grant's audience.
+   A party holding a grant can present it to any authorization server in
+   its audience.  Where enforcement is required, the profile,
+   configuration, or the issuing authorization server's policy
+   establishes that every such server verifies the binding (Section 8).
+   A client that needs this assurance obtains evidence for each audience
+   from validated metadata (Section 7.1), configuration, or the profile.
+   If the client cannot read the grant's aud claim, it relies on
+   configuration or the profile to establish the audience.
 
 9.2.  Grant Type Substitution
 
@@ -1861,17 +1666,11 @@ Table of Contents
    bound to the attacker's own key.  Protection of bearer subject tokens
    is outside the scope of this specification; see [RFC9700].
 
-   A bound subject_token is protected by item 2 of Section 4.2, except
-   from an authenticated intended audience that Section 4.2.1 exempts.
-   The exemption covers every authenticated client that the issuing
-   authorization server associates with the token's aud claim or its
-   records of the token and that, from the token's claims or its
-   records, it can tell is not the client to which the token was issued.
-   When that claim identifies a resource that several resource servers
-   serve, any of them that obtains the token, for example from another
-   of them, can exchange it without the key.  An issuing authorization
-   server that associates several clients with one audience value
-   therefore weakens the binding of tokens for that audience.
+   The exemption in Section 4.2.1 can weaken binding when several
+   resource servers share one audience value.  Each server that
+   qualifies for the exemption can exchange a bound subject token it
+   obtains, including one obtained from another server, without holding
+   the key.
 
    When jkt is not a permitted confirmation method for the authorization
    grant and binding is not required, a client that proves possession of
