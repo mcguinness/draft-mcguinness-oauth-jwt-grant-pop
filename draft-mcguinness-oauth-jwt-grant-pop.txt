@@ -697,30 +697,25 @@ Table of Contents
 4.3.  Token Exchange Response
 
    This specification defines the use of the cnf token response
-   parameter, registered by [RFC9201], in a Token Exchange response:
+   parameter, which [RFC9201] registers, in a Token Exchange response.
+   There, the access_token parameter carries the issued token, whatever
+   its type (Section 2.2.1 of [RFC8693]).  The cnf parameter identifies
+   the key or certificate to which the authorization server bound that
+   token, including an opaque or encrypted one.  It does not describe a
+   refresh_token in the same response.
 
-   cnf:  A JSON object containing exactly one confirmation member, which
-      identifies the key or certificate to which the authorization
-      server bound the token in the access_token response parameter.
-      Its syntax and member semantics are those of the cnf claim
-      (Section 3.1 of [RFC7800]).  Whether the parameter is present
-      depends on the token:
+   cnf:  A JSON object that contains exactly one confirmation member,
+      with the syntax and semantics of the cnf claim (Section 3.1 of
+      [RFC7800]).  Its presence depends on the issued token:
 
-      *  REQUIRED if the token is bound to a key or certificate and the
-         token_type response parameter is N_A.
+      *  Bound, and token_type is N_A, as for a key-bound authorization
+         grant (Section 4.2.5): REQUIRED.
 
-      *  OPTIONAL if the token is bound and the token_type response
-         parameter has another value, unless another specification
-         requires it, as Section 3.2 of [RFC9201] does for a symmetric
-         proof-of-possession key.
+      *  Bound, with another token_type, such as DPoP: OPTIONAL, unless
+         another specification requires it, as Section 3.2 of [RFC9201]
+         does for a pop token with a symmetric proof-of-possession key.
 
-      *  MUST NOT be present if the token is not bound.
-
-   The parameter describes only the token in the access_token response
-   parameter, whatever its issued_token_type, including an opaque or
-   encrypted token and an access token whose token_type also indicates
-   the binding.  It does not describe a refresh_token in the same
-   response.
+      *  Not bound: MUST NOT be present.
 
    When the issued token is a JWT that contains a cnf claim, the
    parameter MUST identify the same key or certificate as that claim
@@ -816,21 +811,27 @@ Table of Contents
 5.1.  Access Token Request
 
    The client presents a key-bound authorization grant in an access
-   token request (Section 4.1 of [RFC7521]) with the jwt-pop, the jwt-
-   bearer, or, where Section 5.1.2 applies, the jwt-dpop grant type.  It
-   SHOULD use jwt-pop if the resource authorization server advertises it
-   (Section 7.1) and the client's registration permits it (Section 7.2).
-   Otherwise, a client that presents a grant with a jkt member SHOULD
-   use jwt-dpop if the resource authorization server advertises it and
-   the client's registration permits it.  The jwt-bearer grant type is
-   not a reliable fallback: the client's registration might not permit
-   it, and a server that implements only [JWT-DPOP-GRANT] rejects such a
-   grant presented with it.  A client whose request is rejected with the
-   unauthorized_client or unsupported_grant_type error code can send a
-   new request with the same grant and another grant type, with a new
-   DPoP proof where one is needed (Section 4.2 of [RFC9449]).  A
-   resource authorization server that supports this specification does
-   not record a grant as used when it rejects the request (Section 5.2).
+   token request (Section 4.1 of [RFC7521]) and chooses the grant type
+   in this order:
+
+   1.  jwt-pop (Section 5.1.1): the client SHOULD use it if the resource
+       authorization server advertises it (Section 7.1) and the client's
+       registration permits it (Section 7.2).
+
+   2.  jwt-dpop (Section 5.1.2): otherwise, for a grant with a jkt
+       member, the client SHOULD use it under the same two conditions.
+
+   3.  jwt-bearer: the client can use this grant type if its
+       registration permits it.  A server that implements only
+       [JWT-DPOP-GRANT] rejects a grant with a jkt member presented this
+       way.
+
+   If the request is rejected with the unauthorized_client or
+   unsupported_grant_type error code, the client can retry with the same
+   grant and another grant type, with a new DPoP proof where one is
+   needed (Section 4.2 of [RFC9449]).  A resource authorization server
+   that supports this specification does not record a grant as used when
+   it rejects a request (Section 5.2).
 
    The client proves possession of the key or certificate identified by
    the authorization grant's cnf claim:
@@ -880,18 +881,24 @@ Table of Contents
 5.1.2.  Legacy DPoP-Bound Grant Type
 
    The jwt-dpop grant type, first defined in [JWT-DPOP-GRANT], is a
-   legacy grant type for existing clients.  A resource authorization
-   server MAY support it, and SHOULD continue to support it while
-   clients are registered for it.  A resource authorization server that
-   supports it SHOULD include it in the grant_types_supported metadata
-   parameter; an issuing authorization server that implements
-   [JWT-DPOP-GRANT] can rely on that value to determine that the
+   legacy grant type for existing clients; a new client uses jwt-pop.  A
+   resource authorization server:
+
+   *  MAY support jwt-dpop, and SHOULD continue to support it while
+      clients are registered for it;
+
+   *  SHOULD, if it supports it, include it in the grant_types_supported
+      metadata parameter; and
+
+   *  processes a jwt-dpop request by the rules for jwt-pop
+      (Section 5.1.1), and MUST also reject it with the invalid_grant
+      error code if the confirmation member of the grant's cnf claim is
+      not jkt.
+
+   An issuing authorization server that implements [JWT-DPOP-GRANT] can
+   rely on that grant_types_supported value to determine that the
    resource authorization server verifies DPoP-bound authorization
-   grants.  The resource authorization server processes a request with
-   that grant type by the rules for the jwt-pop grant type
-   (Section 5.1.1), and MUST also reject the request with the
-   invalid_grant error code if the confirmation member of the grant's
-   cnf claim is not jkt.  A new client uses the jwt-pop grant type.
+   grants.
 
    Unlike [JWT-DPOP-GRANT], this specification:
 
