@@ -713,7 +713,7 @@ Table of Contents
 
       *  Bound, with another token_type, such as DPoP: OPTIONAL, unless
          another specification requires it, as Section 3.2 of [RFC9201]
-         does for a symmetric proof-of-possession key.
+         does for a pop token with a symmetric proof-of-possession key.
 
       *  Not bound: MUST NOT be present.
 
@@ -821,10 +821,10 @@ Table of Contents
    2.  jwt-dpop (Section 5.1.2): otherwise, for a grant with a jkt
        member, the client SHOULD use it under the same two conditions.
 
-   3.  jwt-bearer: otherwise.  It is not a reliable fallback: the
-       client's registration might not permit it, and a server that
-       implements only [JWT-DPOP-GRANT] rejects a key-bound grant
-       presented with it.
+   3.  jwt-bearer: the client can use this grant type if its
+       registration permits it.  A server that implements only
+       [JWT-DPOP-GRANT] rejects a grant with a jkt member presented this
+       way.
 
    If the request is rejected with the unauthorized_client or
    unsupported_grant_type error code, the client can retry with the same
