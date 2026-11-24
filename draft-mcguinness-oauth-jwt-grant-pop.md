@@ -71,9 +71,9 @@ This specification defines how an authorization server binds a JSON Web Token (J
 
 # Introduction
 
-A client can exchange a JWT authorization grant for an access token at an authorization server that trusts the grant's issuer ({{Section 2.1 of RFC7523}}). In {{ID-CHAINING}} and {{ID-JAG}}, the client uses Token Exchange {{RFC8693}} to obtain a grant in one trust domain and redeems it in another. A workload platform can also issue a grant directly {{WAG}}. A stolen bearer grant can be redeemed by a party that meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}).
+A client can exchange a JWT authorization grant for an access token at an authorization server that trusts the grant's issuer ({{Section 2.1 of RFC7523}}). In {{ID-CHAINING}} and {{ID-JAG}}, the client uses Token Exchange {{RFC8693}} to obtain a grant in one trust domain and redeems it in another. A workload platform can also issue a grant for a workload acting on its own behalf {{WAG}}. A stolen bearer grant can be redeemed by a party that meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}).
 
-This specification binds a JWT authorization grant to a DPoP key {{RFC9449}} or a TLS client certificate {{RFC8705}}. The issuer identifies the key or certificate in the grant's `cnf` claim {{RFC7800}}. At redemption, the resource authorization server verifies possession and applies the token binding rules in {{token-response}} and {{refresh}}. In Token Exchange, a client can learn the binding from the response even when the grant is encrypted {{RFC7516}}.
+This specification defines how an issuing authorization server binds a JWT authorization grant to a DPoP key {{RFC9449}} or a TLS client certificate {{RFC8705}} by identifying the key or certificate in the grant's `cnf` claim {{RFC7800}}. At redemption, the resource authorization server verifies possession and applies the token binding rules in {{token-response}} and {{refresh}}. In Token Exchange, a client can learn the binding from the response even when the grant is encrypted {{RFC7516}}.
 
 ## Relationship to Other Documents {#relationship}
 
