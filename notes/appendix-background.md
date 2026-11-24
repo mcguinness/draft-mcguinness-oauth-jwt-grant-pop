@@ -7,6 +7,21 @@ reasoning behind each proposed change to ID-JAG and the background for each
 open issue. Section numbers and references are those of that version of the
 draft.
 
+Before the -00 was submitted, the open issues were reduced from 12 to 5.
+Items 1, 4 and 5, 6 and 10, and 11 below became items 1, 2, 3 and 4 of the
+draft. Item 5 of the draft (holder of the key) was added after this file
+was written and has no background here. Items 2, 3, 7, 8 and 9 were closed,
+keeping the position that the draft states:
+
+- 2: `invalid_dpop_proof`, `invalid_request` or `invalid_target` for a
+  required binding that is not applied; no new error code.
+- 3: the `cnf` response parameter is defined for Token Exchange responses.
+- 7: a refresh token issued for a key-bound grant is bound even when the
+  client authenticates, unless the grant identifies that client.
+- 8: a `cnf` claim has exactly one member, from a closed set.
+- 9: a resource authorization server may accept `jwk`; an issuing
+  authorization server binds only with `jkt` or `x5t#S256`.
+
 ```text
 Appendix A.  Profiles of This Specification
 
