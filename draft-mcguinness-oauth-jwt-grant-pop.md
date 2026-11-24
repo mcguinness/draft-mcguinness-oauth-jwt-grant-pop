@@ -454,7 +454,13 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
 
 ### Legacy DPoP-Bound Grant Type {#legacy-jwt-dpop}
 
-The `jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients. A resource authorization server MAY support it, and SHOULD continue to support it while clients are registered for it. A resource authorization server that supports it SHOULD include it in the `grant_types_supported` metadata parameter; an issuing authorization server that implements {{JWT-DPOP-GRANT}} can rely on that value to determine that the resource authorization server verifies DPoP-bound authorization grants. The resource authorization server processes a request with that grant type by the rules for the `jwt-pop` grant type ({{jwt-pop}}), and MUST also reject the request with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`. A new client uses the `jwt-pop` grant type.
+The `jwt-dpop` grant type, first defined in {{JWT-DPOP-GRANT}}, is a legacy grant type for existing clients; a new client uses `jwt-pop`. A resource authorization server:
+
+* MAY support `jwt-dpop`, and SHOULD continue to support it while clients are registered for it;
+* SHOULD, if it supports it, include it in the `grant_types_supported` metadata parameter; and
+* processes a `jwt-dpop` request by the rules for `jwt-pop` ({{jwt-pop}}), and MUST also reject it with the `invalid_grant` error code if the confirmation member of the grant's `cnf` claim is not `jkt`.
+
+An issuing authorization server that implements {{JWT-DPOP-GRANT}} can rely on that `grant_types_supported` value to determine that the resource authorization server verifies DPoP-bound authorization grants.
 
 Unlike {{JWT-DPOP-GRANT}}, this specification:
 
