@@ -312,7 +312,7 @@ Cache-Control: no-store
 
 ### Required Binding {#required-binding}
 
-Binding is required if the grant's profile requires it. The issuing authorization server MAY also require binding by policy or by the client's registration. Where the binding must be enforced, the profile, configuration, or issuer policy establishes that each authorization server in the audience verifies it ({{non-enforcing-consumers}}).
+Binding is required if the grant's profile requires it. The issuing authorization server MAY also require binding by policy or by the client's registration. A requirement for binding ensures that an issued grant is bound, not that each authorization server in the grant's audience verifies the binding; where that is needed, the profile, configuration, or the issuing authorization server's policy establishes it ({{non-enforcing-consumers}}).
 
 If the issuing authorization server does not apply a required binding, it rejects the Token Exchange request with the error from {{required-binding-errors}} (item 3 of {{issuer-processing}}).
 
