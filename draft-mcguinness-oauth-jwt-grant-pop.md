@@ -415,7 +415,7 @@ The client presents a key-bound authorization grant in an access token request (
 
 1. `jwt-pop` ({{jwt-pop}}): the client SHOULD use it if the resource authorization server advertises it ({{as-metadata}}) and the client's registration permits it ({{client-metadata}}).
 2. `jwt-dpop` ({{legacy-jwt-dpop}}): otherwise, for a grant with a `jkt` member, the client SHOULD use it under the same two conditions.
-3. `jwt-bearer`: otherwise. It is not a reliable fallback: the client's registration might not permit it, and a server that implements only {{JWT-DPOP-GRANT}} rejects a key-bound grant presented with it.
+3. `jwt-bearer`: the client can use this grant type if its registration permits it. A server that implements only {{JWT-DPOP-GRANT}} rejects a grant with a `jkt` member presented this way.
 
 If the request is rejected with the `unauthorized_client` or `unsupported_grant_type` error code, the client can retry with the same grant and another grant type, with a new DPoP proof where one is needed ({{Section 4.2 of RFC9449}}). A resource authorization server that supports this specification does not record a grant as used when it rejects a request ({{processing}}).
 
