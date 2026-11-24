@@ -20,7 +20,11 @@ keeping the position that the draft states:
   certificate. If the client authenticates and the server verifies that the
   grant identifies it, in a claim that the grant's profile defines, the
   server may bind the refresh token to that client alone.
-- 8: a `cnf` claim has exactly one member, from a closed set.
+- 8: grant redemption uses the closed set in Section 5.2: exactly one
+  member, which is `jkt`, `jwk` or `x5t#S256`. For a bound `subject_token`
+  or `actor_token`, Section 4.2.1 treats any `cnf` as a binding, applies the
+  exactly-one-member rule only to decide whether possession can be proven,
+  and keeps the client exemption.
 - 9: a resource authorization server may accept `jwk`; an issuing
   authorization server binds only with `jkt` or `x5t#S256`.
 
