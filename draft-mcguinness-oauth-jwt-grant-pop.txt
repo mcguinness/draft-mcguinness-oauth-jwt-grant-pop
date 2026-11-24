@@ -1014,10 +1014,13 @@ Table of Contents
 
 5.3.  Access Token Response
 
-   Section 5 of [RFC9449] and Section 3 of [RFC8705] determine the
-   binding of the tokens that the resource authorization server issues,
-   except as this section and Section 5.4 restrict it for a key-bound
-   authorization grant.
+   For a key-bound authorization grant, Section 5 of [RFC9449] and
+   Section 3 of [RFC8705] determine the binding of the tokens that the
+   resource authorization server issues, except as this section and
+   Section 5.4 restrict it.  This specification does not restrict the
+   binding of tokens issued for an unbound authorization grant, such as
+   a binding to a key that the grant conveys in a requested_cnf claim
+   (Appendix B.3 of [ID-CHAINING]).
 
    When the authorization grant is bound, the resource authorization
    server SHOULD bind the access token it issues, and indicate the
@@ -2006,11 +2009,16 @@ Appendix B.  Open Issues
         (Section 7.2) applies only when the server identifies a
         registered client, and a [WAG] agent can present a grant with
         jwt-bearer without client authentication or a per-agent
-        registration.  Metadata would remove the conflict with Section 8
-        of [ID-JAG] and fit Section 4.1 of [RFC7521], which defines
-        grant_type as "the format of the assertion".  A client would
-        confirm the policy from the registered client metadata that the
-        resource authorization server returns (Section 3.2.1 of
+        registration.  A profile can require every grant of its type to
+        be key-bound and every resource authorization server
+        implementing the profile to verify the binding (items 2 and 3 of
+        Section 8).  A server that accepts jwt-bearer without
+        recognizing the profile may ignore its typ value (Section 3.11
+        of [RFC8725]).  Metadata would remove the conflict with
+        Section 8 of [ID-JAG] and fit Section 4.1 of [RFC7521], which
+        defines grant_type as "the format of the assertion".  A client
+        would confirm the policy from the registered client metadata
+        that the resource authorization server returns (Section 3.2.1 of
         [RFC7591]) or from that server's validated metadata
         (Section 7.1).
 
@@ -2047,12 +2055,12 @@ Appendix B.  Open Issues
    5.   Alignment with other documents.  Should the working group
         resolve the two conflicts with [ID-JAG] that Appendix A lists by
         the changes proposed there, or by changes to this document?  For
-        [ID-CHAINING], should a profile be able to permit binding the
-        access token to a key in a requested_cnf claim?  Replacing the
-        jwt-dpop grant type, and the rules in Section 5.1.2, need the
-        agreement of the author of [JWT-DPOP-GRANT], which also requests
-        registration of the jwt-dpop grant type (Section 9.1 of
-        [JWT-DPOP-GRANT]).
+        [ID-CHAINING], should a profile be able to permit a
+        requested_cnf claim to select a key for the access token that
+        Table 3 would otherwise exclude?  Replacing the jwt-dpop grant
+        type, and the rules in Section 5.1.2, need the agreement of the
+        author of [JWT-DPOP-GRANT], which also requests registration of
+        the jwt-dpop grant type (Section 9.1 of [JWT-DPOP-GRANT]).
 
    6.   Bind or fail.  Is a per-request "bind or fail" option needed?
         When the issuing authorization server cannot honor a DPoP
