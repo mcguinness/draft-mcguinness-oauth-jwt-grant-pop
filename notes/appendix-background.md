@@ -16,8 +16,10 @@ keeping the position that the draft states:
 - 2: `invalid_dpop_proof`, `invalid_request` or `invalid_target` for a
   required binding that is not applied; no new error code.
 - 3: the `cnf` response parameter is defined for Token Exchange responses.
-- 7: a refresh token issued for a key-bound grant is bound even when the
-  client authenticates, unless the grant identifies that client.
+- 7: a refresh token issued for a key-bound grant is bound to a key or
+  certificate. If the client authenticates and the server verifies that the
+  grant identifies it, in a claim that the grant's profile defines, the
+  server may bind the refresh token to that client alone.
 - 8: a `cnf` claim has exactly one member, from a closed set.
 - 9: a resource authorization server may accept `jwk`; an issuing
   authorization server binds only with `jkt` or `x5t#S256`.
