@@ -360,7 +360,7 @@ This specification defines the use of the `cnf` token response parameter, which 
 : A JSON object that contains exactly one confirmation member, with the syntax and semantics of the `cnf` claim ({{Section 3.1 of RFC7800}}). Its presence depends on the issued token:
 
   * Bound, and `token_type` is `N_A`, as for a key-bound authorization grant ({{bind}}): REQUIRED.
-  * Bound, with another `token_type`, such as `DPoP`: OPTIONAL, unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a symmetric proof-of-possession key.
+  * Bound, with another `token_type`, such as `DPoP`: OPTIONAL, unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a `pop` token with a symmetric proof-of-possession key.
   * Not bound: MUST NOT be present.
 
 When the issued token is a JWT that contains a `cnf` claim, the parameter MUST identify the same key or certificate as that claim ({{cnf-comparison}}). The authorization server SHOULD use the same confirmation member in the parameter as in the claim, and SHOULD use a thumbprint member, such as `jkt` or `x5t#S256`, rather than a `jwk` member ({{privacy}}).
