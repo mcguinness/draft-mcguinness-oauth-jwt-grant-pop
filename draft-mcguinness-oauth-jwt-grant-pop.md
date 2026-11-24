@@ -71,15 +71,15 @@ This specification defines how an authorization server binds a JSON Web Token (J
 
 # Introduction
 
-A client can exchange a JWT authorization grant for an access token at an authorization server that trusts the grant's issuer ({{Section 2.1 of RFC7523}}). Identity chaining {{ID-CHAINING}} and {{ID-JAG}} use Token Exchange {{RFC8693}} to obtain grants across trust domains. A workload platform can also issue a grant directly {{WAG}}. A stolen bearer grant can be redeemed by a party that meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}).
+A client can exchange a JWT authorization grant for an access token at an authorization server that trusts the grant's issuer ({{Section 2.1 of RFC7523}}). In {{ID-CHAINING}} and {{ID-JAG}}, the client uses Token Exchange {{RFC8693}} to obtain a grant in one trust domain and redeems it in another. A workload platform can also issue a grant directly {{WAG}}. A stolen bearer grant can be redeemed by a party that meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}).
 
 This specification binds a JWT authorization grant to a DPoP key {{RFC9449}} or a TLS client certificate {{RFC8705}}. The issuer identifies the key or certificate in the grant's `cnf` claim {{RFC7800}}. At redemption, the resource authorization server verifies possession and applies the token binding rules in {{token-response}} and {{refresh}}. In Token Exchange, a client can learn the binding from the response even when the grant is encrypted {{RFC7516}}.
 
 ## Relationship to Other Documents {#relationship}
 
-* It proposes to replace {{JWT-DPOP-GRANT}}, subject to the agreement of that document's author ({{open-issues}}), and extends it from DPoP to mutual TLS. It generalizes the `jwt-dpop` grant type of that document into the method-neutral `jwt-pop` grant type ({{jwt-pop}}) and keeps `jwt-dpop` for existing clients; {{legacy-jwt-dpop}} lists the other differences.
-* It replaces {{TE-CNF}}, whose Token Exchange response parameter it incorporates ({{cnf-param}}). That parameter is the `cnf` token response parameter that {{RFC9201}} registers for the Authentication and Authorization for Constrained Environments (ACE) framework.
-* It generalizes the sender-constraining rules that the Identity Assertion JWT Authorization Grant {{ID-JAG}} defines for its grant, and {{profile-examples}} shows that grant as a profile of this specification and lists the conflicts between the two documents.
+* {{JWT-DPOP-GRANT}} defines the `jwt-dpop` grant type. This specification proposes to replace that document, subject to its author's agreement ({{open-issues}}). The `jwt-pop` grant type ({{jwt-pop}}) supports both DPoP and mutual TLS. Existing clients can continue to use `jwt-dpop` as described in {{legacy-jwt-dpop}}, which lists the other differences.
+* {{TE-CNF}} specifies the use of `cnf` in Token Exchange responses. This specification incorporates that use ({{cnf-param}}) and replaces {{TE-CNF}}. {{RFC9201}} registers the parameter for the Authentication and Authorization for Constrained Environments (ACE) framework.
+* {{ID-JAG}} defines sender-constraining rules for the Identity Assertion JWT Authorization Grant. This specification generalizes those rules. {{profile-examples}} shows how that grant fits the profile requirements and identifies conflicts between the two documents.
 
 ## Conventions and Terminology
 
@@ -599,7 +599,7 @@ An authorization server returns the error specified by the failed check, as defi
 
 At either authorization server, if a DPoP proof in the request requires a nonce challenge under {{Section 8 of RFC9449}}, the server MUST use `use_dpop_nonce` for that failure. This also applies when the proof is needed to verify a key-bound grant or a bound input token.
 
-When several errors apply, the authorization server MUST return the first applicable error in the following order. Both authorization servers start with:
+When two or more of the errors listed below apply, the authorization server MUST return the first applicable error in the order shown. Both authorization servers start with:
 
 1. `invalid_client`, if the request includes client authentication and that authentication fails;
 2. `unauthorized_client`, if the client authenticated and is not permitted to use the grant type of the request ({{Section 5.2 of RFC6749}}); and
