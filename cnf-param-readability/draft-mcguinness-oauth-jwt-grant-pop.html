@@ -1929,14 +1929,26 @@ Cache-Control: no-store
         <h3 id="name-access-token-request">
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-access-token-request" class="section-name selfRef">Access Token Request</a>
         </h3>
-<p id="section-5.1-1">The client presents a key-bound authorization grant in an access token request (<span><a href="https://rfc-editor.org/rfc/rfc7521#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7521" class="cite xref">RFC7521</a>]</span>) with the <code>jwt-pop</code>, the <code>jwt-bearer</code>, or, where <a href="#legacy-jwt-dpop" class="auto internal xref">Section 5.1.2</a> applies, the <code>jwt-dpop</code> grant type. It <span class="bcp14">SHOULD</span> use <code>jwt-pop</code> if the resource authorization server advertises it (<a href="#as-metadata" class="auto internal xref">Section 7.1</a>) and the client's registration permits it (<a href="#client-metadata" class="auto internal xref">Section 7.2</a>). Otherwise, a client that presents a grant with a <code>jkt</code> member <span class="bcp14">SHOULD</span> use <code>jwt-dpop</code> if the resource authorization server advertises it and the client's registration permits it. The <code>jwt-bearer</code> grant type is not a reliable fallback: the client's registration might not permit it, and a server that implements only <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> rejects such a grant presented with it. A client whose request is rejected with the <code>unauthorized_client</code> or <code>unsupported_grant_type</code> error code can send a new request with the same grant and another grant type, with a new DPoP proof where one is needed (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>). A resource authorization server that supports this specification does not record a grant as used when it rejects the request (<a href="#processing" class="auto internal xref">Section 5.2</a>).<a href="#section-5.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1-2">The client proves possession of the key or certificate identified by the authorization grant's <code>cnf</code> claim:<a href="#section-5.1-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-5.1-3.1">
-            <p id="section-5.1-3.1.1">For a <code>jkt</code> or <code>jwk</code> member, the client <span class="bcp14">MUST</span> include a DPoP proof (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4" class="relref">Section 4</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) signed with that key in the DPoP header field of the request.<a href="#section-5.1-3.1.1" class="pilcrow">¶</a></p>
+<p id="section-5.1-1">The client presents a key-bound authorization grant in an access token request (<span><a href="https://rfc-editor.org/rfc/rfc7521#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC7521" class="cite xref">RFC7521</a>]</span>) and chooses the grant type in this order:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1-2">
+<li id="section-5.1-2.1">
+            <p id="section-5.1-2.1.1"><code>jwt-pop</code> (<a href="#jwt-pop" class="auto internal xref">Section 5.1.1</a>): the client <span class="bcp14">SHOULD</span> use it if the resource authorization server advertises it (<a href="#as-metadata" class="auto internal xref">Section 7.1</a>) and the client's registration permits it (<a href="#client-metadata" class="auto internal xref">Section 7.2</a>).<a href="#section-5.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-5.1-3.2">
-            <p id="section-5.1-3.2.1">For an <code>x5t#S256</code> member, the client <span class="bcp14">MUST</span> send the request over a mutual-TLS connection that uses that certificate, to the token endpoint or to its mutual-TLS endpoint alias (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-5" class="relref">Section 5</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>).<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
+          <li id="section-5.1-2.2">
+            <p id="section-5.1-2.2.1"><code>jwt-dpop</code> (<a href="#legacy-jwt-dpop" class="auto internal xref">Section 5.1.2</a>): otherwise, for a grant with a <code>jkt</code> member, the client <span class="bcp14">SHOULD</span> use it under the same two conditions.<a href="#section-5.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-5.1-2.3">
+            <p id="section-5.1-2.3.1"><code>jwt-bearer</code>: otherwise. It is not a reliable fallback: the client's registration might not permit it, and a server that implements only <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> rejects a key-bound grant presented with it.<a href="#section-5.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-5.1-3">If the request is rejected with the <code>unauthorized_client</code> or <code>unsupported_grant_type</code> error code, the client can retry with the same grant and another grant type, with a new DPoP proof where one is needed (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>). A resource authorization server that supports this specification does not record a grant as used when it rejects a request (<a href="#processing" class="auto internal xref">Section 5.2</a>).<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.1-4">The client proves possession of the key or certificate identified by the authorization grant's <code>cnf</code> claim:<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.1-5.1">
+            <p id="section-5.1-5.1.1">For a <code>jkt</code> or <code>jwk</code> member, the client <span class="bcp14">MUST</span> include a DPoP proof (<span><a href="https://rfc-editor.org/rfc/rfc9449#section-4" class="relref">Section 4</a> of [<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>) signed with that key in the DPoP header field of the request.<a href="#section-5.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-5.1-5.2">
+            <p id="section-5.1-5.2.1">For an <code>x5t#S256</code> member, the client <span class="bcp14">MUST</span> send the request over a mutual-TLS connection that uses that certificate, to the token endpoint or to its mutual-TLS endpoint alias (<span><a href="https://rfc-editor.org/rfc/rfc8705#section-5" class="relref">Section 5</a> of [<a href="#RFC8705" class="cite xref">RFC8705</a>]</span>).<a href="#section-5.1-5.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <div id="jwt-pop">
@@ -1991,17 +2003,29 @@ grant_type=urn:ietf:params:oauth:grant-type:jwt-pop
           <h4 id="name-legacy-dpop-bound-grant-typ">
 <a href="#section-5.1.2" class="section-number selfRef">5.1.2. </a><a href="#name-legacy-dpop-bound-grant-typ" class="section-name selfRef">Legacy DPoP-Bound Grant Type</a>
           </h4>
-<p id="section-5.1.2-1">The <code>jwt-dpop</code> grant type, first defined in <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>, is a legacy grant type for existing clients. A resource authorization server <span class="bcp14">MAY</span> support it, and <span class="bcp14">SHOULD</span> continue to support it while clients are registered for it. A resource authorization server that supports it <span class="bcp14">SHOULD</span> include it in the <code>grant_types_supported</code> metadata parameter; an issuing authorization server that implements <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> can rely on that value to determine that the resource authorization server verifies DPoP-bound authorization grants. The resource authorization server processes a request with that grant type by the rules for the <code>jwt-pop</code> grant type (<a href="#jwt-pop" class="auto internal xref">Section 5.1.1</a>), and <span class="bcp14">MUST</span> also reject the request with the <code>invalid_grant</code> error code if the confirmation member of the grant's <code>cnf</code> claim is not <code>jkt</code>. A new client uses the <code>jwt-pop</code> grant type.<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.2-2">Unlike <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>, this specification:<a href="#section-5.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-1">The <code>jwt-dpop</code> grant type, first defined in <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>, is a legacy grant type for existing clients; a new client uses <code>jwt-pop</code>. A resource authorization server:<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-5.1.2-3.1">
-              <p id="section-5.1.2-3.1.1">binds an authorization grant without first checking that the resource authorization server verifies the binding (<a href="#non-enforcing-consumers" class="auto internal xref">Section 9.1</a>), contrary to the recommendation in <span><a href="https://datatracker.ietf.org/doc/html/draft-parecki-oauth-jwt-dpop-grant-02#section-7.1" class="relref">Section 7.1</a> of [<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>;<a href="#section-5.1.2-3.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-5.1.2-2.1">
+              <p id="section-5.1.2-2.1.1"><span class="bcp14">MAY</span> support <code>jwt-dpop</code>, and <span class="bcp14">SHOULD</span> continue to support it while clients are registered for it;<a href="#section-5.1.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.1.2-3.2">
-              <p id="section-5.1.2-3.2.1">verifies, instead of rejecting, a key-bound authorization grant presented with the <code>jwt-bearer</code> grant type (<a href="#grant-type-substitution" class="auto internal xref">Section 9.2</a>); and<a href="#section-5.1.2-3.2.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-5.1.2-2.2">
+              <p id="section-5.1.2-2.2.1"><span class="bcp14">SHOULD</span>, if it supports it, include it in the <code>grant_types_supported</code> metadata parameter; and<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li class="normal" id="section-5.1.2-3.3">
-              <p id="section-5.1.2-3.3.1">returns <code>invalid_grant</code>, not <code>invalid_dpop_proof</code>, when a resource authorization server receives a DPoP-bound authorization grant without a DPoP proof (<a href="#processing" class="auto internal xref">Section 5.2</a>).<a href="#section-5.1.2-3.3.1" class="pilcrow">¶</a></p>
+            <li class="normal" id="section-5.1.2-2.3">
+              <p id="section-5.1.2-2.3.1">processes a <code>jwt-dpop</code> request by the rules for <code>jwt-pop</code> (<a href="#jwt-pop" class="auto internal xref">Section 5.1.1</a>), and <span class="bcp14">MUST</span> also reject it with the <code>invalid_grant</code> error code if the confirmation member of the grant's <code>cnf</code> claim is not <code>jkt</code>.<a href="#section-5.1.2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-5.1.2-3">An issuing authorization server that implements <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span> can rely on that <code>grant_types_supported</code> value to determine that the resource authorization server verifies DPoP-bound authorization grants.<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-4">Unlike <span>[<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>, this specification:<a href="#section-5.1.2-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.1.2-5.1">
+              <p id="section-5.1.2-5.1.1">binds an authorization grant without first checking that the resource authorization server verifies the binding (<a href="#non-enforcing-consumers" class="auto internal xref">Section 9.1</a>), contrary to the recommendation in <span><a href="https://datatracker.ietf.org/doc/html/draft-parecki-oauth-jwt-dpop-grant-02#section-7.1" class="relref">Section 7.1</a> of [<a href="#JWT-DPOP-GRANT" class="cite xref">JWT-DPOP-GRANT</a>]</span>;<a href="#section-5.1.2-5.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-5.1.2-5.2">
+              <p id="section-5.1.2-5.2.1">verifies, instead of rejecting, a key-bound authorization grant presented with the <code>jwt-bearer</code> grant type (<a href="#grant-type-substitution" class="auto internal xref">Section 9.2</a>); and<a href="#section-5.1.2-5.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-5.1.2-5.3">
+              <p id="section-5.1.2-5.3.1">returns <code>invalid_grant</code>, not <code>invalid_dpop_proof</code>, when a resource authorization server receives a DPoP-bound authorization grant without a DPoP proof (<a href="#processing" class="auto internal xref">Section 5.2</a>).<a href="#section-5.1.2-5.3.1" class="pilcrow">¶</a></p>
 </li>
           </ul>
 </section>
