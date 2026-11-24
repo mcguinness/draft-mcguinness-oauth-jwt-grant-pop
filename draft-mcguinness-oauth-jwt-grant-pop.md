@@ -577,7 +577,7 @@ The resource authorization server does not record the authorization grant as use
 
 ## Access Token Response {#token-response}
 
-{{Section 5 of RFC9449}} and {{Section 3 of RFC8705}} determine the binding of the tokens that the resource authorization server issues, except as this section and {{refresh}} restrict it for a key-bound authorization grant.
+For a key-bound authorization grant, {{Section 5 of RFC9449}} and {{Section 3 of RFC8705}} determine the binding of the tokens that the resource authorization server issues, except as this section and {{refresh}} restrict it. This specification does not restrict the binding of tokens issued for an unbound authorization grant, such as a binding to a key that the grant conveys in a `requested_cnf` claim ({{Appendix B.3 of ID-CHAINING}}).
 
 When the authorization grant is bound, the resource authorization server SHOULD bind the access token it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a key-bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
 
