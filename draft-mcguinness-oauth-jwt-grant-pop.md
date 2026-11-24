@@ -285,7 +285,7 @@ In response to a DPoP binding request with a valid DPoP proof, the issuing autho
 
 A client can therefore use a TLS certificate solely for client authentication or to prove possession of a certificate-bound `subject_token` or `actor_token`, even if it cannot use that certificate at redemption. {{proof-replay}} explains the replay risk of selecting the certificate instead.
 
-Optional binding lets a client send a DPoP proof to satisfy another requirement even when the issuer cannot bind the grant. A client that requires binding discards an unbound grant ({{client-processing}}).
+Issuing an unbound grant when `jkt` is not a permitted confirmation method keeps the exchange working for a client that sends a DPoP proof in every token request, and for a client that proves possession of a DPoP-bound `subject_token`. A client that requires binding discards an unbound grant ({{client-processing}}).
 
 ### Certificate Binding {#cert-binding}
 
