@@ -159,7 +159,7 @@ An issuing authorization server binds an authorization grant by including in it 
 
 The `cnf` claim of an authorization grant that an issuing authorization server binds MUST contain exactly one of these members. Requiring exactly one member is narrower than {{Section 3.1 of RFC7800}}, which requires only that a `cnf` claim "represent only a single proof-of-possession key".
 
-A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound authorization grant. It rejects a `cnf` claim unless the claim contains exactly one confirmation member and the resource authorization server supports that member's confirmation method ({{processing}}).
+A resource authorization server MAY also accept a `jwk` member ({{Section 3.2 of RFC7800}}) in a DPoP-bound authorization grant.
 
 The following is an example of the claims of a DPoP-bound authorization grant:
 
@@ -417,8 +417,6 @@ When a JWT authorization grant is issued through an interface other than Token E
 
 # Redeeming a Key-Bound Authorization Grant {#redemption}
 
-This section defines how a client presents a key-bound authorization grant, how the resource authorization server verifies its binding, and how that server binds the access and refresh tokens that it issues.
-
 ## Access Token Request {#token-request}
 
 The client presents a key-bound authorization grant in an access token request ({{Section 4.1 of RFC7521}}) and chooses the grant type in this order:
@@ -537,7 +535,7 @@ DPoP-Nonce: eyJ7S_zG.eyJH0-Z.HX4w-7v
 ~~~
 {: title="Nonce Challenge for a DPoP-Bound Authorization Grant"}
 
-The resource authorization server does not record the authorization grant as used. The client then repeats the request with the same grant and a DPoP proof that contains the nonce.
+The client then repeats the request with the same grant and a DPoP proof that contains the nonce.
 
 ## Access Token Response {#token-response}
 
@@ -641,8 +639,6 @@ When two or more of the errors listed below apply, the authorization server MUST
 The issuing authorization server continues with `invalid_request`, then `invalid_target`. The resource authorization server continues with `invalid_grant`, then `unauthorized_client` for a client identified from the authorization grant ({{client-auth}}), then `invalid_client` for a request without client authentication.
 
 # Metadata {#metadata}
-
-This section defines how a resource authorization server advertises the confirmation methods that it verifies, and how client registration can limit a client to key-bound authorization grants.
 
 ## Authorization Server Metadata {#as-metadata}
 
@@ -751,7 +747,7 @@ The `jwt-pop` grant type adds no protection against a stolen authorization grant
 * a requirement for a key-bound grant in each request; a resource authorization server that does not support the grant type rejects the request with the `unsupported_grant_type` error code ({{Section 5.2 of RFC6749}}), whereas a server ignores client metadata that it does not understand ({{Section 2 of RFC7591}}); and
 * a way to limit an identified client to key-bound grants through its registration ({{client-metadata}}).
 
-The `jwt-pop` grant type indicates no confirmation method; the methods that a server verifies are advertised separately ({{as-metadata}}). Verifying a key-bound grant presented with the `jwt-bearer` grant type, instead of rejecting it as {{JWT-DPOP-GRANT}} does, lets clients registered only for that grant type keep working.
+Verifying a key-bound grant presented with the `jwt-bearer` grant type, instead of rejecting it as {{JWT-DPOP-GRANT}} does, lets clients registered only for that grant type keep working.
 
 Adopting this specification can make a resource authorization server reject authorization grants that it previously accepted (item 1 of {{processing}}), and an issuing authorization server reject Token Exchange requests that it previously accepted ({{bound-subject}}).
 
