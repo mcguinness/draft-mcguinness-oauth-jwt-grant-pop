@@ -28,6 +28,25 @@ keeping the position that the draft states:
 - 9: a resource authorization server may accept `jwk`; an issuing
   authorization server binds only with `jkt` or `x5t#S256`.
 
+Open issue 1 of the -00 draft keeps only the question and its main
+trade-off. Item 1 below has the metadata analogues
+(`dpop_bound_access_tokens`, `dpop_bound_access_tokens_required`). The
+editorial pass moved these points here; their section numbers are those
+of the -00 draft:
+
+- The per-client limit of the `jwt-pop` grant type (Section 7.2) applies
+  only when the server identifies a registered client, and a WAG agent can
+  present a grant with `jwt-bearer` without client authentication or a
+  per-agent registration.
+- A profile can require every grant of its type to be key-bound and every
+  resource authorization server implementing the profile to verify the
+  binding (items 2 and 3 of Section 8). A server that accepts `jwt-bearer`
+  without recognizing the profile might ignore its `typ` value
+  (Section 3.11 of RFC 8725).
+- A client would confirm the policy from the registered client metadata
+  that the resource authorization server returns (Section 3.2.1 of
+  RFC 7591) or from that server's validated metadata (Section 7.1).
+
 ```text
 Appendix A.  Profiles of This Specification
 
