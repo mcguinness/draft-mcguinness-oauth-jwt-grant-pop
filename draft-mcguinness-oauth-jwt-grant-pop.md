@@ -364,22 +364,7 @@ The issuing authorization server need not establish before issuance that the res
 
 When the issued token is a key-bound authorization grant, the issuing authorization server MUST set the `token_type` response parameter to `N_A` ({{Section 2.2.1 of RFC8693}}); the `DPoP` value that {{Section 5 of RFC9449}} requires applies only to a DPoP-bound access token.
 
-{{ex-grant}} shows the claims of the authorization grant issued in response to the DPoP binding request in {{ex-binding-request}}.
-
-## Token Exchange Response {#cnf-param}
-
-This specification defines the use of the `cnf` token response parameter, which {{RFC9201}} registers, in a Token Exchange response. There, the `access_token` parameter carries the issued token, whatever its type ({{Section 2.2.1 of RFC8693}}). The `cnf` parameter identifies the key or certificate to which the authorization server bound that token, including an opaque or encrypted one. It does not describe a `refresh_token` in the same response.
-
-`cnf`:
-: A JSON object that contains exactly one confirmation member, with the syntax and semantics of the `cnf` claim ({{Section 3.1 of RFC7800}}). Its presence depends on the issued token:
-
-  * Bound, and `token_type` is `N_A`, as for a key-bound authorization grant ({{bind}}): REQUIRED.
-  * Bound, with another `token_type`, such as `DPoP`: OPTIONAL, unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a `pop` token with a symmetric proof-of-possession key.
-  * Not bound: MUST NOT be present.
-
-When the issued token is a JWT that contains a `cnf` claim, the parameter MUST identify the same key or certificate as that claim ({{cnf-comparison}}). The authorization server SHOULD use the same confirmation member in the parameter as in the claim, and SHOULD use a thumbprint member, such as `jkt` or `x5t#S256`, rather than a `jwk` member ({{privacy}}).
-
-The following is an example of the Token Exchange response to the DPoP binding request in {{ex-binding-request}}:
+{{ex-grant}} shows the claims of the authorization grant issued in response to the DPoP binding request in {{ex-binding-request}}, and the following is an example of the Token Exchange response that carries it:
 
 ~~~ http-message
 HTTP/1.1 200 OK
@@ -411,13 +396,26 @@ Whatever the value of the `token_type` response parameter, a client that will pr
 
 A client that did not send a DPoP binding request but receives a `cnf` response parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it MUST discard the issued token.
 
-For an access token, a `token_type` of `DPoP` shows a DPoP binding ({{Section 5 of RFC9449}}), but {{RFC8705}} defines no `token_type` value for a certificate binding; the `cnf` response parameter, if present, identifies the key or certificate of either binding.
-
 For the response in {{ex-te-response}}, the client verifies that the `jkt` value in the `cnf` response parameter equals the JWK SHA-256 Thumbprint of its DPoP public key.
 
 ## Other Issuance Interfaces {#other-issuance}
 
 When a JWT authorization grant is issued through an interface other than Token Exchange, such as a workload platform's token service, {{bind}} applies except for its requirements on the Token Exchange response, with that interface's request in place of the Token Exchange request. The interface defines how the client requests the binding and learns of it. {{redemption}} applies however the grant was issued.
+
+# Token Exchange Response Parameter {#cnf-param}
+
+This specification defines the use of the `cnf` token response parameter, which {{RFC9201}} registers, in a Token Exchange response. It applies to any token issued through Token Exchange ({{Section 2.1 of RFC8693}}), not only to a JWT authorization grant; {{client-processing}} describes how a client that requested a key-bound authorization grant processes it. The `access_token` parameter of the response carries the issued token, whatever its type ({{Section 2.2.1 of RFC8693}}). The `cnf` parameter identifies the key or certificate to which the authorization server bound that token, including an opaque or encrypted one. It does not describe a `refresh_token` in the same response.
+
+`cnf`:
+: A JSON object that contains exactly one confirmation member, with the syntax and semantics of the `cnf` claim ({{Section 3.1 of RFC7800}}). Its presence depends on the issued token:
+
+  * Bound, and `token_type` is `N_A`, as for a key-bound authorization grant ({{bind}}): REQUIRED.
+  * Bound, with another `token_type`, such as `DPoP`: OPTIONAL, unless another specification requires it, as {{Section 3.2 of RFC9201}} does for a `pop` token with a symmetric proof-of-possession key.
+  * Not bound: MUST NOT be present.
+
+When the issued token is a JWT that contains a `cnf` claim, the parameter MUST identify the same key or certificate as that claim ({{cnf-comparison}}). The authorization server SHOULD use the same confirmation member in the parameter as in the claim, and SHOULD use a thumbprint member, such as `jkt` or `x5t#S256`, rather than a `jwk` member ({{privacy}}).
+
+For an access token, a `token_type` of `DPoP` shows a DPoP binding ({{Section 5 of RFC9449}}), but {{RFC8705}} defines no `token_type` value for a certificate binding; the `cnf` response parameter, if present, identifies the key or certificate of either binding.
 
 # Redeeming a Key-Bound Authorization Grant {#redemption}
 
