@@ -651,14 +651,9 @@ This specification defines the following authorization server metadata parameter
 
 A resource authorization server that supports the `jwt-pop` grant type SHOULD include it in the `grant_types_supported` metadata parameter. The `jwt-pop` value alone indicates no confirmation method.
 
-A client or an issuing authorization server can use the `jwt_grant_cnf_methods_supported` metadata parameter to learn which confirmation methods a resource authorization server verifies, for example to choose a confirmation method, to confirm that a binding will be enforced ({{non-enforcing-consumers}}), or to decline a method that the server does not verify ({{issuer-processing}}). It retrieves and validates the metadata as described in {{Section 3 of RFC8414}}:
+A client or an issuing authorization server can use the `jwt_grant_cnf_methods_supported` metadata parameter to learn which confirmation methods a resource authorization server verifies, for example to choose a confirmation method, to confirm that a binding will be enforced ({{non-enforcing-consumers}}), or to decline a method that the server does not verify ({{issuer-processing}}). A client that chooses a confirmation method retrieves the metadata of the authorization server to which it presents the authorization grant.
 
-* A client that chooses a confirmation method retrieves the metadata of the authorization server to which it presents the authorization grant.
-* A client that confirms that a binding will be enforced, and an issuing authorization server, retrieve the metadata for each `aud` value of the grant, using as the issuer identifier either:
-   * that `aud` value; or
-   * an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}). When the `aud` value is a token endpoint URL, the `token_endpoint` value of the metadata also has to equal the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
-
-{{metadata-evidence}} shows what metadata is evidence of for one confirmation method. Validated metadata is metadata retrieved and validated as described above.
+{{metadata-evidence}} shows what metadata is evidence of for one confirmation method. Validated metadata is metadata retrieved and validated as described in {{Section 3 of RFC8414}}; for the authorization servers in a grant's audience, it is retrieved and validated as {{non-enforcing-consumers}} describes.
 
 | Metadata | Evidence |
 |---|---|
@@ -739,6 +734,11 @@ The issuing authorization server can bind a grant without first checking the aud
 * The confirmation member reaches servers that do not verify it ({{privacy}}).
 
 A party holding a grant can present it to any authorization server in its audience. Where enforcement is required, the profile, configuration, or the issuing authorization server's policy establishes that every such server verifies the binding ({{profiles}}). A client that needs this assurance obtains evidence for each audience from validated metadata ({{as-metadata}}), configuration, or the profile. If the client cannot read the grant's `aud` claim, it relies on configuration or the profile to establish the audience.
+
+A client that confirms that a binding will be enforced, and an issuing authorization server, retrieve the metadata for each `aud` value of the grant, using as the issuer identifier either:
+
+* that `aud` value; or
+* an issuer identifier that its configuration associates with that `aud` value, for example when the `aud` value is a token endpoint URL ({{Section 4 of RFC10070}}). When the `aud` value is a token endpoint URL, the `token_endpoint` value of the metadata also has to equal the `aud` value. That equality alone does not establish the association, because only the `issuer` value of metadata is validated ({{Section 3.3 of RFC8414}}, {{Section 1 of RFC10070}}).
 
 ## Grant Type Substitution {#grant-type-substitution}
 
