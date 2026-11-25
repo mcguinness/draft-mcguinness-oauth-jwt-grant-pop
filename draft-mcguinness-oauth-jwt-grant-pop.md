@@ -514,21 +514,16 @@ The client then repeats the request with the same grant and a DPoP proof that co
 
 For a key-bound authorization grant, {{Section 5 of RFC9449}} and {{Section 3 of RFC8705}} determine the binding of the tokens that the resource authorization server issues, except as this section and {{refresh}} restrict it. This specification does not restrict the binding of tokens issued for an unbound authorization grant, such as a binding to a key that the grant conveys in a `requested_cnf` claim ({{Appendix B.3 of ID-CHAINING}}).
 
-When the authorization grant is key-bound, the resource authorization server SHOULD bind the access token that it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}. For a key-bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than the following:
-
-* for a DPoP-bound authorization grant, the grant's key, which is the key of the DPoP proof; or
-* for a certificate-bound authorization grant, the grant's certificate or, if the resource authorization server supports DPoP and the request contains a valid DPoP proof, the public key of that proof.
-
-A TLS client certificate presented with a DPoP-bound authorization grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}). {{binding-outcomes}} summarizes these rules. It lists the key or certificate to which an issued token can be bound, not whether the token is bound: the access token can be unbound, and {{refresh}} determines whether a refresh token is bound.
+When the authorization grant is key-bound, the resource authorization server SHOULD bind the access token that it issues, and indicate the binding as defined in {{Section 5 of RFC9449}} or {{Section 3 of RFC8705}}; it binds a refresh token as {{refresh}} requires. For a key-bound grant, it MUST NOT bind the access token, or a refresh token that it issues, to a key or certificate other than one that {{binding-outcomes}} permits. A TLS client certificate presented with a DPoP-bound authorization grant therefore does not determine the binding, even when the client authenticates with it ({{proof-replay}}).
 
 | Authorization grant's confirmation member | Proof in the request | Permitted key or certificate when the token is bound |
 |---|---|---|
-| `jkt` or `jwk` | DPoP proof, with or without a TLS client certificate | Authorization grant's key |
-| `x5t#S256` | TLS client certificate only | Authorization grant's certificate |
-| `x5t#S256` | TLS client certificate and DPoP proof | Authorization grant's certificate or key of the DPoP proof; for a refresh token issued to a public client by a resource authorization server that supports DPoP, key of the DPoP proof |
+| `jkt` or `jwk` | DPoP proof, with or without a TLS client certificate | Authorization grant's key, which is the key of the DPoP proof |
+| `x5t#S256` | TLS client certificate, without a valid DPoP proof or at a resource authorization server that does not support DPoP | Authorization grant's certificate |
+| `x5t#S256` | TLS client certificate and a valid DPoP proof, at a resource authorization server that supports DPoP | Authorization grant's certificate or key of the DPoP proof; for a refresh token issued to a public client, the key of the DPoP proof, as {{Section 5 of RFC9449}} requires |
 {: #binding-outcomes title="Permitted Binding of Tokens Issued for a Key-Bound Authorization Grant"}
 
-The last row of {{binding-outcomes}} follows {{Section 5 of RFC9449}} for a refresh token issued to a public client; {{refresh}} departs from that section for a refresh token issued to a confidential client.
+{{binding-outcomes}} lists the key or certificate to which an issued token can be bound, not whether the token is bound: the access token can be unbound, and {{refresh}} determines whether a refresh token is bound. Its last row follows {{Section 5 of RFC9449}} for a refresh token issued to a public client; {{refresh}} departs from that section for a refresh token issued to a confidential client.
 
 ## Refresh Tokens {#refresh}
 
