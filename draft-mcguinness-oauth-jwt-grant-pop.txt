@@ -2026,11 +2026,6 @@ A.2.  Conflicts
 
 Appendix B.  Open Issues
 
-   [Editor's note: this appendix lists questions for the working group.
-   It will be removed before publication.  Background for questions 1 to
-   4 is in the file notes/appendix-background.md in the GitHub
-   repository of this document.]
-
    1.  Grant type or metadata.  Should key-bound authorization grants
        keep the jwt-pop grant type, or use jwt-bearer with a client or
        authorization server metadata parameter that requires key-bound
