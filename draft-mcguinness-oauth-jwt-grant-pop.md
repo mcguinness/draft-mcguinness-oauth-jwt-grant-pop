@@ -189,7 +189,7 @@ The following is an example of the `cnf` claim of a certificate-bound authorizat
   }
 }
 ~~~
-{: title="Confirmation Claim of a Certificate-Bound Authorization Grant"}
+{: #cert-example title="Confirmation Claim of a Certificate-Bound Authorization Grant"}
 
 ## Comparing Confirmation Members {#cnf-comparison}
 
@@ -283,7 +283,7 @@ Item 2 of {{issuer-processing}} applies to a `subject_token` or `actor_token` th
 * it is an intended audience of the token; and
 * the token was issued to a client other than the requesting client.
 
-The issuing authorization server determines whether the requesting client is an intended audience of the token from the token's `aud` claim or its own records of the token, for example by associating a resource server's client registration with the resource identifiers that the `aud` claim contains. It determines that the token was issued to a client other than the requesting client from the token's claims, such as `client_id` ({{Section 4.3 of RFC8693}}), or from its own records of the token; if it cannot, the requesting client is not exempt.
+The issuing authorization server establishes the second and third conditions from the token's claims, such as `aud` and `client_id` ({{Section 4.3 of RFC8693}}), or from its own records of the token. If it cannot establish them, the requesting client is not exempt.
 
 The issuing authorization server MUST treat a `subject_token` or `actor_token` as bound if the token contains a `cnf` claim, or if the issuing authorization server's validation of the token, including its own records of the token, yields a `cnf` value, whatever that claim or value contains. Confirmation members that the issuing authorization server does not recognize are not ignored, as they would be under the default in {{Section 3.1 of RFC7800}}, which applies only in the absence of application-specific requirements. Possession of such a token is proven only if its `cnf` claim or value is a JSON object that contains exactly one confirmation member, and the request proves possession of the key or certificate that the member identifies. Otherwise, the token fails item 2 unless the requesting client is exempt.
 
@@ -304,25 +304,6 @@ The issuing authorization server MAY bind the authorization grant to the client'
 * `x5t#S256` is a permitted confirmation method for the grant.
 
 The issuing authorization server SHOULD NOT bind the grant to a TLS client certificate unless the profile of the grant requires certificate binding, or the client's registration or configuration at the issuing authorization server indicates that the client presents that certificate when it redeems the grant. Neither the `tls_client_certificate_bound_access_tokens` client metadata parameter ({{Section 3.4 of RFC8705}}), which concerns access tokens, nor a requirement for binding is such an indication. Binding in any other case could give a client that does not support this specification a grant that it cannot redeem.
-
-The following is an example of a Token Exchange response for a certificate-bound authorization grant, issued to a client whose configuration at the issuing authorization server indicates that it redeems grants over mutual TLS with the certificate it used to authenticate:
-
-~~~ http-message
-HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-
-{
-  "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6IjE2In0...",
-  "issued_token_type": "urn:ietf:params:oauth:token-type:jwt",
-  "token_type": "N_A",
-  "expires_in": 300,
-  "cnf": {
-    "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
-  }
-}
-~~~
-{: #cert-example title="Token Exchange Response for a Certificate-Bound Authorization Grant"}
 
 ### Required Binding {#required-binding}
 
@@ -509,18 +490,6 @@ A resource authorization server that supports DPoP rejects an invalid DPoP proof
 For an `x5t#S256` member, the resource authorization server need not authenticate the client with the certificate or trust the certificate's issuer ({{Section 4 of RFC8705}}).
 
 A resource authorization server that detects reuse of a JWT authorization grant, bound or not, for example by its `jti` claim ({{Section 4.1.7 of RFC7519}}), MUST NOT record the grant as used when it rejects the request ({{single-use}}).
-
-The following is an example of a `cnf` claim that is rejected with the `invalid_grant` error code because it contains two confirmation members:
-
-~~~ json
-{
-  "cnf": {
-    "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
-    "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg0"
-  }
-}
-~~~
-{: title="Confirmation Claim with Two Confirmation Members"}
 
 The following is an example of the response to the request in {{ex-redeem}} from a resource authorization server that requires a DPoP nonce:
 
