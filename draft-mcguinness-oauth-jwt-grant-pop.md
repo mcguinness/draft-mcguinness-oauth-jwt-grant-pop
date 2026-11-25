@@ -365,16 +365,19 @@ Cache-Control: no-store
 
 ## Client Processing of the Response {#client-processing}
 
-Whatever the value of the `token_type` response parameter, a client that will present the issued token as a JWT authorization grant processes the Token Exchange response as follows if (a) it sent a DPoP binding request, or (b) it presented a TLS client certificate and requires a key-bound grant:
+Whatever the value of the `token_type` response parameter, a client that will present the issued token as a JWT authorization grant processes the Token Exchange response as follows if (a) it sent a DPoP binding request, or (b) it presented a TLS client certificate and requires a key-bound grant.
 
-1. If the `cnf` response parameter is present and is not a JSON object that contains exactly one confirmation member, the client MUST discard the issued token.
-2. The client determines the binding from the `cnf` parameter and, if it can read the issued token, from the token's `cnf` claim. If neither is present, the authorization grant is not bound, and a client that requires a key-bound grant MUST discard it.
-3. The client MUST verify the following, and MUST discard the issued token if any check fails:
-   * if the `cnf` parameter is present and the client can read the authorization grant, the grant contains a `cnf` claim;
-   * the `cnf` claim, if readable, contains exactly one confirmation member; and
-   * the confirmation member of the `cnf` parameter, if present, and of the `cnf` claim, if readable, each match the client's own key or certificate ({{cnf-comparison}}): after a DPoP binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
+The client determines the binding from the `cnf` response parameter and, if it can read the issued token, from the token's `cnf` claim. A client that cannot read the token, for example because it is encrypted, relies on the `cnf` response parameter. The client compares each confirmation member with its own key or certificate ({{cnf-comparison}}): after a DPoP binding request, the public key of its DPoP proof; otherwise, its TLS client certificate. A confirmation member that the client does not recognize does not match.
 
-A client that did not send a DPoP binding request but receives a `cnf` response parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it MUST discard the issued token.
+A client in case (a) or case (b) MUST discard the issued token if:
+
+* the `cnf` response parameter is present and is not a JSON object that contains exactly one confirmation member;
+* the `cnf` response parameter is present, the client can read the token, and the token contains no `cnf` claim;
+* the token's `cnf` claim is readable and does not contain exactly one confirmation member;
+* a confirmation member of the `cnf` response parameter or of a readable `cnf` claim does not match the client's own key or certificate; or
+* neither the `cnf` response parameter nor a readable `cnf` claim is present, and the client requires a key-bound grant.
+
+A client in neither case (a) nor case (b) that receives a `cnf` response parameter presents the token with the corresponding proof if it holds the identified key or certificate, such as the certificate it used for mutual-TLS client authentication. Otherwise, it MUST discard the issued token.
 
 For the response in {{ex-te-response}}, the client verifies that the `jkt` value in the `cnf` response parameter equals the JWK SHA-256 Thumbprint of its DPoP public key.
 
