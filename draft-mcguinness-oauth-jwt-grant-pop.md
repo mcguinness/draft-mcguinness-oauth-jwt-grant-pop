@@ -71,9 +71,37 @@ This specification defines how an authorization server binds a JSON Web Token (J
 
 # Introduction
 
-A client can exchange a JWT authorization grant for an access token at an authorization server that trusts the grant's issuer ({{Section 2.1 of RFC7523}}). In {{ID-CHAINING}} and {{ID-JAG}}, the client uses Token Exchange {{RFC8693}} to obtain a grant in one trust domain and redeems it in another. A workload platform can also issue a grant for a workload acting on its own behalf {{WAG}}. A stolen bearer grant can be redeemed by a party that meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}).
+A client can present a JWT authorization grant to an authorization server to obtain an access token ({{Section 2.1 of RFC7523}}). A bearer grant can also be presented by a party that obtains it and meets the server's other requirements ({{Section 5.5 of ID-CHAINING}}, {{Section 10 of WAG}}). In {{ID-CHAINING}} and {{ID-JAG}}, the client obtains a JWT authorization grant in one trust domain and redeems it in another; in {{WAG}}, a workload platform issues one to a workload.
 
-This specification defines how an issuing authorization server binds a JWT authorization grant to a DPoP key {{RFC9449}} or a TLS client certificate {{RFC8705}} by identifying the key or certificate in the grant's `cnf` claim {{RFC7800}}. At redemption, the resource authorization server verifies possession and applies the token binding rules in {{token-response}} and {{refresh}}. In Token Exchange, a client can learn the binding from the response even when the grant is encrypted {{RFC7516}}.
+This specification lets the issuing authorization server bind a grant to the client's DPoP key {{RFC9449}} or TLS client certificate {{RFC8705}} by identifying the key or certificate in the grant's `cnf` claim {{RFC7800}}. The client presents the grant to the resource authorization server and proves possession; that server checks the proof against the `cnf` claim ({{processing}}) and limits the binding of the tokens that it issues ({{token-response}}, {{refresh}}). These rules apply however the client obtained the grant.
+
+When the client obtains the grant through Token Exchange {{RFC8693}}, it can request a DPoP binding and learn which binding was applied, even when the grant is encrypted {{RFC7516}}.
+
+## Protocol Overview {#overview}
+
+In the following figure, a client obtains an authorization grant bound to its DPoP key K and redeems it at the resource authorization server:
+
+~~~ ascii-art
++--------+                                 +---------------+
+|        |--(1) Token Exchange request --->|    Issuing    |
+|        |     and DPoP proof for key K    | Authorization |
+|        |                                 |    Server     |
+|        |<-(2) grant with cnf for K ------|               |
+|        |     and cnf response parameter  +---------------+
+| Client |
+|        |                                 +---------------+
+|        |--(3) jwt-pop request ---------->|   Resource    |
+|        |     with grant and DPoP proof   | Authorization |
+|        |     for key K                   |    Server     |
+|        |<-(4) access token --------------|               |
+|        |     (normally bound to K)       |               |
++--------+                                 +---------------+
+~~~
+{: title="Issuing and Redeeming a DPoP-Bound Authorization Grant"}
+
+The client sends a separate DPoP proof, signed with K, to each authorization server ({{te-request}}), and checks the binding that the issuing authorization server returns ({{client-processing}}). With mutual TLS, the client's TLS client certificate takes the place of K: the client proves possession in the TLS handshake instead of with a DPoP proof.
+
+This specification involves three separate bindings: that of a `subject_token` or `actor_token` presented to the issuing authorization server ({{bound-subject}}); that of the authorization grant ({{processing}}); and that of the access and refresh tokens that the resource authorization server issues ({{token-response}}, {{refresh}}). Proof of possession shows that the presenter holds a key or certificate, not which client it is ({{pop-identity}}).
 
 ## Relationship to Other Documents {#relationship}
 
@@ -120,35 +148,7 @@ This specification refers to grant types by the short names in {{grant-type-name
 | `jwt-dpop` | `urn:ietf:params:oauth:grant-type:jwt-dpop` | {{JWT-DPOP-GRANT}}, {{legacy-jwt-dpop}} |
 {: #grant-type-names title="Grant Type Short Names"}
 
-The examples in this specification are non-normative. They use the public key from the examples in {{RFC9449}}, whose JWK SHA-256 Thumbprint is `0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I`, an issuing authorization server at `https://issuer.example/`, and a resource authorization server at `https://as.example/`. Request bodies are shown with extra line breaks and without URL encoding, and tokens are truncated, for display purposes only.
-
-# Protocol Overview {#overview}
-
-In the following figure, a client obtains an authorization grant bound to its DPoP key K and redeems it at the resource authorization server:
-
-~~~ ascii-art
-+--------+                                 +---------------+
-|        |--(1) Token Exchange request --->|    Issuing    |
-|        |     and DPoP proof for key K    | Authorization |
-|        |                                 |    Server     |
-|        |<-(2) grant with cnf for K ------|               |
-|        |     and cnf response parameter  +---------------+
-| Client |
-|        |                                 +---------------+
-|        |--(3) jwt-pop request ---------->|   Resource    |
-|        |     with grant and DPoP proof   | Authorization |
-|        |     for key K                   |    Server     |
-|        |<-(4) access token --------------|               |
-|        |     (normally bound to K)       |               |
-+--------+                                 +---------------+
-~~~
-{: title="Issuing and Redeeming a DPoP-Bound Authorization Grant"}
-
-The client checks the binding returned by the issuing authorization server ({{client-processing}}). At redemption, the resource authorization server checks the proof against the grant's `cnf` claim ({{processing}}).
-
-The client sends a separate DPoP proof to each authorization server, signed with the same key, because the `htu` claim of a DPoP proof identifies the endpoint that receives it ({{Section 4.2 of RFC9449}}). K's algorithm therefore needs to be one that each authorization server accepts and, if the access token is bound to K, one that the resource server also accepts. Each server can list the algorithms that it accepts in its `dpop_signing_alg_values_supported` metadata parameter ({{Section 5.1 of RFC9449}}, {{Section 2 of RFC9728}}). With mutual TLS, the client's TLS client certificate takes the place of K: the client proves possession in the TLS handshake instead of with a DPoP proof.
-
-This specification involves three separate bindings: that of a `subject_token` or `actor_token` presented to the issuing authorization server ({{bound-subject}}); that of the authorization grant ({{processing}}); and that of the access and refresh tokens that the resource authorization server issues ({{token-response}}, {{refresh}}). Proof of possession shows that the presenter holds a key or certificate, not which client it is ({{pop-identity}}).
+The examples in this specification are non-normative. They use the public key from the examples in {{RFC9449}}, an issuing authorization server at `https://issuer.example/`, and a resource authorization server at `https://as.example/`. Request bodies are shown with extra line breaks and without URL encoding, and tokens are truncated, for display purposes only.
 
 # Key-Bound JWT Authorization Grants {#format}
 
@@ -220,6 +220,8 @@ This section covers JWT authorization grants issued through Token Exchange ({{Se
 ## Token Exchange Request {#te-request}
 
 A client requests a DPoP-bound authorization grant by including a DPoP proof ({{Section 4 of RFC9449}}) in the DPoP HTTP header field of a Token Exchange request, as it would for a DPoP-bound access token. Such a request is a DPoP binding request. The client signs the DPoP proof with the key that it will use to redeem the grant.
+
+The client sends a separate DPoP proof to each authorization server, signed with the same key, because the `htu` claim of a DPoP proof identifies the endpoint that receives it ({{Section 4.2 of RFC9449}}). The key's algorithm therefore needs to be one that both authorization servers accept and, if the access token is bound to the key, one that the resource server also accepts. Each server can list the algorithms that it accepts in its `dpop_signing_alg_values_supported` metadata parameter ({{Section 5.1 of RFC9449}}, {{Section 2 of RFC9728}}).
 
 A TLS client certificate in a request does not ask for a certificate binding: the client might be presenting the certificate only for mutual-TLS client authentication ({{Section 2 of RFC8705}}). An issuing authorization server binds a grant to that certificate only as {{cert-binding}} describes.
 
