@@ -273,7 +273,7 @@ For a Token Exchange request for a JWT authorization grant, the issuing authoriz
 
 If several checks fail, {{errors}} determines which error to return. When it rejects a request for a JWT authorization grant, the issuing authorization server MUST NOT treat the `subject_token` or `actor_token` as used, for example by rotating a refresh token ({{single-use}}).
 
-The issuing authorization server determines which confirmation methods are permitted independently of the proofs in the request. Its policy can decline a method for an audience that does not verify it, based on configuration, an established trust relationship, or metadata ({{as-metadata}}). {{binding-request}} and {{cert-binding}} determine whether the request permits binding with a permitted confirmation method.
+The issuing authorization server determines which confirmation methods are permitted independently of the proofs in the request. Its policy can decline a method for an audience that does not verify it, based on configuration, an established trust relationship, or metadata ({{as-metadata}}). {{binding-request}} and {{cert-binding}} determine whether the request permits binding with a permitted confirmation method, and {{issuer-outcomes}} summarizes the outcome.
 
 ### Bound Subject and Actor Tokens {#bound-subject}
 
@@ -309,18 +309,17 @@ The issuing authorization server SHOULD NOT bind the grant to a TLS client certi
 
 Binding is required if the grant's profile requires it. The issuing authorization server MAY also require binding by policy or by the client's registration. A requirement for binding ensures that an issued grant is bound, not that each authorization server in the grant's audience verifies the binding ({{non-enforcing-consumers}}).
 
-If the issuing authorization server does not apply a required binding, it rejects the Token Exchange request with the error code from {{required-binding-errors}} (item 3 of {{issuer-processing}}).
+{{issuer-outcomes}} shows the outcome of a Token Exchange request for a JWT authorization grant that passes items 1 and 2 of {{issuer-processing}}; a request with an invalid DPoP proof fails item 1. In the table, "permitted" means a permitted confirmation method for the grant. If the issuing authorization server does not apply a required binding, it rejects the request with the error code that the table gives (item 3 of {{issuer-processing}}). The other cells summarize {{binding-request}} and {{cert-binding}}.
 
-| Request contains | Conditions | Error code |
+| Request contains | Binding not required | Binding required |
 |---|---|---|
-| No DPoP proof | `jkt` is a permitted confirmation method for the grant | `invalid_dpop_proof` |
-| Neither a DPoP proof nor a TLS client certificate | `x5t#S256` is a permitted confirmation method for the grant and `jkt` is not, and the issuing authorization server would bind the grant to the client's TLS client certificate, if the request had one, as {{cert-binding}} describes | `invalid_request` |
-| Any other case | Any | `invalid_target` ({{Section 2.2.2 of RFC8693}}) |
-{: #required-binding-errors title="Error Codes When a Required Binding Is Not Applied"}
+| A valid DPoP proof; `jkt` permitted | Bound to the key of the DPoP proof | Bound to the key of the DPoP proof |
+| A valid DPoP proof; `jkt` not permitted | Unbound | `invalid_target` ({{Section 2.2.2 of RFC8693}}) |
+| A TLS client certificate and no DPoP proof | Bound to the certificate if the server applies {{cert-binding}}; otherwise unbound | Bound to the certificate if the server applies {{cert-binding}}; otherwise `invalid_dpop_proof` if `jkt` is permitted, and `invalid_target` if not |
+| Neither a DPoP proof nor a TLS client certificate | Unbound | `invalid_dpop_proof` if `jkt` is permitted; `invalid_request` if `x5t#S256` is permitted, `jkt` is not, and the server would bind the grant to the client's TLS client certificate, if the request had one, as {{cert-binding}} describes; otherwise `invalid_target` |
+{: #issuer-outcomes title="Outcome of a Request for a JWT Authorization Grant"}
 
-The last row covers, for example, a request for a grant for which no confirmation method is permitted, and a request that contains a DPoP proof when `jkt` is not a permitted confirmation method for the grant ({{binding-request}}).
-
-A client that receives the `invalid_dpop_proof` error code under the first row can repeat the request with a DPoP proof, and one that receives `invalid_request` under the second row can repeat it over a mutual-TLS connection with its TLS client certificate. In an error response with the `invalid_dpop_proof` error code, the issuing authorization server MAY include a DPoP-Nonce HTTP header field ({{Section 8.2 of RFC9449}}) so that the repeated request can include the nonce and need not first be rejected with `use_dpop_nonce`.
+A client that receives the `invalid_dpop_proof` error code for a required binding can repeat the request with a DPoP proof, and one that receives `invalid_request` for a required binding can repeat it over a mutual-TLS connection with its TLS client certificate. In an error response with the `invalid_dpop_proof` error code, the issuing authorization server MAY include a DPoP-Nonce HTTP header field ({{Section 8.2 of RFC9449}}) so that the repeated request can include the nonce and need not first be rejected with `use_dpop_nonce`.
 
 The following is an example of the error response to a Token Exchange request that contains no DPoP proof, when binding is required and `jkt` is a permitted confirmation method for the authorization grant:
 
