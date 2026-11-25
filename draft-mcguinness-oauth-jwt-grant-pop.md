@@ -900,8 +900,6 @@ Each conflict could be resolved by a change to either document (item 2 of {{open
 
 # Open Issues {#open-issues}
 
-\[Editor's note: this appendix lists questions for the working group. It will be removed before publication. Background for questions 1 to 4 is in the file `notes/appendix-background.md` in the GitHub repository of this document.\]
-
 1. Grant type or metadata. Should key-bound authorization grants keep the `jwt-pop` grant type, or use `jwt-bearer` with a client or authorization server metadata parameter that requires key-bound grants? The grant type requires a key-bound grant in each request, and a server that does not support it rejects the request, whereas a server ignores metadata that it does not understand ({{grant-type-substitution}}). Metadata would fit {{Section 4.1 of RFC7521}}, which defines `grant_type` as "the format of the assertion", and would remove the conflict with {{Section 8 of ID-JAG}}.
 2. Alignment with other documents. Should the working group resolve the two conflicts with {{ID-JAG}} that {{profile-examples}} lists by the changes proposed there, or by changes to this document? Should a client metadata parameter let a client opt into a certificate binding ({{cert-binding}}), which this document leaves to the issuing authorization server's configuration? If so, should the opt-in also permit a certificate binding when the request contains a DPoP proof, as {{Section 9.11 of ID-JAG}} does, except when the request proves possession of a DPoP-bound `subject_token` or `actor_token` ({{proof-replay}})? That would narrow the first of those conflicts, but would need exceptions to {{te-request}}, {{binding-request}}, {{cert-binding}}, {{required-binding}}, and {{client-processing}}.
 
