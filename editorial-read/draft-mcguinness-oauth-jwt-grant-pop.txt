@@ -551,15 +551,15 @@ Table of Contents
 
 4.2.2.  DPoP Binding
 
-   In response to a DPoP binding request with a valid DPoP proof, if jkt
-   is a permitted confirmation method for the grant, the issuing
-   authorization server MUST bind the issued authorization grant to the
-   public key of the DPoP proof.  Otherwise, unless binding is required,
-   it MUST NOT reject the request because it cannot bind the grant; any
-   grant that it issues is unbound, and the response omits the cnf
-   response parameter.  It MUST NOT bind the grant to any other key or
-   certificate, including when the client also presents a TLS client
-   certificate.
+   When it issues an authorization grant in response to a DPoP binding
+   request, the issuing authorization server MUST bind the grant to the
+   public key of the DPoP proof if jkt is a permitted confirmation
+   method for the grant.  If jkt is not a permitted confirmation method
+   for the grant and binding is not required, it MUST NOT reject a DPoP
+   binding request because it cannot bind the grant; any grant that it
+   issues is unbound, and the response omits the cnf response parameter.
+   It MUST NOT bind the grant to any other key or certificate, including
+   when the client also presents a TLS client certificate.
 
    A client can therefore use a TLS client certificate solely for client
    authentication or to prove possession of a certificate-bound
@@ -2031,29 +2031,16 @@ Appendix B.  Open Issues
    4 is in the file notes/appendix-background.md in the GitHub
    repository of this document.]
 
-   1.  Grant type or client metadata.  Should key-bound authorization
-       grants keep the jwt-pop grant type, or use jwt-bearer and express
-       "key-bound grants only" with a boolean client metadata parameter,
-       as dpop_bound_access_tokens does (Section 5.2 of [RFC9449]), or a
-       boolean authorization server metadata parameter, as
-       dpop_bound_access_tokens_required does for a protected resource
-       (Section 2 of [RFC9728])?  The grant type gives a per-request
-       requirement and the rejection of an unsupported grant type
-       (Section 9.2).  Its per-client limit (Section 7.2) applies only
-       when the server identifies a registered client, and a [WAG] agent
-       can present a grant with jwt-bearer without client authentication
-       or a per-agent registration.  A profile can require every grant
-       of its type to be key-bound and every resource authorization
-       server implementing the profile to verify the binding (items 2
-       and 3 of Section 8).  A server that accepts jwt-bearer without
-       recognizing the profile might ignore its typ value (Section 3.11
-       of [RFC8725]).  Metadata would remove the conflict with Section 8
-       of [ID-JAG] and fit Section 4.1 of [RFC7521], which defines
-       grant_type as "the format of the assertion".  A client would
-       confirm the policy from the registered client metadata that the
-       resource authorization server returns (Section 3.2.1 of
-       [RFC7591]) or from that server's validated metadata
-       (Section 7.1).
+   1.  Grant type or metadata.  Should key-bound authorization grants
+       keep the jwt-pop grant type, or use jwt-bearer with a client or
+       authorization server metadata parameter that requires key-bound
+       grants?  The grant type requires a key-bound grant in each
+       request, and a server that does not support it rejects the
+       request, whereas a server ignores metadata that it does not
+       understand (Section 9.2).  Metadata would fit Section 4.1 of
+       [RFC7521], which defines grant_type as "the format of the
+       assertion", and would remove the conflict with Section 8 of
+       [ID-JAG].
 
    2.  Alignment with other documents.  Should the working group resolve
        the two conflicts with [ID-JAG] that Appendix A lists by the
@@ -2072,9 +2059,10 @@ Appendix B.  Open Issues
        requested_cnf claim to select a key for the access token that
        Table 3 would otherwise exclude?
 
-       Replacing the jwt-dpop grant type and the rules in Section 5.1.2
-       needs the agreement of the author of [JWT-DPOP-GRANT], which also
-       requests registration of the jwt-dpop grant type (Section 9.1 of
+       Both the proposal to replace [JWT-DPOP-GRANT] and the rules for
+       the jwt-dpop grant type in Section 5.1.2 need the agreement of
+       the author of [JWT-DPOP-GRANT].  That document also requests
+       registration of the jwt-dpop grant type (Section 9.1 of
        [JWT-DPOP-GRANT]).
 
    3.  Required binding.  Is a per-request "bind or fail" option needed?
