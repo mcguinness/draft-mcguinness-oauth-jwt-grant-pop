@@ -287,7 +287,7 @@ The issuing authorization server MUST treat a `subject_token` or `actor_token` a
 
 ### DPoP Binding {#binding-request}
 
-In response to a DPoP binding request with a valid DPoP proof, if `jkt` is a permitted confirmation method for the grant, the issuing authorization server MUST bind the issued authorization grant to the public key of the DPoP proof. Otherwise, unless binding is required, it MUST NOT reject the request because it cannot bind the grant; any grant that it issues is unbound, and the response omits the `cnf` response parameter. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
+When it issues an authorization grant in response to a DPoP binding request, the issuing authorization server MUST bind the grant to the public key of the DPoP proof if `jkt` is a permitted confirmation method for the grant. If `jkt` is not a permitted confirmation method for the grant and binding is not required, it MUST NOT reject a DPoP binding request because it cannot bind the grant; any grant that it issues is unbound, and the response omits the `cnf` response parameter. It MUST NOT bind the grant to any other key or certificate, including when the client also presents a TLS client certificate.
 
 A client can therefore use a TLS client certificate solely for client authentication or to prove possession of a certificate-bound `subject_token` or `actor_token`, even if it cannot use that certificate at redemption. {{proof-replay}} explains the replay risk of selecting the certificate instead.
 
